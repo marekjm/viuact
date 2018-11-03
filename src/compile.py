@@ -70,13 +70,24 @@ def lex(source):
     patterns = [
         re.compile('\('),
         re.compile('\)'),
-        re.compile(r'let\b'),
+        re.compile(r'\blet\b'),
+        re.compile(r'\bif\b'),
+        re.compile(r'\bor\b'),
+        re.compile(r'\band\b'),
+        re.compile(r'\bnot\b'),
         re.compile('[a-zA-Z][a-zA-Z0-9_]*'),
         re.compile('->'),
         re.compile('='),
         re.compile('"[^"]*?"'),
         re.compile('(0|-?[1-9][0-9]*)'),
         re.compile('\*'),
+        re.compile('/'),
+        re.compile('\+'),
+        re.compile('-'),
+        re.compile('<'),
+        re.compile('>'),
+        re.compile('<='),
+        re.compile('>='),
     ]
 
     i = 0
