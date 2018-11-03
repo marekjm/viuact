@@ -72,6 +72,8 @@ def lex(source):
         re.compile('\)'),
         re.compile(r'\blet\b'),
         re.compile(r'\bif\b'),
+        re.compile(r'\bmodule\b'),
+        re.compile(r'\bimport\b'),
         re.compile(r'\bor\b'),
         re.compile(r'\band\b'),
         re.compile(r'\bnot\b'),
