@@ -1,4 +1,5 @@
 (module main (
+    (let zero () 0)
     (let main (args) (
         ;(let s "Hello World!")
         ;(let i 42)

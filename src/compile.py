@@ -148,8 +148,11 @@ def parse_function(source):
 
     if not isinstance(source[2], list):
         raise Exception('expected arguments list, got', source[2])
-    for each in source[2]:
-        fn.arguments = source[2]
+    fn.arguments = source[2]
+
+    # if not isinstance(source[3], list):
+    #     raise Exception('expected expression, got', source[3])
+    fn.body = source[3]
 
     return fn
 
