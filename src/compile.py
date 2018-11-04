@@ -1,50 +1,13 @@
 #!/usr/bin/env python3
 
+import collections
 import json
 import re
 import sys
 
 
 import token_types
-
-
-def group_impl(tokens):
-    grouped = [tokens[0]]
-
-    i = 1
-    while i < len(tokens):
-        each = tokens[i]
-
-        if isinstance(each, token_types.Left_paren):
-            g, n = group_impl(tokens[i:])
-            grouped.append(g[1:-1])
-            i += n
-
-            # print('gi', grouped)
-            continue
-
-        grouped.append(each)
-        i += 1
-
-        if isinstance(each, token_types.Right_paren):
-            return grouped, i
-
-    return grouped, i
-
-def group(tokens):
-    groups = []
-
-    i = 0
-    while i < len(tokens):
-        each = tokens[i]
-
-        g, n = group_impl(tokens[i:])
-        # print('g', g, groups)
-
-        groups.append(g[1:-1])
-        i += n
-
-    return groups
+import group_types
 
 
 class Token:
@@ -132,9 +95,79 @@ def lex(source):
 
     return tokens
 
-
 def strip_comments(tokens):
     return list(filter(lambda each: (not isinstance(each, token_types.Comment)), tokens))
+
+
+def group_impl(tokens):
+    grouped = [tokens[0]]
+
+    i = 1
+    while i < len(tokens):
+        each = tokens[i]
+
+        if isinstance(each, token_types.Left_paren):
+            g, n = group_impl(tokens[i:])
+            grouped.append(g[1:-1])
+            i += n
+
+            # print('gi', grouped)
+            continue
+
+        grouped.append(each)
+        i += 1
+
+        if isinstance(each, token_types.Right_paren):
+            return grouped, i
+
+    return grouped, i
+
+def group(tokens):
+    groups = []
+
+    i = 0
+    while i < len(tokens):
+        each = tokens[i]
+
+        g, n = group_impl(tokens[i:])
+        # print('g', g, groups)
+
+        groups.append(g[1:-1])
+        i += n
+
+    return groups
+
+
+def parse_function(source):
+    Function = collections.namedtuple('Function', ('name',))
+    return Function(collections.namedtuple('Placeholder', ('token',))('<placeholder>'))
+
+def parse_module(source):
+    if not isinstance(source[1], token_types.Name):
+        raise Exception('expected name, got', source[1])
+
+    mod = group_types.Module(source[1])
+
+    module_contents = source[2]
+    for each in module_contents:
+        fn = parse_function(each)
+        mod.functions[str(fn.name.token)] = fn
+
+    return mod
+
+
+def parse(groups):
+    parsed = []
+
+    for each in groups:
+        leader = each[0]
+        if isinstance(leader, token_types.Module):
+            parsed.append(parse_module(each))
+        else:
+            raise Exception('invalid leader', leader)
+
+    return parsed
+
 
 def main(args):
     source_file = args[0]
@@ -155,5 +188,9 @@ def main(args):
             raise TypeError(f'Object of type {obj.__class__.__name__} '
                             f'is not JSON serializable')
         print(json.dumps(groups, indent=2, default=encode_groups))
+        print('\n')
+
+    expressions = parse(groups)
+    print(expressions)
 
 main(sys.argv[1:])
