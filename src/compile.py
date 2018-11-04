@@ -150,8 +150,8 @@ def parse_function(source):
         raise Exception('expected arguments list, got', source[2])
     fn.arguments = source[2]
 
-    # if not isinstance(source[3], list):
-    #     raise Exception('expected expression, got', source[3])
+    if not isinstance(source[3], list):
+        raise Exception('expected expression, got', source[3])
     fn.body = source[3]
 
     return fn
@@ -183,6 +183,27 @@ def parse(groups):
     return parsed
 
 
+def output_interface_file(expressions):
+    is_module = isinstance(expressions[0], group_types.Module)
+    if not is_module:
+        return
+
+    module_expr = expressions[0]
+    module_name = str(module_expr.name.token)
+
+    module_interface = {
+        'name': module_name,
+        'exports': {},
+        'imports': [],
+    }
+
+    for fn_name, fn_def in module_expr.functions.items():
+        module_interface['exports'][fn_name] = {
+            'arity': len(fn_def.arguments),
+        }
+
+    print(json.dumps(module_interface, indent=2))
+
 def main(args):
     source_file = args[0]
     source_code = None
@@ -206,5 +227,7 @@ def main(args):
 
     expressions = parse(groups)
     print(expressions)
+
+    output_interface_file(expressions)
 
 main(sys.argv[1:])
