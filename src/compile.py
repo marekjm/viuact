@@ -139,14 +139,25 @@ def group(tokens):
 
 
 def parse_function(source):
-    Function = collections.namedtuple('Function', ('name',))
-    return Function(collections.namedtuple('Placeholder', ('token',))('<placeholder>'))
+    if not isinstance(source[1], token_types.Name):
+        raise Exception('expected name, got', source[1])
+    if len(source) != 4:
+        raise Exception('invalid function definition')
+
+    fn = group_types.Function(name = source[1])
+
+    if not isinstance(source[2], list):
+        raise Exception('expected arguments list, got', source[2])
+    for each in source[2]:
+        fn.arguments = source[2]
+
+    return fn
 
 def parse_module(source):
     if not isinstance(source[1], token_types.Name):
         raise Exception('expected name, got', source[1])
 
-    mod = group_types.Module(source[1])
+    mod = group_types.Module(name = source[1])
 
     module_contents = source[2]
     for each in module_contents:

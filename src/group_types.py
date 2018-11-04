@@ -7,6 +7,7 @@ class Group_type:
             s,
         )
 
+
 class Module(Group_type):
     type_name = 'Module'
 
@@ -15,8 +16,23 @@ class Module(Group_type):
         self.functions = {}
 
     def to_string(self):
-        s = ', '.join(self.functions.keys())
+        s = ', '.join(map(lambda each: each.to_string(), self.functions.values()))
         return '{} with {}'.format(
             str(self.name.token),
             (s or 'no functions'),
+        )
+
+
+class Function(Group_type):
+    type_name = 'Function'
+
+    def __init__(self, name):
+        self.name = name
+        self.arguments = []
+        self.body = []
+
+    def to_string(self):
+        return '{}({})'.format(
+            str(self.name.token),
+            ', '.join(map(lambda each: str(each.token), self.arguments)),
         )

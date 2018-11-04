@@ -1,5 +1,5 @@
 (module main (
-    (let main () (
+    (let main (args) (
         ;(let s "Hello World!")
         ;(let i 42)
         ;(let i_neg -42)
