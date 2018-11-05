@@ -204,6 +204,17 @@ def output_interface_file(expressions):
 
     print(json.dumps(module_interface, indent=2))
 
+def output_function_body(fn):
+    body = [
+        '.function: {}/{}'.format(
+            str(fn.name.token),
+            len(fn.arguments),
+        ),
+    ]
+
+    body.append('.end')
+    return body
+
 def main(args):
     source_file = args[0]
     source_code = None
@@ -229,5 +240,14 @@ def main(args):
     print(expressions)
 
     output_interface_file(expressions)
+
+    is_module = isinstance(expressions[0], group_types.Module)
+    if not is_module:
+        return
+
+    module_expr = expressions[0]
+    for fn_name, fn_def in module_expr.functions.items():
+        print(fn_name, fn_def)
+        print('   ', output_function_body(fn_def))
 
 main(sys.argv[1:])
