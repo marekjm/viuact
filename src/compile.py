@@ -258,6 +258,7 @@ def output_function_body(fn):
     print(state.name_to_slot)
 
     body.extend(inner_body)
+    body.append(emitter.Verbatim('return'))
     body.append(emitter.Verbatim('.end'))
     return body
 

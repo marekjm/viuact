@@ -13,12 +13,18 @@ class State:
     def __init__(self):
         self.next_slot = 1
         self.name_to_slot = {}
+        self.last_used_slot = None
 
     def get_slot(self, name):
         if name not in self.name_to_slot:
             self.name_to_slot[name] = self.next_slot
             self.next_slot += 1
-        return Slot(name, self.name_to_slot[name])
+        self.last_used_slot = self.name_to_slot[name]
+        return Slot(name, self.last_used_slot)
+
+    def slot_of(self, name):
+        self.last_used_slot = self.name_to_slot[name]
+        return Slot(name, self.last_used_slot)
 
 
 class Verbatim:
@@ -55,6 +61,8 @@ def emit_expr(body : list, expr, state : State):
             expr,
             state,
         )
+    elif leader_type is group_types.Name_ref:
+        return state.slot_of(str(expr.name.token))
     else:
         raise Exception('expression could not be emitted', expr)
 
@@ -84,7 +92,18 @@ def emit_call(body : list, call_expr, state : State):
     applied_args = []
     for i, each in enumerate(args):
         print('    arg[{}]'.format(i), each)
-        applied_args.append(emit_expr(each, body, state))
+        applied_args.append(emit_expr(body, each, state))
     print(applied_args)
 
     body.append(Verbatim('frame %{}'.format(len(args))))
+    for i, each in enumerate(applied_args):
+        body.append(Verbatim('copy %{} parameters %{} local'.format(
+            i,
+            each.index,
+        )))
+
+    body.append(Verbatim('call %{} local {}/{}'.format(
+        state.get_slot(None).index,
+        str(name.token),
+        len(args),
+    )))
