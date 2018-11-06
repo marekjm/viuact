@@ -273,6 +273,9 @@ def output_function_body(fn):
 
     print(state.name_to_slot)
 
+    body.append(emitter.Verbatim('allocate_registers %{} local'.format(
+        state.next_slot,
+    )))
     body.extend(inner_body)
     body.append(emitter.Verbatim('return'))
     body.append(emitter.Verbatim('.end'))
@@ -306,12 +309,20 @@ def main(args):
     if not is_module:
         return
 
+    lowered_function_bodies = []
+
     module_expr = expressions[0]
     for fn_name, fn_def in module_expr.functions.items():
         print(fn_name, fn_def)
         print('   ', fn_def.body)
         body = output_function_body(fn_def)
         print('   ', body)
-        print(lower_function_body(body))
+        s = lower_function_body(body)
+        print(s)
+        lowered_function_bodies.append(s)
+
+    if len(args) > 1:
+        with open(args[1], 'w') as ofstream:
+            ofstream.write('\n\n'.join(lowered_function_bodies))
 
 main(sys.argv[1:])

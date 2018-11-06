@@ -107,7 +107,7 @@ def emit_call(body : list, call_expr, state : State):
 
     body.append(Verbatim('frame %{}'.format(len(args))))
     for i, each in enumerate(applied_args):
-        body.append(Verbatim('copy %{} parameters %{} local'.format(
+        body.append(Verbatim('copy %{} arguments %{} local'.format(
             i,
             each.index,
         )))

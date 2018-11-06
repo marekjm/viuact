@@ -1,4 +1,7 @@
 (module main (
+    (let foo (x) (
+        (print (x))
+    ))
     (let main (args) (
         (let s "Hello World!")
         (foo (s))
