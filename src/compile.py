@@ -8,6 +8,7 @@ import sys
 
 import token_types
 import group_types
+import emitter
 
 
 class Token:
@@ -138,6 +139,31 @@ def group(tokens):
     return groups
 
 
+def parse_expression(expr):
+    leader = expr[0]
+    leader_type = type(leader)
+
+    if leader_type is token_types.Let:
+        return group_types.Let_binding(
+            name = expr[1],
+            value = expr[2],
+        )
+    elif leader_type is token_types.Name and len(expr) == 2 and type(expr[1]) is list:
+        return group_types.Function_call(
+            name = expr[0],
+            args = expr[1],
+        )
+    else:
+        raise Exception('invalid expression in function body', expr)
+
+def parse_function_body(source):
+    body = []
+
+    for each in source:
+        body.append(parse_expression(each))
+
+    return body
+
 def parse_function(source):
     if not isinstance(source[1], token_types.Name):
         raise Exception('expected name, got', source[1])
@@ -152,7 +178,7 @@ def parse_function(source):
 
     if not isinstance(source[3], list):
         raise Exception('expected expression, got', source[3])
-    fn.body = source[3]
+    fn.body = parse_function_body(source[3])
 
     return fn
 
@@ -197,22 +223,37 @@ def output_interface_file(expressions):
         'imports': [],
     }
 
+    # FIXME save the interface to file
     for fn_name, fn_def in module_expr.functions.items():
         module_interface['exports'][fn_name] = {
             'arity': len(fn_def.arguments),
         }
 
-    print(json.dumps(module_interface, indent=2))
-
 def output_function_body(fn):
     body = [
-        '.function: {}/{}'.format(
+        emitter.Verbatim('.function: {}/{}'.format(
             str(fn.name.token),
             len(fn.arguments),
-        ),
+        )),
     ]
 
-    body.append('.end')
+    inner_body = []
+    state = emitter.State()
+
+    for each in fn.body:
+        leader_type = type(each)
+
+        if leader_type is group_types.Let_binding:
+            emitter.emit_let(
+                inner_body,
+                each,
+                state,
+            )
+
+    print(state.name_to_slot)
+
+    body.extend(inner_body)
+    body.append(emitter.Verbatim('.end'))
     return body
 
 def main(args):
@@ -222,7 +263,6 @@ def main(args):
         source_code = ifstream.read()
 
     tokens = strip_comments(lex(source_code))
-    # [print(each) for each in tokens]
 
     groups = group(tokens)
     if True:
@@ -237,7 +277,6 @@ def main(args):
         print('\n')
 
     expressions = parse(groups)
-    print(expressions)
 
     output_interface_file(expressions)
 
@@ -248,6 +287,7 @@ def main(args):
     module_expr = expressions[0]
     for fn_name, fn_def in module_expr.functions.items():
         print(fn_name, fn_def)
+        print('   ', fn_def.body)
         print('   ', output_function_body(fn_def))
 
 main(sys.argv[1:])

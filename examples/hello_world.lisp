@@ -1,6 +1,7 @@
 (module main (
     (let main (args) (
-        ;(let s "Hello World!")
+        (let s "Hello World!")
+        (print (s))
         ;(let i 42)
         ;(let i_neg -42)
         ;(let f 4.2)
