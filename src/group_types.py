@@ -64,3 +64,15 @@ class Function_call(Group_type):
             str(self.name.token),
             ', '.join(map(str, self.args)),
         )
+
+
+class Name_ref(Group_type):
+    type_name = 'Name_ref'
+
+    def __init__(self, name):
+        self.name = name
+
+    def to_string(self):
+        return '{}'.format(
+            str(self.name.token),
+        )

@@ -29,6 +29,8 @@ class Token:
 
 
 def lex(source):
+    """Lexing turns a stream of characters into a stream of tokens.
+    """
     tokens = []
 
     def make_token(text):
@@ -124,6 +126,9 @@ def group_impl(tokens):
     return grouped, i
 
 def group(tokens):
+    """Grouping turns a stream of tokens into a stream of groups representing
+    nested expressions surrounded by ().
+    """
     groups = []
 
     i = 0
@@ -140,7 +145,10 @@ def group(tokens):
 
 
 def parse_expression(expr):
-    leader = expr[0]
+    """Parsing turns "anonymous" groups of tokens into syntactic entities.
+    Let bindings, name references, function calls, etc.
+    """
+    leader = (expr[0] if type(expr) is list else expr)
     leader_type = type(leader)
 
     if leader_type is token_types.Let:
@@ -148,10 +156,14 @@ def parse_expression(expr):
             name = expr[1],
             value = expr[2],
         )
-    elif leader_type is token_types.Name and len(expr) == 2 and type(expr[1]) is list:
+    elif leader_type is token_types.Name and type(expr) is list:
         return group_types.Function_call(
             name = expr[0],
-            args = expr[1],
+            args = [parse_expression(each) for each in expr[1]],
+        )
+    elif leader_type is token_types.Name:
+        return group_types.Name_ref(
+            name = expr,
         )
     else:
         raise Exception('invalid expression in function body', expr)
@@ -241,14 +253,7 @@ def output_function_body(fn):
     state = emitter.State()
 
     for each in fn.body:
-        leader_type = type(each)
-
-        if leader_type is group_types.Let_binding:
-            emitter.emit_let(
-                inner_body,
-                each,
-                state,
-            )
+        emitter.emit_expr(inner_body, each, state)
 
     print(state.name_to_slot)
 
