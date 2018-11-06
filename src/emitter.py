@@ -34,11 +34,21 @@ class Verbatim:
     def __repr__(self):
         return 'Verbatim: {}'.format(repr(self.text))
 
+    def to_string(self):
+        return self.text
+
 class Ctor:
     def __init__(self, of_type : str, slot : Slot, value : str):
         self.of_type = of_type
         self.slot = slot
         self.value = value
+
+    def to_string(self):
+        return '{} %{} local {}'.format(
+            self.of_type,
+            self.slot.index,
+            self.value,
+        )
 
 class Call:
     def __init__(self, to : str, slot : Slot):

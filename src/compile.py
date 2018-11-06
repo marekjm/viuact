@@ -241,6 +241,22 @@ def output_interface_file(expressions):
             'arity': len(fn_def.arguments),
         }
 
+
+def lower_function_body(body):
+    instructions = [
+        body[0].to_string(),   # signature
+    ]
+
+    for each in body[1:-1]:
+        instructions.append('    {}'.format(
+            each.to_string(),
+        ))
+
+    instructions.append(body[-1].to_string())  # .end
+
+    return '\n'.join(instructions)
+
+
 def output_function_body(fn):
     body = [
         emitter.Verbatim('.function: {}/{}'.format(
@@ -294,6 +310,8 @@ def main(args):
     for fn_name, fn_def in module_expr.functions.items():
         print(fn_name, fn_def)
         print('   ', fn_def.body)
-        print('   ', output_function_body(fn_def))
+        body = output_function_body(fn_def)
+        print('   ', body)
+        print(lower_function_body(body))
 
 main(sys.argv[1:])
