@@ -1,4 +1,7 @@
 (module Main (
+    (let zero () (
+        (let i 0)
+    ))
     (let foo (x) (
         (print (x))
     ))

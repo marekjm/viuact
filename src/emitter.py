@@ -153,6 +153,14 @@ def emit_let(body : list, let_expr, state : State):
             str(value.token),
         ))
         return slot
+    elif expr_type is token_types.Integer:
+        slot = state.get_slot(str(name.token))
+        body.append(Ctor(
+            'integer',
+            slot,
+            str(value.token),
+        ))
+        return slot
     else:
         raise Exception('invalid value for let-binding', let_expr)
 
