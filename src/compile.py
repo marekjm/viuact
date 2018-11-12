@@ -291,6 +291,10 @@ def output_function_body(fn):
         state.next_slot[emitter.LOCAL_REGISTER_SET],
     )))
     body.extend(inner_body)
+    body.append(emitter.Move.make_move(
+        state.last_used_slot,
+        emitter.Slot(None, 0,)
+    ))
     body.append(emitter.Verbatim('return'))
     body.append(emitter.Verbatim('.end'))
     return body
