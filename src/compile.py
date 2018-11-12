@@ -154,7 +154,7 @@ def parse_expression(expr):
     if leader_type is token_types.Let:
         return group_types.Let_binding(
             name = expr[1],
-            value = expr[2],
+            value = parse_expression(expr[2]),
         )
     elif leader_type is token_types.Name and type(expr) is list:
         return group_types.Function_call(
@@ -165,6 +165,8 @@ def parse_expression(expr):
         return group_types.Name_ref(
             name = expr,
         )
+    elif leader_type in (token_types.Integer, token_types.String,):
+        return expr
     else:
         raise Exception('invalid expression in function body', expr)
 
