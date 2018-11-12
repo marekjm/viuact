@@ -170,6 +170,11 @@ def emit_call(body : list, call_expr, state : State):
     name = call_expr.name
     args = call_expr.args
 
+    if str(name.token) == 'print':
+        arg = emit_expr(body, args[0], state)
+        body.append(Verbatim('print {}'.format(arg.to_string())))
+        return
+
     print('    args:', args)
     applied_args = []
     for i, each in enumerate(args):
