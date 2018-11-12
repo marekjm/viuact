@@ -118,7 +118,7 @@ class Call:
         self.slot = slot
 
 
-def emit_expr(body : list, expr, state : State):
+def emit_expr(body : list, expr, state : State, slot : Slot = None):
     leader_type = type(expr)
 
     if leader_type is group_types.Let_binding:
@@ -126,12 +126,14 @@ def emit_expr(body : list, expr, state : State):
             body,
             expr,
             state,
+            slot,
         )
     elif leader_type is group_types.Function_call:
         return emit_call(
             body,
             expr,
             state,
+            slot,
         )
     elif leader_type is group_types.Name_ref:
         return state.slot_of(str(expr.name.token))
@@ -139,7 +141,7 @@ def emit_expr(body : list, expr, state : State):
         raise Exception('expression could not be emitted', expr)
 
 
-def emit_let(body : list, let_expr, state : State):
+def emit_let(body : list, let_expr, state : State, slot : Slot):
     print('let', let_expr)
     name = let_expr.name
     value = let_expr.value
@@ -165,7 +167,7 @@ def emit_let(body : list, let_expr, state : State):
         raise Exception('invalid value for let-binding', let_expr)
 
 
-def emit_call(body : list, call_expr, state : State):
+def emit_call(body : list, call_expr, state : State, slot : Slot):
     print('call', call_expr)
     name = call_expr.name
     args = call_expr.args
@@ -189,8 +191,8 @@ def emit_call(body : list, call_expr, state : State):
             each.index,
         )))
 
-    body.append(Verbatim('call %{} local {}/{}'.format(
-        state.get_slot(None).index,
+    body.append(Verbatim('call {} {}/{}'.format(
+        ('void' if slot is None else slot.to_string()),
         str(name.token),
         len(args),
     )))

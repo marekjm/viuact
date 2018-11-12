@@ -283,7 +283,17 @@ def output_function_body(fn):
         ))
 
     for each in fn.body:
-        emitter.emit_expr(inner_body, each, state)
+        # Expressions evaluated at function-level are given anonymous
+        # slots.
+        # Why? Because they are not assigned to anything. If an
+        # expression is assigned to an anonymous slot it can decide for
+        # itself what to do with this situation; function calls will
+        # return to void, literals and let-bindings will be created.
+        emitter.emit_expr(
+            body = inner_body,
+            expr = each,
+            state = state,
+        )
 
     print(state.name_to_slot)
 
