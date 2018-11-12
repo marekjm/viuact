@@ -217,6 +217,8 @@ def parse(groups):
         leader = each[0]
         if isinstance(leader, token_types.Module):
             parsed.append(parse_module(each))
+        elif isinstance(leader, token_types.Let):
+            parsed.append(parse_function(each))
         else:
             raise Exception('invalid leader', leader)
 
