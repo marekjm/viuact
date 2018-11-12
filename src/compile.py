@@ -283,6 +283,8 @@ def output_function_body(fn):
             source,
             dest,
         ))
+    if fn.arguments:
+        inner_body.append(emitter.Verbatim(''))
 
     for each in fn.body:
         # Expressions evaluated at function-level are given anonymous
@@ -296,12 +298,14 @@ def output_function_body(fn):
             expr = each,
             state = state,
         )
+        inner_body.append(emitter.Verbatim(''))
 
     print(state.name_to_slot)
 
     body.append(emitter.Verbatim('allocate_registers %{} local'.format(
         state.next_slot[emitter.LOCAL_REGISTER_SET],
     )))
+    body.append(emitter.Verbatim(''))
     body.extend(inner_body)
     body.append(emitter.Move.make_move(
         state.last_used_slot,
