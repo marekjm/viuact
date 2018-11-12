@@ -5,7 +5,7 @@
     (let foo (x) (
         (print (x))
     ))
-    (let main (args) (
+    (let main () (
         (let s "Hello World!")
         (foo (s))
         (let i (zero ()))
