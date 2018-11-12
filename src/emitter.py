@@ -153,6 +153,8 @@ def emit_let(body : list, let_expr, state : State):
             str(value.token),
         ))
         return slot
+    else:
+        raise Exception('invalid value for let-binding', let_expr)
 
 
 def emit_call(body : list, call_expr, state : State):
