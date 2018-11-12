@@ -4,27 +4,50 @@ import group_types
 import token_types
 
 
-class Slot(collections.namedtuple('Slot', ('name', 'index'))):
+DEFAULT_REGISTER_SET = 'local'
+
+
+class Slot:
+    def __init__(self, name, index, register_set = DEFAULT_REGISTER_SET):
+        self.name = name
+        self.index = index
+        self.register_set = register_set
+
+    def __str__(self):
+        return '{} = %{} {}'.format(
+            self.name,
+            self.index,
+            self.register_set,
+        )
+
     def is_void(self):
-        return self[1] is None
+        return self.index is None
 
 
 class State:
     def __init__(self):
-        self.next_slot = 1
+        self.next_slot = {
+            'local': 1,
+            'static': 0,
+            'parameters': 0,
+        }
         self.name_to_slot = {}
         self.last_used_slot = None
 
-    def get_slot(self, name):
+    def get_slot(self, name, register_set = DEFAULT_REGISTER_SET):
         if name not in self.name_to_slot:
-            self.name_to_slot[name] = self.next_slot
-            self.next_slot += 1
+            self.name_to_slot[name] = Slot(
+                name,
+                self.next_slot[register_set],
+                register_set,
+            )
+            self.next_slot[register_set] += 1
         self.last_used_slot = self.name_to_slot[name]
-        return Slot(name, self.last_used_slot)
+        return self.last_used_slot
 
     def slot_of(self, name):
         self.last_used_slot = self.name_to_slot[name]
-        return Slot(name, self.last_used_slot)
+        return self.last_used_slot
 
 
 class Verbatim:

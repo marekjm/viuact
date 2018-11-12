@@ -268,6 +268,12 @@ def output_function_body(fn):
     inner_body = []
     state = emitter.State()
 
+    for each in fn.arguments:
+        x = state.get_slot(
+            str(each.token),
+            'parameters',
+        )
+
     for each in fn.body:
         emitter.emit_expr(inner_body, each, state)
 

@@ -1,4 +1,4 @@
-(module main (
+(module Main (
     (let foo (x) (
         (print (x))
     ))
