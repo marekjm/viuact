@@ -147,34 +147,31 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None):
         )
     elif leader_type is group_types.Name_ref:
         return state.slot_of(str(expr.name.token))
+    elif leader_type is token_types.String:
+        body.append(Ctor(
+            'text',
+            slot,
+            str(expr.token),
+        ))
+        return slot
+    elif leader_type is token_types.Integer:
+        body.append(Ctor(
+            'integer',
+            slot,
+            str(expr.token),
+        ))
+        return slot
     else:
         raise Exception('expression could not be emitted', expr)
 
 
 def emit_let(body : list, let_expr, state : State, slot : Slot):
     print('let', let_expr)
-    name = let_expr.name
-    value = let_expr.value
 
-    expr_type = type(value)
-    if expr_type is token_types.String:
-        slot = state.get_slot(str(name.token))
-        body.append(Ctor(
-            'text',
-            slot,
-            str(value.token),
-        ))
-        return slot
-    elif expr_type is token_types.Integer:
-        slot = state.get_slot(str(name.token))
-        body.append(Ctor(
-            'integer',
-            slot,
-            str(value.token),
-        ))
-        return slot
-    else:
-        raise Exception('invalid value for let-binding', let_expr)
+    # Let-bindings always create their own slots.
+    slot = state.get_slot(str(let_expr.name.token))
+    emit_expr(body, let_expr.value, state, slot)
+    return slot
 
 
 def emit_call(body : list, call_expr, state : State, slot : Slot):

@@ -8,6 +8,7 @@
     (let main (args) (
         (let s "Hello World!")
         (foo (s))
+        ;(let i (zero ()))
         (zero ())
         ;(let i 42)
         ;(let i_neg -42)
