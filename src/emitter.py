@@ -21,6 +21,10 @@ class Slot:
             self.register_set,
         )
 
+    @staticmethod
+    def to_address(slot):
+        return ('void' if slot is None else slot.to_string())
+
     def is_void(self):
         return self.index is None
 
@@ -114,8 +118,14 @@ class Move:
 
 class Call:
     def __init__(self, to : str, slot : Slot):
-        self.to = name
+        self.to = to
         self.slot = slot
+
+    def to_string(self):
+        return 'call {dest} {fn}'.format(
+            dest = Slot.to_address(self.slot),
+            fn = self.to,
+        )
 
 
 def emit_expr(body : list, expr, state : State, slot : Slot = None):
@@ -191,8 +201,7 @@ def emit_call(body : list, call_expr, state : State, slot : Slot):
             each.index,
         )))
 
-    body.append(Verbatim('call {} {}/{}'.format(
-        ('void' if slot is None else slot.to_string()),
-        str(name.token),
-        len(args),
-    )))
+    body.append(Call(
+        to = '{}/{}'.format(str(name.token), len(args)),
+        slot = slot,
+    ))
