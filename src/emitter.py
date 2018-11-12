@@ -23,6 +23,12 @@ class Slot:
     def is_void(self):
         return self.index is None
 
+    def to_string(self):
+        return '%{} {}'.format(
+            self.index,
+            self.register_set,
+        )
+
 
 class State:
     def __init__(self):
@@ -67,9 +73,9 @@ class Ctor:
         self.value = value
 
     def to_string(self):
-        return '{} %{} local {}'.format(
+        return '{} {} {}'.format(
             self.of_type,
-            self.slot.index,
+            self.slot.to_string(),
             self.value,
         )
 
