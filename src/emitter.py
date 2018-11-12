@@ -5,6 +5,7 @@ import token_types
 
 
 DEFAULT_REGISTER_SET = 'local'
+LOCAL_REGISTER_SET = 'local'
 
 
 class Slot:
@@ -77,6 +78,38 @@ class Ctor:
             self.of_type,
             self.slot.to_string(),
             self.value,
+        )
+
+class Move:
+    MOVE = 'move'
+    COPY = 'copy'
+
+    @staticmethod
+    def make_move(source, dest):
+        return Move(
+            Move.MOVE,
+            source,
+            dest,
+        )
+
+    @staticmethod
+    def make_copy(source, dest):
+        return Move(
+            Move.COPY,
+            source,
+            dest,
+        )
+
+    def __init__(self, of_type : str, source : Slot, dest : Slot):
+        self.of_type = of_type
+        self.source = source
+        self.dest = dest
+
+    def to_string(self):
+        return '{} {} {}'.format(
+            self.of_type,
+            self.dest.to_string(),
+            self.source.to_string(),
         )
 
 class Call:

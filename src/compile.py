@@ -268,11 +268,19 @@ def output_function_body(fn):
     inner_body = []
     state = emitter.State()
 
-    for each in fn.arguments:
-        x = state.get_slot(
-            str(each.token),
+    for i, each in enumerate(fn.arguments):
+        source = emitter.Slot(
+            None,
+            i,
             'parameters',
         )
+        dest = state.get_slot(
+            str(each.token),
+        )
+        inner_body.append(emitter.Move.make_move(
+            source,
+            dest,
+        ))
 
     for each in fn.body:
         emitter.emit_expr(inner_body, each, state)
@@ -280,7 +288,7 @@ def output_function_body(fn):
     print(state.name_to_slot)
 
     body.append(emitter.Verbatim('allocate_registers %{} local'.format(
-        state.next_slot,
+        state.next_slot[emitter.LOCAL_REGISTER_SET],
     )))
     body.extend(inner_body)
     body.append(emitter.Verbatim('return'))
