@@ -1,3 +1,6 @@
+import token_types
+
+
 class Group_type:
     def __repr__(self):
         s = self.to_string()
@@ -59,9 +62,12 @@ class Function_call(Group_type):
         self.name = name
         self.args = args
 
+    def to(self):
+        return (str(self.name.token) if type(self.name) is token_types.Name else self.name.to_string())
+
     def to_string(self):
         return '{}({})'.format(
-            str(self.name.token),
+            self.to(),
             ', '.join(map(str, self.args)),
         )
 
@@ -76,3 +82,15 @@ class Name_ref(Group_type):
         return '{}'.format(
             str(self.name.token),
         )
+
+
+class Id(Group_type):
+    type_name = 'Id'
+
+    def __init__(self, name):
+        self.name = name
+
+    def to_string(self):
+        return ''.join(
+            map(lambda each: ('::' if each == '.' else each),
+            map(lambda each: str(each.token), self.name)))

@@ -58,8 +58,10 @@ def lex(source):
         token_types.Lte,
         token_types.Gt,
         token_types.Gte,
+        token_types.Dot,
 
         token_types.Name,           # Names and ids
+        token_types.Module_name,
 
         token_types.Comment,
 
@@ -117,6 +119,21 @@ def group_impl(tokens):
             # print('gi', grouped)
             continue
 
+        if isinstance(each, token_types.Dot):
+            name_types = (token_types.Module_name, token_types.Name,)
+            if ((type(grouped[-1]) not in name_types) or
+                (type(grouped[-1]) is list and type(grouped[-1][-1]) not in name_types)):
+                raise Exception('operator dot must follow module name or name, got', grouped[-1])
+            if type(tokens[i+1]) not in (token_types.Module_name, token_types.Name):
+                raise Exception('expected module name or name to follow operator dot, got', tokens[i+1])
+
+            if type(grouped[-1]) is list:
+                grouped[-1].extend([each, tokens[i+1],])
+            else:
+                grouped[-1] = [grouped[-1], each, tokens[i+1],]
+            i += 2
+            continue
+
         grouped.append(each)
         i += 1
 
@@ -151,6 +168,9 @@ def parse_expression(expr):
     leader = (expr[0] if type(expr) is list else expr)
     leader_type = type(leader)
 
+    name_types = (token_types.Module_name, token_types.Name,)
+    literal_types = (token_types.Integer, token_types.String,)
+
     if leader_type is token_types.Let:
         return group_types.Let_binding(
             name = expr[1],
@@ -161,11 +181,20 @@ def parse_expression(expr):
             name = expr[0],
             args = [parse_expression(each) for each in expr[1]],
         )
+    elif leader_type is list and type(leader[0]) in name_types:
+        return group_types.Function_call(
+            name = parse_expression(expr[0]),
+            args = [parse_expression(each) for each in expr[1]],
+        )
+    elif leader_type in name_types and type(expr) is list and type(expr[1]) is token_types.Dot:
+        return group_types.Id(
+            name = expr,
+        )
     elif leader_type is token_types.Name:
         return group_types.Name_ref(
             name = expr,
         )
-    elif leader_type in (token_types.Integer, token_types.String,):
+    elif leader_type in literal_types:
         return expr
     else:
         raise Exception('invalid expression in function body', expr)
@@ -197,8 +226,8 @@ def parse_function(source):
     return fn
 
 def parse_module(source):
-    if not isinstance(source[1], token_types.Name):
-        raise Exception('expected name, got', source[1])
+    if not isinstance(source[1], token_types.Module_name):
+        raise Exception('expected module name, got', source[1])
 
     mod = group_types.Module(name = source[1])
 
@@ -347,15 +376,22 @@ def main(args):
 
     lowered_function_bodies = []
 
-    module_expr = expressions[0]
-    for fn_name, fn_def in module_expr.functions.items():
-        print(fn_name, fn_def)
-        print('   ', fn_def.body)
-        body = output_function_body(fn_def)
-        print('   ', body)
-        s = lower_function_body(body)
-        print(s)
-        lowered_function_bodies.append(s)
+    for each in expressions:
+        print(type(each))
+        if type(each) is group_types.Module:
+            module_expr = expressions[0]
+            for fn_name, fn_def in module_expr.functions.items():
+                print('   ', fn_name, fn_def, type(fn_def))
+                print('   ', fn_def.body)
+                body = output_function_body(fn_def)
+                print('   ', body)
+                s = lower_function_body(body)
+                print(s)
+                lowered_function_bodies.append(s)
+        elif type(each) is group_types.Function:
+            body = output_function_body(each)
+            s = lower_function_body(body)
+            lowered_function_bodies.append(s)
 
     if len(args) > 1:
         with open(args[1], 'w') as ofstream:

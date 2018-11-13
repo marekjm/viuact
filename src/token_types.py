@@ -82,6 +82,10 @@ class Gte(Operator):
     type_name = 'gte'
     pattern = re.compile(r'>=')
 
+class Dot(Operator):
+    type_name = 'dot'
+    pattern = re.compile(r'\.')
+
 
 class Punctuation(Token_type):
     pass
@@ -97,7 +101,11 @@ class Right_paren(Punctuation):
 
 class Name(Token_type):
     type_name = 'Name'
-    pattern = re.compile('[a-zA-Z][a-zA-Z0-9_]*')
+    pattern = re.compile('[a-z][a-zA-Z0-9_]*')
+
+class Module_name(Token_type):
+    type_name = 'Module_name'
+    pattern = re.compile('[A-Z][a-zA-Z0-9_]*')
 
 
 class Comment(Token_type):

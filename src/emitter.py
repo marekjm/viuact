@@ -179,7 +179,7 @@ def emit_call(body : list, call_expr, state : State, slot : Slot):
     name = call_expr.name
     args = call_expr.args
 
-    if str(name.token) == 'print':
+    if call_expr.to() == 'print':
         arg = emit_expr(body, args[0], state)
         body.append(Verbatim('print {}'.format(arg.to_string())))
         return
@@ -199,6 +199,6 @@ def emit_call(body : list, call_expr, state : State, slot : Slot):
         )))
 
     body.append(Call(
-        to = '{}/{}'.format(str(name.token), len(args)),
+        to = '{}/{}'.format(call_expr.to(), len(args)),
         slot = slot,
     ))
