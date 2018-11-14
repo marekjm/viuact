@@ -115,8 +115,6 @@ def group_impl(tokens):
             g, n = group_impl(tokens[i:])
             grouped.append(g[1:-1])
             i += n
-
-            # print('gi', grouped)
             continue
 
         if isinstance(each, token_types.Dot):
@@ -151,10 +149,7 @@ def group(tokens):
     i = 0
     while i < len(tokens):
         each = tokens[i]
-
         g, n = group_impl(tokens[i:])
-        # print('g', g, groups)
-
         groups.append(g[1:-1])
         i += n
 
@@ -331,8 +326,6 @@ def output_function_body(fn):
         )
         inner_body.append(emitter.Verbatim(''))
 
-    # print(state.name_to_slot)
-
     body.append(emitter.Verbatim('allocate_registers %{} local'.format(
         state.next_slot[emitter.LOCAL_REGISTER_SET],
     )))
@@ -355,16 +348,6 @@ def main(args):
     tokens = strip_comments(lex(source_code))
 
     groups = group(tokens)
-    if True:
-        def encode_groups(obj):
-            if isinstance(obj, Token):
-                return str(obj)
-            if isinstance(obj, token_types.Token_type):
-                return repr(obj)
-            raise TypeError(f'Object of type {obj.__class__.__name__} '
-                            f'is not JSON serializable')
-        # print(json.dumps(groups, indent=2, default=encode_groups))
-        # print('\n')
 
     expressions = parse(groups)
 
@@ -377,16 +360,11 @@ def main(args):
     lowered_function_bodies = []
 
     for each in expressions:
-        # print(type(each))
         if type(each) is group_types.Module:
             module_expr = expressions[0]
             for fn_name, fn_def in module_expr.functions.items():
-                # print('   ', fn_name, fn_def, type(fn_def))
-                # print('   ', fn_def.body)
                 body = output_function_body(fn_def)
-                # print('   ', body)
                 s = lower_function_body(body)
-                # print(s)
                 lowered_function_bodies.append(s)
         elif type(each) is group_types.Function:
             body = output_function_body(each)
