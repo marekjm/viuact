@@ -1,3 +1,13 @@
+(module Std (
+    (module Posix (
+        (module Io (
+            (let open (s) (
+                s
+            ))
+        ))
+    ))
+))
+
 (module Main (
     (let zero () (
         (let i 0)
@@ -11,6 +21,7 @@
     (let s "Hello World!")
     (Main.foo (s))
     (let i (Main.zero ()))
+    (let x (Std.Posix.Io.open ("./foo.asm")))
     ;(zero ())
     ;(let i 42)
     ;(let i_neg -42)

@@ -119,9 +119,13 @@ def group_impl(tokens):
 
         if isinstance(each, token_types.Dot):
             name_types = (token_types.Module_name, token_types.Name,)
-            if ((type(grouped[-1]) not in name_types) or
-                (type(grouped[-1]) is list and type(grouped[-1][-1]) not in name_types)):
-                raise Exception('operator dot must follow module name or name, got', grouped[-1])
+            if not ((type(grouped[-1]) in name_types) or
+                (type(grouped[-1]) is list and type(grouped[-1][-1]) in name_types)):
+                raise Exception(
+                    'operator dot must follow module name or name, got',
+                    grouped[-1],
+                    grouped[-1][-1],
+                )
             if type(tokens[i+1]) not in (token_types.Module_name, token_types.Name):
                 raise Exception('expected module name or name to follow operator dot, got', tokens[i+1])
 
@@ -228,8 +232,16 @@ def parse_module(source):
 
     module_contents = source[2]
     for each in module_contents:
-        fn = parse_function(each)
-        mod.functions[str(fn.name.token)] = fn
+        if type(each[0]) is token_types.Let:
+            fn = parse_function(each)
+            mod.function_names.append(str(fn.name.token))
+            mod.functions[mod.function_names[-1]] = fn
+        elif type(each[0]) is token_types.Module:
+            md = parse_module(each)
+            mod.module_names.append(str(md.name.token))
+            mod.modules[mod.module_names[-1]] = md
+        else:
+            raise Exception('expected `module` or `let` keyword, got', each[0])
 
     return mod
 
@@ -283,10 +295,6 @@ def main(args):
     expressions = parse(groups)
 
     output_interface_file(expressions)
-
-    is_module = isinstance(expressions[0], group_types.Module)
-    if not is_module:
-        return
 
     lowered_function_bodies = lowerer.lower_file(expressions)
 

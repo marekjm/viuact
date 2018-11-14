@@ -7,8 +7,7 @@ def lower_file(expressions):
 
     for each in expressions:
         if type(each) is group_types.Module:
-            module_expr = expressions[0]
-            lowered_function_bodies.extend(lower_module(module_expr))
+            lowered_function_bodies.extend(lower_module(each))
 
     for each in expressions:
         if type(each) is group_types.Function:
@@ -20,7 +19,12 @@ def lower_file(expressions):
 def lower_module(module_expr, in_module = None):
     lowered_function_bodies = []
 
-    for fn_name, fn_def in module_expr.functions.items():
+    for mod_name in module_expr.module_names:
+        mod_def = module_expr.modules[mod_name]
+        lowered_function_bodies.extend(lower_module(mod_def))
+
+    for fn_name in module_expr.function_names:
+        fn_def = module_expr.functions[fn_name]
         body = output_function_body(fn_def)
         s = lower_function_body(body)
         lowered_function_bodies.append(s)

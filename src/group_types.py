@@ -17,6 +17,9 @@ class Module(Group_type):
     def __init__(self, name):
         self.name = name
         self.functions = {}
+        self.function_names = []
+        self.modules = {}
+        self.module_names = []
 
     def to_string(self):
         s = ', '.join(map(lambda each: each.to_string(), self.functions.values()))
