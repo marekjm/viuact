@@ -288,16 +288,7 @@ def main(args):
     if not is_module:
         return
 
-    lowered_function_bodies = []
-
-    for each in expressions:
-        if type(each) is group_types.Module:
-            module_expr = expressions[0]
-            lowered_function_bodies.extend(lowerer.lower_module(module_expr))
-
-    for each in expressions:
-        if type(each) is group_types.Function:
-            lowered_function_bodies.append(lowerer.lower_function(each))
+    lowered_function_bodies = lowerer.lower_file(expressions)
 
     if len(args) > 1:
         with open(args[1], 'w') as ofstream:

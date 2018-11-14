@@ -1,4 +1,20 @@
+import group_types
 import emitter
+
+
+def lower_file(expressions):
+    lowered_function_bodies = []
+
+    for each in expressions:
+        if type(each) is group_types.Module:
+            module_expr = expressions[0]
+            lowered_function_bodies.extend(lower_module(module_expr))
+
+    for each in expressions:
+        if type(each) is group_types.Function:
+            lowered_function_bodies.append(lower_function(each))
+
+    return lowered_function_bodies
 
 
 def lower_module(module_expr, in_module = None):
