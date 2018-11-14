@@ -183,7 +183,8 @@ def emit_call(body : list, call_expr, state : State, slot : Slot):
 
     applied_args = []
     for i, each in enumerate(args):
-        applied_args.append(emit_expr(body, each, state))
+        arg_slot = state.get_slot(None)
+        applied_args.append(emit_expr(body, each, state, arg_slot))
 
     body.append(Verbatim('frame %{}'.format(len(args))))
     for i, each in enumerate(applied_args):
@@ -192,6 +193,8 @@ def emit_call(body : list, call_expr, state : State, slot : Slot):
             each.index,
         )))
 
+    if slot is not None:
+        state.slot_of(slot.name)
     body.append(Call(
         to = '{}/{}'.format(call_expr.to(), len(args)),
         slot = slot,
