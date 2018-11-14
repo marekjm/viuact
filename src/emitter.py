@@ -166,8 +166,6 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None):
 
 
 def emit_let(body : list, let_expr, state : State, slot : Slot):
-    print('let', let_expr)
-
     # Let-bindings always create their own slots.
     slot = state.get_slot(str(let_expr.name.token))
     emit_expr(body, let_expr.value, state, slot)
@@ -175,7 +173,6 @@ def emit_let(body : list, let_expr, state : State, slot : Slot):
 
 
 def emit_call(body : list, call_expr, state : State, slot : Slot):
-    print('call', call_expr)
     name = call_expr.name
     args = call_expr.args
 
@@ -184,12 +181,9 @@ def emit_call(body : list, call_expr, state : State, slot : Slot):
         body.append(Verbatim('print {}'.format(arg.to_string())))
         return
 
-    print('    args:', args)
     applied_args = []
     for i, each in enumerate(args):
-        print('    arg[{}]'.format(i), each)
         applied_args.append(emit_expr(body, each, state))
-    print(applied_args)
 
     body.append(Verbatim('frame %{}'.format(len(args))))
     for i, each in enumerate(applied_args):
