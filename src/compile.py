@@ -8,7 +8,7 @@ import sys
 
 import token_types
 import group_types
-import emitter
+import lowerer
 
 
 class Token:
@@ -270,75 +270,6 @@ def output_interface_file(expressions):
         }
 
 
-def lower_function_body(body):
-    instructions = [
-        body[0].to_string(),   # signature
-    ]
-
-    for each in body[1:-1]:
-        instructions.append('    {}'.format(
-            each.to_string(),
-        ))
-
-    instructions.append(body[-1].to_string())  # .end
-
-    return '\n'.join(instructions)
-
-
-def output_function_body(fn):
-    body = [
-        emitter.Verbatim('.function: {}/{}'.format(
-            str(fn.name.token),
-            len(fn.arguments),
-        )),
-    ]
-
-    inner_body = []
-    state = emitter.State()
-
-    for i, each in enumerate(fn.arguments):
-        source = emitter.Slot(
-            None,
-            i,
-            'parameters',
-        )
-        dest = state.get_slot(
-            str(each.token),
-        )
-        inner_body.append(emitter.Move.make_move(
-            source,
-            dest,
-        ))
-    if fn.arguments:
-        inner_body.append(emitter.Verbatim(''))
-
-    for each in fn.body:
-        # Expressions evaluated at function-level are given anonymous
-        # slots.
-        # Why? Because they are not assigned to anything. If an
-        # expression is assigned to an anonymous slot it can decide for
-        # itself what to do with this situation; function calls will
-        # return to void, literals and let-bindings will be created.
-        emitter.emit_expr(
-            body = inner_body,
-            expr = each,
-            state = state,
-        )
-        inner_body.append(emitter.Verbatim(''))
-
-    body.append(emitter.Verbatim('allocate_registers %{} local'.format(
-        state.next_slot[emitter.LOCAL_REGISTER_SET],
-    )))
-    body.append(emitter.Verbatim(''))
-    body.extend(inner_body)
-    body.append(emitter.Move.make_move(
-        state.last_used_slot,
-        emitter.Slot(None, 0,)
-    ))
-    body.append(emitter.Verbatim('return'))
-    body.append(emitter.Verbatim('.end'))
-    return body
-
 def main(args):
     source_file = args[0]
     source_code = None
@@ -362,14 +293,11 @@ def main(args):
     for each in expressions:
         if type(each) is group_types.Module:
             module_expr = expressions[0]
-            for fn_name, fn_def in module_expr.functions.items():
-                body = output_function_body(fn_def)
-                s = lower_function_body(body)
-                lowered_function_bodies.append(s)
-        elif type(each) is group_types.Function:
-            body = output_function_body(each)
-            s = lower_function_body(body)
-            lowered_function_bodies.append(s)
+            lowered_function_bodies.extend(lowerer.lower_module(module_expr))
+
+    for each in expressions:
+        if type(each) is group_types.Function:
+            lowered_function_bodies.append(lowerer.lower_function(each))
 
     if len(args) > 1:
         with open(args[1], 'w') as ofstream:
