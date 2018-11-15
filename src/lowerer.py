@@ -16,18 +16,24 @@ def lower_file(expressions):
     return lowered_function_bodies
 
 
-def lower_module(module_expr, in_module = None):
+def lower_module(module_expr, in_module = ()):
     lowered_function_bodies = []
+
+    full_mod_name = in_module + (str(module_expr.name.token),)
 
     for mod_name in module_expr.module_names:
         mod_def = module_expr.modules[mod_name]
-        lowered_function_bodies.extend(lower_module(mod_def))
+        lowered_function_bodies.extend(lower_module(
+            mod_def,
+            in_module = full_mod_name,
+        ))
 
     for fn_name in module_expr.function_names:
         fn_def = module_expr.functions[fn_name]
-        body = output_function_body(fn_def)
-        s = lower_function_body(body)
-        lowered_function_bodies.append(s)
+        lowered_function_bodies.append(lower_function(
+            fn_def,
+            in_module = full_mod_name,
+        ))
 
     return lowered_function_bodies
 
@@ -46,10 +52,11 @@ def lower_function_body(body):
 
     return '\n'.join(instructions)
 
-def output_function_body(fn):
+def output_function_body(fn, in_module):
+    full_fn_name = in_module + (str(fn.name.token),)
     body = [
         emitter.Verbatim('.function: {}/{}'.format(
-            str(fn.name.token),
+            '::'.join(full_fn_name),
             len(fn.arguments),
         )),
     ]
@@ -100,6 +107,6 @@ def output_function_body(fn):
     body.append(emitter.Verbatim('.end'))
     return body
 
-def lower_function(fn_expr, in_module = None):
-    body = output_function_body(fn_expr)
+def lower_function(fn_expr, in_module = ()):
+    body = output_function_body(fn_expr, in_module)
     return lower_function_body(body)
