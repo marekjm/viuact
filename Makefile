@@ -6,7 +6,7 @@ ASM_OUTPUT=a.asm
 compile: $(OUTPUT_DIR)/$(ASM_OUTPUT)
 
 $(OUTPUT_DIR)/$(ASM_OUTPUT):
-	./scripts/cc examples/hello_world.lisp
+	./scripts/cc hello_world.lisp
 	../core/viuavm/build/bin/vm/asm \
 		-o $(OUTPUT_DIR)/a.out \
 		$(OUTPUT_DIR)/$(ASM_OUTPUT)
