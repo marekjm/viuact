@@ -2,6 +2,7 @@
 
 import collections
 import json
+import os
 import re
 import sys
 
@@ -283,6 +284,9 @@ def output_interface_file(expressions):
 
 
 def main(args):
+    output_directory = './build/_default'
+    os.makedirs(output_directory, exist_ok = True)
+
     source_file = args[0]
     source_code = None
     with open(source_file, 'r') as ifstream:
@@ -298,8 +302,7 @@ def main(args):
 
     lowered_function_bodies = lowerer.lower_file(expressions)
 
-    if len(args) > 1:
-        with open(args[1], 'w') as ofstream:
-            ofstream.write('\n\n'.join(lowered_function_bodies))
+    with open(os.path.join(output_directory, 'a.asm'), 'w') as ofstream:
+        ofstream.write('\n\n'.join(lowered_function_bodies))
 
 main(sys.argv[1:])
