@@ -184,8 +184,7 @@ def emit_call(body : list, call_expr, state : State, slot : Slot):
     args = call_expr.args
 
     if call_expr.to() == 'print':
-        arg = emit_expr(body, args[0], state)
-        body.append(Verbatim('print {}'.format(arg.to_string())))
+        body.append(Verbatim('print {}'.format(emit_expr(body, args[0], state).to_string())))
         return
 
     applied_args = []
