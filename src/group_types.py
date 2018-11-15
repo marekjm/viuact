@@ -75,6 +75,25 @@ class Function_call(Group_type):
         )
 
 
+class Operator_call(Group_type):
+    type_name = 'Operator_call'
+
+    def __init__(self, operator, args):
+        self.operator = operator
+        self.args = args
+
+    def to(self):
+        return (str(self.operator.token)
+                if isinstance(self.operator, (token_types.Logic_operator, token_types.Arithmetic_operator))
+                else self.operator.to_string())
+
+    def to_string(self):
+        return '{}({})'.format(
+            self.to(),
+            ', '.join(map(str, self.args)),
+        )
+
+
 class Name_ref(Group_type):
     type_name = 'Name_ref'
 

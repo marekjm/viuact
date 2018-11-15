@@ -145,6 +145,13 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None):
             state,
             slot,
         )
+    elif leader_type is group_types.Operator_call:
+        return emit_operator_call(
+            body,
+            expr,
+            state,
+            slot,
+        )
     elif leader_type is group_types.Name_ref:
         return state.slot_of(str(expr.name.token))
     elif leader_type is token_types.String:
@@ -199,3 +206,30 @@ def emit_call(body : list, call_expr, state : State, slot : Slot):
         to = '{}/{}'.format(call_expr.to(), len(args)),
         slot = slot,
     ))
+
+
+def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
+    name = call_expr.operator
+    args = call_expr.args
+
+    applied_args = []
+    for i, each in enumerate(args):
+        arg_slot = state.get_slot(None)
+        applied_args.append(emit_expr(body, each, state, arg_slot))
+
+    if slot is not None:
+        state.slot_of(slot.name)
+
+    operator_names = {
+        '+': 'add',
+        '-': 'sub',
+        '*': 'mul',
+        '/': 'div',
+    }
+
+    body.append(Verbatim('{} {} {} {}'.format(
+        operator_names.get(str(name.token)),
+        slot.to_string(),
+        applied_args[0].to_string(),
+        applied_args[1].to_string(),
+    )))

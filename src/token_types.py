@@ -46,41 +46,63 @@ class Operator(Token_type):
     def __repr__(self):
         return 'Operator_{}: {}'.format(self.type_name.lower(), self.token)
 
-class Or(Operator):
+class Logic_operator(Operator):
+    pass
+
+class Arithmetic_operator(Operator):
+    pass
+
+class Or(Logic_operator):
     type_name = 'or'
     pattern = re.compile(r'\bor\b')
 
-class And(Operator):
+class And(Logic_operator):
     type_name = 'and'
     pattern = re.compile(r'\band\b')
 
-class Not(Operator):
+class Not(Logic_operator):
     type_name = 'not'
     pattern = re.compile(r'\bnot\b')
 
-class Eq(Operator):
+class Eq(Logic_operator):
     type_name = 'eq'
     pattern = re.compile(r'=')
 
-class Ne(Operator):
+class Ne(Logic_operator):
     type_name = 'ne'
     pattern = re.compile(r'!=')
 
-class Lt(Operator):
+class Lt(Logic_operator):
     type_name = 'lt'
     pattern = re.compile(r'<')
 
-class Lte(Operator):
+class Lte(Logic_operator):
     type_name = 'lte'
     pattern = re.compile(r'<=')
 
-class Gt(Operator):
+class Gt(Logic_operator):
     type_name = 'gt'
     pattern = re.compile(r'>')
 
-class Gte(Operator):
+class Gte(Logic_operator):
     type_name = 'gte'
     pattern = re.compile(r'>=')
+
+class Add(Arithmetic_operator):
+    type_name = 'add'
+    pattern = re.compile(r'\+')
+
+class Subtract(Arithmetic_operator):
+    type_name = 'subtract'
+    pattern = re.compile(r'-')
+
+class Mul(Arithmetic_operator):
+    type_name = 'mul'
+    pattern = re.compile(r'\*')
+
+class Div(Arithmetic_operator):
+    type_name = 'div'
+    pattern = re.compile(r'/')
 
 class Dot(Operator):
     type_name = 'dot'

@@ -59,6 +59,10 @@ def lex(source):
         token_types.Lte,
         token_types.Gt,
         token_types.Gte,
+        token_types.Add,
+        token_types.Subtract,
+        token_types.Mul,
+        token_types.Div,
         token_types.Dot,
 
         token_types.Name,           # Names and ids
@@ -193,6 +197,11 @@ def parse_expression(expr):
     elif leader_type is token_types.Name:
         return group_types.Name_ref(
             name = expr,
+        )
+    elif isinstance(leader, (token_types.Logic_operator, token_types.Arithmetic_operator)) and type(expr) is list:
+        return group_types.Operator_call(
+            operator = expr[0],
+            args = [parse_expression(each) for each in expr[1]],
         )
     elif leader_type in literal_types:
         return expr
