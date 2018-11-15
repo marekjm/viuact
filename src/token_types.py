@@ -101,7 +101,7 @@ class Right_paren(Punctuation):
 
 class Name(Token_type):
     type_name = 'Name'
-    pattern = re.compile('[a-z][a-zA-Z0-9_]*')
+    pattern = re.compile('([a-z][a-zA-Z0-9_]*|_)')
 
 class Module_name(Token_type):
     type_name = 'Module_name'
