@@ -29,15 +29,18 @@ class If(Keyword):
     type_name = 'if'
     pattern = re.compile(r'\bif\b')
 
-class Import(Keyword):
+class Ctor_keyword(Keyword):
+    pass
+
+class Import(Ctor_keyword):
     type_name = 'import'
     pattern = re.compile(r'\bimport\b')
 
-class Struct(Keyword):
+class Struct(Ctor_keyword):
     type_name = 'struct'
     pattern = re.compile(r'\bstruct\b')
 
-class Vector(Keyword):
+class Vector(Ctor_keyword):
     type_name = 'vector'
     pattern = re.compile(r'\bvector\b')
 
