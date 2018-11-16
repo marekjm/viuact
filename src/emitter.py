@@ -264,18 +264,19 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
         false_arm_id,
     )))
 
-    if_slot = state.get_slot(None)
+    if slot is None:
+        slot = state.get_slot(None)
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(true_arm_id)))
-    emit_expr(body, arms[0], state, if_slot)
+    emit_expr(body, arms[0], state, slot)
     body.append(Verbatim('jump {}'.format(if_end_id)))
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(false_arm_id)))
-    emit_expr(body, arms[1], state, if_slot)
+    emit_expr(body, arms[1], state, slot)
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(if_end_id)))
 
-    return if_slot
+    return slot

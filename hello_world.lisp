@@ -30,10 +30,16 @@
     (let c (+ (a b)))
     (print (c))
 
-    (if (= (c 43))
-        (print ("Hell, yes!"))
-        (print ("Hell, no!"))
-    )
+    ;(if (= (c 43))
+    ;    (print ("Hell, yes!"))
+    ;    (print ("Hell, no!"))
+    ;)
+
+    (let msg (if (= (c 42))
+        "Oh yeah..."
+        "OH NOES!"
+    ))
+    (print (msg))
 
     (let _ 0)
 ))
