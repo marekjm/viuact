@@ -203,6 +203,14 @@ def parse_expression(expr):
             operator = expr[0],
             args = [parse_expression(each) for each in expr[1]],
         )
+    elif leader_type is token_types.If:
+        print(expr)
+        print('   ', expr[1])
+        print('   ', expr[2:])
+        return group_types.If(
+            condition = parse_expression(expr[1]),
+            arms = [parse_expression(each) for each in expr[2:]],
+        )
     elif leader_type in literal_types:
         return expr
     else:

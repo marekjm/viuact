@@ -116,3 +116,14 @@ class Id(Group_type):
         return ''.join(
             map(lambda each: ('::' if each == '.' else each),
             map(lambda each: str(each.token), self.name)))
+
+
+class If(Group_type):
+    type_name = 'If'
+
+    def __init__(self, condition, arms):
+        self.condition = condition
+        self.arms = arms
+
+    def to_string(self):
+        return 'if ({})'.format(self.condition)

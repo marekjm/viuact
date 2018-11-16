@@ -1,4 +1,5 @@
 import collections
+import hashlib
 
 import group_types
 import token_types
@@ -152,9 +153,18 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None):
             state,
             slot,
         )
+    elif leader_type is group_types.If:
+        return emit_if(
+            body,
+            expr,
+            state,
+            slot,
+        )
     elif leader_type is group_types.Name_ref:
         return state.slot_of(str(expr.name.token))
     elif leader_type is token_types.String:
+        if slot is None:
+            slot = state.get_slot(None)
         body.append(Ctor(
             'text',
             slot,
@@ -184,7 +194,9 @@ def emit_call(body : list, call_expr, state : State, slot : Slot):
     args = call_expr.args
 
     if call_expr.to() == 'print':
-        body.append(Verbatim('print {}'.format(emit_expr(body, args[0], state).to_string())))
+        body.append(Verbatim('print {}'.format(
+            emit_expr(body, args[0], state).to_string()
+        )))
         return
 
     applied_args = []
@@ -224,11 +236,46 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
         '-': 'sub',
         '*': 'mul',
         '/': 'div',
+        '=': 'eq',
     }
 
     body.append(Verbatim('{} {} {} {}'.format(
-        operator_names.get(str(name.token)),
+        operator_names[str(name.token)],
         slot.to_string(),
         applied_args[0].to_string(),
         applied_args[1].to_string(),
     )))
+
+
+def emit_if(body : list, if_expr, state : State, slot : Slot):
+    condition = if_expr.condition
+    arms = if_expr.arms
+
+    cond_slot = state.get_slot(None)
+    emit_expr(body, condition, state, cond_slot)
+
+    true_arm_id = 'if_arm_{}'.format(hashlib.sha1(repr(arms[0]).encode('utf-8')).hexdigest())
+    false_arm_id = 'if_arm_{}'.format(hashlib.sha1(repr(arms[1]).encode('utf-8')).hexdigest())
+    if_end_id = 'if_end_{}'.format(hashlib.sha1(repr(if_expr).encode('utf-8')).hexdigest())
+
+    body.append(Verbatim('if {} {} {}'.format(
+        cond_slot.to_string(),
+        true_arm_id,
+        false_arm_id,
+    )))
+
+    if_slot = state.get_slot(None)
+
+    body.append(Verbatim(''))
+    body.append(Verbatim('.mark: {}'.format(true_arm_id)))
+    emit_expr(body, arms[0], state, if_slot)
+    body.append(Verbatim('jump {}'.format(if_end_id)))
+
+    body.append(Verbatim(''))
+    body.append(Verbatim('.mark: {}'.format(false_arm_id)))
+    emit_expr(body, arms[1], state, if_slot)
+
+    body.append(Verbatim(''))
+    body.append(Verbatim('.mark: {}'.format(if_end_id)))
+
+    return if_slot
