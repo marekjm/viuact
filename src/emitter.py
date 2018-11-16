@@ -172,6 +172,8 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None):
         ))
         return slot
     elif leader_type is token_types.Integer:
+        if slot is None:
+            slot = state.get_slot(None)
         body.append(Ctor(
             'integer',
             slot,
@@ -212,11 +214,13 @@ def emit_call(body : list, call_expr, state : State, slot : Slot):
         )))
 
     if slot is not None:
-        state.slot_of(slot.name)
+        slot = state.slot_of(slot.name)
     body.append(Call(
         to = '{}/{}'.format(call_expr.to(), len(args)),
         slot = slot,
     ))
+
+    return slot
 
 
 def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
@@ -229,7 +233,7 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
         applied_args.append(emit_expr(body, each, state, arg_slot))
 
     if slot is not None:
-        state.slot_of(slot.name)
+        slot = state.slot_of(slot.name)
 
     operator_names = {
         '+': 'add',
@@ -245,6 +249,8 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
         applied_args[0].to_string(),
         applied_args[1].to_string(),
     )))
+
+    return slot
 
 
 def emit_if(body : list, if_expr, state : State, slot : Slot):
