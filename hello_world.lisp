@@ -17,6 +17,14 @@
     ))
 ))
 
+(let countdown (x) (
+    (print (x))
+    (if (= (x 0))
+        x
+        (countdown ((- (x 1))))
+    )
+))
+
 (let main () (
     (let s "Hello World!")
     (Main.foo (s))
@@ -35,11 +43,18 @@
     ;    (print ("Hell, no!"))
     ;)
 
-    (let msg (if (= (c 42))
-        "Oh yeah..."
-        "OH NOES!"
-    ))
-    (print (msg))
+    ;(let msg (if (= (c 42))
+    ;    "Oh yeah..."
+    ;    "OH NOES!"
+    ;))
+    ;(print (msg))
+
+    ;(print ((if (= (c 42))
+    ;    "X"
+    ;    "Y"
+    ;)))
+
+    (countdown (10))
 
     (let _ 0)
 ))
