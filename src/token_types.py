@@ -44,6 +44,10 @@ class Vector(Ctor_keyword):
     type_name = 'vector'
     pattern = re.compile(r'\bvector\b')
 
+class Actor(Keyword):
+    type_name = 'actor'
+    pattern = re.compile(r'\bactor\b')
+
 
 class Operator(Token_type):
     def __repr__(self):

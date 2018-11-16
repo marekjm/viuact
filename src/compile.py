@@ -65,6 +65,8 @@ def lex(source):
         token_types.Div,
         token_types.Dot,
 
+        token_types.Actor,          # Keywords
+
         token_types.Name,           # Names and ids
         token_types.Module_name,
 
@@ -181,7 +183,6 @@ def parse_expression(expr):
             value = parse_expression(expr[2]),
         )
     elif leader_type is token_types.Name and type(expr) is list:
-        print(expr)
         return group_types.Function_call(
             name = expr[0],
             args = [parse_expression(each) for each in expr[1]],
@@ -211,6 +212,11 @@ def parse_expression(expr):
         )
     elif leader_type in literal_types:
         return expr
+    elif leader_type is token_types.Actor and type(expr[1]) is token_types.Name and type(expr[2]) is list:
+        return group_types.Actor_call(
+            name = parse_expression(expr[1]),
+            args = [parse_expression(each) for each in expr[2]],
+        )
     else:
         raise Exception('invalid expression in function body', expr)
 

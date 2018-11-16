@@ -94,6 +94,23 @@ class Operator_call(Group_type):
         )
 
 
+class Actor_call(Group_type):
+    type_name = 'Actor_call'
+
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
+
+    def to(self):
+        return (str(self.name.token) if type(self.name) is token_types.Name else self.name.to_string())
+
+    def to_string(self):
+        return 'actor {}({})'.format(
+            self.to(),
+            ', '.join(map(str, self.args)),
+        )
+
+
 class Name_ref(Group_type):
     type_name = 'Name_ref'
 

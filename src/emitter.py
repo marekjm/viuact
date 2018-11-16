@@ -118,12 +118,19 @@ class Move:
         )
 
 class Call:
-    def __init__(self, to : str, slot : Slot):
+    class Kind:
+        Synchronous = 'call'
+        Actor = 'process'
+        Deferred = 'defer'
+
+    def __init__(self, to : str, slot : Slot, kind = Kind.Synchronous):
         self.to = to
         self.slot = slot
+        self.kind = kind
 
     def to_string(self):
-        return 'call {dest} {fn}'.format(
+        return '{kind} {dest} {fn}'.format(
+            kind = self.kind,
             dest = Slot.to_address(self.slot),
             fn = self.to,
         )
@@ -141,6 +148,13 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None):
         )
     elif leader_type is group_types.Function_call:
         return emit_call(
+            body,
+            expr,
+            state,
+            slot,
+        )
+    elif leader_type is group_types.Actor_call:
+        return emit_actor_call(
             body,
             expr,
             state,
@@ -218,6 +232,36 @@ def emit_call(body : list, call_expr, state : State, slot : Slot):
     body.append(Call(
         to = '{}/{}'.format(call_expr.to(), len(args)),
         slot = slot,
+    ))
+
+    return slot
+
+
+def emit_actor_call(body : list, call_expr, state : State, slot : Slot):
+    name = call_expr.name
+    args = call_expr.args
+
+    if call_expr.to() == 'print':
+        raise Exception('cannot launch built-in function in an actor', call_expr)
+
+    applied_args = []
+    for i, each in enumerate(args):
+        arg_slot = state.get_slot(None)
+        applied_args.append(emit_expr(body, each, state, arg_slot))
+
+    body.append(Verbatim('frame %{}'.format(len(args))))
+    for i, each in enumerate(applied_args):
+        body.append(Verbatim('copy %{} arguments %{} local'.format(
+            i,
+            each.index,
+        )))
+
+    if slot is not None:
+        slot = state.slot_of(slot.name)
+    body.append(Call(
+        to = '{}/{}'.format(call_expr.to(), len(args)),
+        slot = slot,
+        kind = Call.Kind.Actor,
     ))
 
     return slot

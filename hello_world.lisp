@@ -54,7 +54,8 @@
     ;    "Y"
     ;)))
 
-    (countdown (10))
+    (let p (actor countdown (10)))
+    (print (p))
 
     (let _ 0)
 ))
