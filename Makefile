@@ -15,4 +15,4 @@ run: $(OUTPUT_DIR)/$(ASM_OUTPUT)
 	../core/viuavm/build/bin/vm/kernel $(OUTPUT_DIR)/a.out
 
 clean:
-	rm -rfv $(OUTPUT_DIR)/
+	@rm -rf $(OUTPUT_DIR)/
