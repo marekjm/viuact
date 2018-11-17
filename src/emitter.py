@@ -7,6 +7,7 @@ import token_types
 
 DEFAULT_REGISTER_SET = 'local'
 LOCAL_REGISTER_SET = 'local'
+PARAMETERS_REGISTER_SET = 'parameters'
 
 
 class Slot:

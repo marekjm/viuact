@@ -68,7 +68,7 @@ def output_function_body(fn, in_module):
         source = emitter.Slot(
             None,
             i,
-            'parameters',
+            emitter.PARAMETERS_REGISTER_SET,
         )
         dest = state.get_slot(
             str(each.token),
