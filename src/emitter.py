@@ -220,6 +220,11 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
         body.append(Verbatim('print {}'.format(
             emit_expr(body, args[0], state).to_string()
         )))
+    elif call_expr.to() == 'join':
+        body.append(Verbatim('join {} {}'.format(
+            Slot.to_address(slot),
+            emit_expr(body, args[0], state).to_string()
+        )))
 
 def emit_call(body : list, call_expr, state : State, slot : Slot):
     name = call_expr.name

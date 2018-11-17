@@ -56,6 +56,8 @@
 
     (let p (actor countdown (10)))
     (print (p))
+    (let ret_from_p (join (p)))
+    (print (ret_from_p))
 
     (let _ 0)
 ))
