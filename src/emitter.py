@@ -9,6 +9,13 @@ DEFAULT_REGISTER_SET = 'local'
 LOCAL_REGISTER_SET = 'local'
 PARAMETERS_REGISTER_SET = 'parameters'
 
+BUILTIN_FUNCTIONS = (
+    'print',
+    'join',
+    'send',
+    'receive',
+)
+
 
 class Slot:
     def __init__(self, name, index, register_set = DEFAULT_REGISTER_SET):
@@ -206,15 +213,20 @@ def emit_let(body : list, let_expr, state : State, slot : Slot):
     return slot
 
 
-def emit_call(body : list, call_expr, state : State, slot : Slot):
-    name = call_expr.name
+def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
     args = call_expr.args
 
     if call_expr.to() == 'print':
         body.append(Verbatim('print {}'.format(
             emit_expr(body, args[0], state).to_string()
         )))
-        return
+
+def emit_call(body : list, call_expr, state : State, slot : Slot):
+    name = call_expr.name
+    args = call_expr.args
+
+    if call_expr.to() in BUILTIN_FUNCTIONS:
+        return emit_builtin_call(body, call_expr, state, slot)
 
     applied_args = []
     for i, each in enumerate(args):
@@ -242,7 +254,7 @@ def emit_actor_call(body : list, call_expr, state : State, slot : Slot):
     name = call_expr.name
     args = call_expr.args
 
-    if call_expr.to() == 'print':
+    if call_expr.to() in BUILTIN_FUNCTIONS:
         raise Exception('cannot launch built-in function in an actor', call_expr)
 
     applied_args = []
