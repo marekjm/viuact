@@ -144,7 +144,7 @@ class Call:
         )
 
 
-def emit_expr(body : list, expr, state : State, slot : Slot = None):
+def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : bool = False):
     leader_type = type(expr)
 
     if leader_type is group_types.Let_binding:
@@ -183,7 +183,14 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None):
             slot,
         )
     elif leader_type is group_types.Name_ref:
-        return state.slot_of(str(expr.name.token))
+        evaluated_slot = state.slot_of(str(expr.name.token))
+        if slot is not None and must_emit:
+            body.append(Move.make_copy(
+                dest = slot,
+                source = evaluated_slot,
+            ))
+            return slot
+        return evaluated_slot
     elif leader_type is token_types.String:
         if slot is None:
             slot = state.get_slot(None)
@@ -337,12 +344,12 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(true_arm_id)))
-    emit_expr(body, arms[0], state, slot)
+    emit_expr(body, arms[0], state, slot, must_emit = True)
     body.append(Verbatim('jump {}'.format(if_end_id)))
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(false_arm_id)))
-    emit_expr(body, arms[1], state, slot)
+    emit_expr(body, arms[1], state, slot, must_emit = True)
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(if_end_id)))
