@@ -8,6 +8,11 @@ import token_types
 
 DEFAULT_REGISTER_SET = 'local'
 LOCAL_REGISTER_SET = 'local'
+# FIXME Should be 'closure_local' but current master code does not
+# recognise this as a register set name and uses just the index to bind
+# closure-local registers.
+# CLOSURE_LOCAL_REGISTER_SET = 'closure_local'
+CLOSURE_LOCAL_REGISTER_SET = ''
 PARAMETERS_REGISTER_SET = 'parameters'
 
 BUILTIN_FUNCTIONS = (
@@ -53,7 +58,7 @@ class Slot:
 
 
 class State:
-    def __init__(self):
+    def __init__(self, upper = None):
         self.next_slot = {
             'local': 1,
             'static': 0,
@@ -62,6 +67,8 @@ class State:
         self.name_to_slot = {}
         self.last_used_slot = None
         self.nested_fns = []
+        self.upper = upper
+        self.used_upper_slots = {}
 
     def get_slot(self, name, register_set = DEFAULT_REGISTER_SET):
         if name not in self.name_to_slot:
@@ -75,6 +82,13 @@ class State:
         return self.last_used_slot
 
     def slot_of(self, name):
+        if name not in self.name_to_slot and self.upper is not None:
+            slot = self.upper.slot_of(name)
+            self.used_upper_slots[name] = {
+                'upper': slot,
+                'local': self.get_slot(name),
+            }
+            return self.last_used_slot
         self.last_used_slot = self.name_to_slot[name]
         return self.last_used_slot
 
@@ -124,6 +138,10 @@ class Move:
 
     def __init__(self, of_type : str, source : Slot, dest : Slot):
         self.of_type = of_type
+
+        if source is None:
+            raise exceptions.Source_cannot_be_void('source cannot be void', of_type)
+
         self.source = source
         self.dest = dest
 
@@ -214,7 +232,7 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
         return evaluated_slot
     elif leader_type is group_types.Function:
         nested_body = []
-        nested_state = State()
+        nested_state = State(state)
         emit_function(
             nested_body,
             expr,
@@ -223,7 +241,29 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
         )
         for fn in nested_state.nested_fns:
             state.nested_fns.append(fn)
+
+        if nested_state.used_upper_slots:
+            nested_body[0].text = nested_body[0].text.replace('.function:', '.closure:')
+
+        if nested_state.used_upper_slots:
+            if slot is None:
+                slot = state.get_slot(str(expr.name.token))
+            body.append(Verbatim('closure {} {}'.format(
+                slot.to_string(),
+                '{}/{}'.format(
+                    str(expr.name.token),
+                    len(expr.arguments),
+                )
+            )))
+            for _, nested_slot in nested_state.used_upper_slots.items():
+                body.append(Verbatim('capturecopy {} {} {}'.format(
+                    slot.to_string(),
+                    Slot(None, nested_slot['local'].index, CLOSURE_LOCAL_REGISTER_SET).to_string(),
+                    nested_slot['upper'].to_string(),
+                )))
+
         state.nested_fns.append(nested_body)
+
         return None
     elif leader_type is token_types.String:
         if slot is None:
