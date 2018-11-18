@@ -247,9 +247,12 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             emit_expr(body, args[0], state).to_string()
         )))
     elif call_expr.to() == 'join':
-        body.append(Verbatim('join {} {}'.format(
+        print('join', args)
+        timeout = (args[1] if len(args) > 1 else token_types.Timeout(INFINITE_DURATION))
+        body.append(Verbatim('join {} {} {}'.format(
             Slot.to_address(slot),
-            emit_expr(body, args[0], state).to_string()
+            emit_expr(body, args[0], state).to_string(),
+            str(timeout.token),
         )))
     elif call_expr.to() == 'receive':
         timeout = (args[0] if args else token_types.Timeout(INFINITE_DURATION))

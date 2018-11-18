@@ -62,7 +62,7 @@
 
     (let p (actor countdown (10)))
     (print (p))
-    (let ret_from_p (join (p)))
+    (let ret_from_p (join (p 1s)))
     (print (ret_from_p))
 
     ;(let print_pid (actor delayed_print ()))
