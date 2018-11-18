@@ -11,9 +11,14 @@ PARAMETERS_REGISTER_SET = 'parameters'
 
 BUILTIN_FUNCTIONS = (
     'print',
+
+    'actor',
     'join',
+
     'send',
     'receive',
+
+    'defer',
 )
 
 
