@@ -72,6 +72,9 @@
     (Std.Actor.send (print_pid msg))
 
     (let g (x) (
+        (let h (x) (
+            (print (x))
+        ))
         (print ((+ (x 1))))
     ))
 

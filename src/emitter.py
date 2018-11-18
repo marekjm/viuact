@@ -221,6 +221,8 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
             nested_state,
             None,
         )
+        for fn in nested_state.nested_fns:
+            state.nested_fns.append(fn)
         state.nested_fns.append(nested_body)
         return None
     elif leader_type is token_types.String:
