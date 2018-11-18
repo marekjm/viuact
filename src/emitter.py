@@ -232,6 +232,20 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             Slot.to_address(slot),
             emit_expr(body, args[0], state).to_string()
         )))
+    elif call_expr.to() == 'receive':
+        body.append(Verbatim('receive {} infinity'.format(
+            Slot.to_address(slot),
+            # emit_expr(body, args[0], state).to_string()
+        )))
+    elif call_expr.to() == 'send':
+        pid_slot = emit_expr(body, args[0], state)
+        message_slot = emit_expr(body, args[1], state)
+        body.append(Verbatim('send {} {}'.format(
+            pid_slot.to_string(),
+            message_slot.to_string(),
+        )))
+    else:
+        raise Exception('unimplemented built-in', call_expr.to())
 
 def emit_call(body : list, call_expr, state : State, slot : Slot):
     name = call_expr.name

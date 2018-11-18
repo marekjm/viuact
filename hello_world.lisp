@@ -25,6 +25,12 @@
     )
 ))
 
+(let delayed_print () (
+    (print ("delayed_print() awaiting a message..."))
+    (let msg (receive ()))
+    (print (msg))
+))
+
 (let main () (
     (let s "Hello World!")
     (Main.foo (s))
@@ -58,6 +64,10 @@
     (print (p))
     (let ret_from_p (join (p)))
     (print (ret_from_p))
+
+    (let print_pid (actor delayed_print ()))
+    (let msg "Hello World (after delay)!")
+    (send (print_pid msg))
 
     (let _ 0)
 ))
