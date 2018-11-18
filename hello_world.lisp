@@ -78,9 +78,10 @@
         (print ((+ (x 1))))
     ))
 
-    (let n 42)
+    (let n 41)
+    (let z 1)
     (let k () (
-        (print (n))
+        (print ((+ (n z))))
     ))
     (k ())
 
