@@ -326,7 +326,7 @@ def main(args):
     output_interface_file(expressions)
 
     lowered_function_bodies, meta = lowerer.lower_file(expressions)
-    print(json.dumps(meta, indent = 2))
+    # print(json.dumps(meta, indent = 2))
 
     with open(os.path.join(output_directory, 'a.asm'), 'w') as ofstream:
         ofstream.write('\n\n'.join(lowered_function_bodies))

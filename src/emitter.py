@@ -151,7 +151,25 @@ class Call:
         )
 
 
-def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : bool = False):
+def check_function_visibility(expr, meta):
+    if meta is None:
+        return
+
+    return
+
+    parts = expr.to().split('::')
+
+    current_meta = meta
+    for each in parts:
+        if each[0].isupper():
+            current_meta = current_meta['modules'][each]
+            continue
+
+        if each not in current_meta['functions']:
+            raise Exception('call to undefined function', expr.to())
+
+
+def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : bool = False, meta = None):
     leader_type = type(expr)
 
     if leader_type is group_types.Let_binding:
@@ -163,10 +181,11 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
         )
     elif leader_type is group_types.Function_call:
         return emit_call(
-            body,
-            expr,
-            state,
-            slot,
+            body = body,
+            call_expr = expr,
+            state = state,
+            slot = slot,
+            meta = meta,
         )
     elif leader_type is group_types.Actor_call:
         return emit_actor_call(
@@ -268,13 +287,15 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
     else:
         raise Exception('unimplemented built-in', call_expr.to())
 
-def emit_call(body : list, call_expr, state : State, slot : Slot):
+def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     name = call_expr.name
     args = call_expr.args
 
-    # print(call_expr, call_expr.to())
     if call_expr.to() in BUILTIN_FUNCTIONS:
         return emit_builtin_call(body, call_expr, state, slot)
+
+    # print('function-call', call_expr, call_expr.to(), meta)
+    check_function_visibility(call_expr, meta)
 
     applied_args = []
     for i, each in enumerate(args):
