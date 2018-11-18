@@ -46,9 +46,7 @@ def lower_module(module_expr, upper_meta, in_module = ()):
 
     full_mod_name = in_module + (str(module_expr.name.token),)
 
-    meta = make_meta(
-        name = '::'.join(full_mod_name),
-    )
+    meta = make_meta()
 
     for mod_name in module_expr.module_names:
         mod_def = module_expr.modules[mod_name]

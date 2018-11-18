@@ -157,16 +157,9 @@ def check_function_visibility(expr, meta):
 
     return
 
-    parts = expr.to().split('::')
-
-    current_meta = meta
-    for each in parts:
-        if each[0].isupper():
-            current_meta = current_meta['modules'][each]
-            continue
-
-        if each not in current_meta['functions']:
-            raise Exception('call to undefined function', expr.to())
+    name = expr.to()
+    if (name not in meta['functions']) and (name not in meta['local_functions']):
+        raise Exception('call to undefined function', name)
 
 
 def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : bool = False, meta = None):
