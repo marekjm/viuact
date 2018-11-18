@@ -92,6 +92,9 @@ class State:
         self.last_used_slot = self.name_to_slot[name]
         return self.last_used_slot
 
+    def has_slot(self, name):
+        return (name in self.name_to_slot)
+
 
 class Verbatim:
     def __init__(self, text):
@@ -244,6 +247,12 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
 
         if nested_state.used_upper_slots:
             nested_body[0].text = nested_body[0].text.replace('.function:', '.closure:')
+            bd = []
+            for each in nested_body:
+                if type(each) is Verbatim and each.text.startswith('allocate_registers '):
+                    continue
+                bd.append(each)
+            nested_body = bd
 
         if nested_state.used_upper_slots:
             if slot is None:
@@ -359,8 +368,13 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
 
     if slot is not None:
         slot = state.slot_of(slot.name)
+
+    to = '{}/{}'.format(call_expr.to(), len(args))
+    if state.has_slot(call_expr.to()):
+        to = state.slot_of(call_expr.to()).to_string()
+
     body.append(Call(
-        to = '{}/{}'.format(call_expr.to(), len(args)),
+        to = to,
         slot = slot,
     ))
 
