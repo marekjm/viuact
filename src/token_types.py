@@ -148,7 +148,7 @@ class Module_name(Token_type):
 
 class Comment(Token_type):
     type_name = 'Comment'
-    pattern = re.compile(';.*\n')
+    pattern = re.compile(';.*')
 
 
 class Literal(Token_type):

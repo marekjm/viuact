@@ -7,14 +7,17 @@ import re
 import sys
 
 
+import exceptions
 import token_types
 import group_types
 import lowerer
 
 
 class Token:
-    def __init__(self, text):
+    def __init__(self, text, line, character):
         self._text = text
+        self.line = line
+        self.character = character
 
     def __str__(self):
         return self._text
@@ -28,14 +31,17 @@ class Token:
     def __len__(self):
         return len(self._text)
 
+    def location(self):
+        return (self.line, self.character,)
+
 
 def lex(source):
     """Lexing turns a stream of characters into a stream of tokens.
     """
     tokens = []
 
-    def make_token(text):
-        return Token(text)
+    def make_token(text, line, character):
+        return Token(text, line, character)
 
     patterns = [
         token_types.Left_paren,     # Punctuation
@@ -80,15 +86,10 @@ def lex(source):
         token_types.Timeout,
         token_types.Integer,
     ]
-    # pats = [
-    #     re.compile('->'),
-    #     re.compile('\*'),
-    #     re.compile('/'),
-    #     re.compile('\+'),
-    #     re.compile('-'),
-    # ]
 
     i = 0
+    line = 0
+    character_in_line = 0
     while i < len(source):
         match_found = False
         for each in patterns:
@@ -96,15 +97,27 @@ def lex(source):
             if r is not None:
                 match_found = True
                 s = r.group(0)
-                tokens.append(each(make_token(s)))
+                tokens.append(each(make_token(
+                    text = s,
+                    line = line,
+                    character = character_in_line,
+                )))
                 i += len(s)
+                character_in_line += len(s)
                 break
 
         if match_found:
             continue
 
+        if source[i] == '\n':
+            i += 1
+            character_in_line = 0
+            line += 1
+            continue
+
         if source[i].strip() == '':
             i += 1
+            character_in_line += 1
             continue
 
         raise Exception('unexpected token', repr(source[i]))
@@ -325,8 +338,26 @@ def main(args):
 
     output_interface_file(expressions)
 
-    lowered_function_bodies, meta = lowerer.lower_file(expressions)
-    # print(json.dumps(meta, indent = 2))
+    lowered_function_bodies = []
+    try:
+        lowered_function_bodies, meta = lowerer.lower_file(expressions)
+    except exceptions.Emitter_exception as e:
+        msg, cause = e.args
+        line, character = 0, 0
+
+        cause_type = type(cause)
+        if cause_type is group_types.Function:
+            token = cause.name.token
+            line, character = token.location()
+
+        print('{}:{}:{}: {}: {}'.format(
+            source_file,
+            line + 1,
+            character + 1,
+            msg,
+            cause,
+        ))
+        raise
 
     with open(os.path.join(output_directory, 'a.asm'), 'w') as ofstream:
         ofstream.write('\n\n'.join(lowered_function_bodies))

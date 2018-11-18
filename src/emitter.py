@@ -1,6 +1,7 @@
 import collections
 import hashlib
 
+import exceptions
 import group_types
 import token_types
 
@@ -236,7 +237,7 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
         ))
         return slot
     else:
-        raise Exception('expression could not be emitted', expr)
+        raise exceptions.Emitter_exception('expression could not be emitted', expr)
 
 
 def emit_let(body : list, let_expr, state : State, slot : Slot):
