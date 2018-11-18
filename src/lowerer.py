@@ -26,7 +26,7 @@ def lower_file(expressions):
 
     for each in expressions:
         if type(each) is group_types.Function:
-            lowered_function_bodies.append(lower_function(each, upper_meta = meta))
+            lowered_function_bodies.extend(lower_function(each, upper_meta = meta))
 
     flat_meta = {
         'functions': [],
@@ -67,7 +67,7 @@ def lower_module(module_expr, upper_meta, in_module = ()):
 
     for fn_name in module_expr.function_names:
         fn_def = module_expr.functions[fn_name]
-        lowered_function_bodies.append(lower_function(
+        lowered_function_bodies.extend(lower_function(
             fn_def,
             in_module = full_mod_name,
             upper_meta = meta,
@@ -145,8 +145,10 @@ def output_function_body(fn, in_module, upper_meta):
     ))
     body.append(emitter.Verbatim('return'))
     body.append(emitter.Verbatim('.end'))
-    return body
+    return state.nested_fns + [body]
 
 def lower_function(fn_expr, upper_meta, in_module = ()):
-    body = output_function_body(fn_expr, in_module, upper_meta)
-    return lower_function_body(body)
+    # Bodies instead of a single body, because a function may contain
+    # nested functions and thus compile to multiple bodies.
+    bodies = output_function_body(fn_expr, in_module, upper_meta)
+    return [lower_function_body(each) for each in bodies]

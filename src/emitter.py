@@ -61,6 +61,7 @@ class State:
         }
         self.name_to_slot = {}
         self.last_used_slot = None
+        self.nested_fns = []
 
     def get_slot(self, name, register_set = DEFAULT_REGISTER_SET):
         if name not in self.name_to_slot:
@@ -211,6 +212,17 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
             ))
             return slot
         return evaluated_slot
+    elif leader_type is group_types.Function:
+        nested_body = []
+        nested_state = State()
+        emit_function(
+            nested_body,
+            expr,
+            nested_state,
+            None,
+        )
+        state.nested_fns.append(nested_body)
+        return None
     elif leader_type is token_types.String:
         if slot is None:
             slot = state.get_slot(None)
@@ -406,3 +418,57 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
     body.append(Verbatim('.mark: {}'.format(if_end_id)))
 
     return slot
+
+
+def emit_function(body : list, expr, state : State, slot : Slot):
+    body.append(Verbatim('.function: {}/{}'.format(
+        str(expr.name.token),
+        len(expr.arguments),
+    )))
+
+    inner_body = []
+
+    for i, each in enumerate(expr.arguments):
+        source = Slot(
+            None,
+            i,
+            PARAMETERS_REGISTER_SET,
+        )
+        dest = state.get_slot(
+            str(each.token),
+        )
+        inner_body.append(Move.make_move(
+            source,
+            dest,
+        ))
+    if expr.arguments:
+        inner_body.append(Verbatim(''))
+
+    for each in expr.body:
+        # Expressions evaluated at function-level are given anonymous
+        # slots.
+        # Why? Because they are not assigned to anything. If an
+        # expression is assigned to an anonymous slot it can decide for
+        # itself what to do with this situation; function calls will
+        # return to void, literals and let-bindings will be created.
+        emit_expr(
+            body = inner_body,
+            expr = each,
+            state = state,
+            meta = None,
+        )
+        inner_body.append(Verbatim(''))
+
+    body.append(Verbatim('allocate_registers %{} local'.format(
+        state.next_slot[LOCAL_REGISTER_SET],
+    )))
+    body.append(Verbatim(''))
+    body.extend(inner_body)
+    body.append(Move.make_move(
+        state.last_used_slot,
+        Slot(None, 0,)
+    ))
+    body.append(Verbatim('return'))
+    body.append(Verbatim('.end'))
+
+    return

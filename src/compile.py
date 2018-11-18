@@ -194,11 +194,13 @@ def parse_expression(expr):
     name_types = (token_types.Module_name, token_types.Name,)
     literal_types = (token_types.Integer, token_types.String, token_types.Timeout)
 
-    if leader_type is token_types.Let:
+    if leader_type is token_types.Let and len(expr) == 3:
         return group_types.Let_binding(
             name = expr[1],
             value = parse_expression(expr[2]),
         )
+    elif leader_type is token_types.Let and len(expr) == 4:
+        return parse_function(expr)
     elif leader_type is token_types.Name and type(expr) is list:
         return group_types.Function_call(
             name = expr[0],

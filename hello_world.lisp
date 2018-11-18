@@ -67,9 +67,13 @@
     (print (ret_from_p))
 
     (let print_pid (actor delayed_print ()))
-    (let _ (actor delayed_print ()))
+    ;(let _ (actor delayed_print ()))
     (let msg "Hello World (after delay)!")
     (Std.Actor.send (print_pid msg))
+
+    (let g (x) (
+        (print ((+ (x 1))))
+    ))
 
     (let _ 0)
 ))
