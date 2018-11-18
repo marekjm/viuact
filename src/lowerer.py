@@ -1,19 +1,35 @@
+import json
+
 import group_types
 import emitter
+
+
+def make_meta(name = None):
+    return {
+        'name': name,
+        'modules': {
+        },
+        'functions': [],
+    }
 
 
 def lower_file(expressions):
     lowered_function_bodies = []
 
+    meta = make_meta()
+
     for each in expressions:
         if type(each) is group_types.Module:
-            lowered_function_bodies.extend(lower_module(each))
+            bodies, mod_meta = lower_module(each)
+            lowered_function_bodies.extend(bodies)
+            print(json.dumps(mod_meta, indent = 2))
+            meta['modules'][str(each.name.token)] = mod_meta
 
     for each in expressions:
         if type(each) is group_types.Function:
             lowered_function_bodies.append(lower_function(each))
 
-    return lowered_function_bodies
+    return lowered_function_bodies, meta
 
 
 def lower_module(module_expr, in_module = ()):
@@ -21,12 +37,18 @@ def lower_module(module_expr, in_module = ()):
 
     full_mod_name = in_module + (str(module_expr.name.token),)
 
+    meta = make_meta(
+        name = '::'.join(full_mod_name),
+    )
+
     for mod_name in module_expr.module_names:
         mod_def = module_expr.modules[mod_name]
-        lowered_function_bodies.extend(lower_module(
+        mod_bodies, mod_meta = lower_module(
             mod_def,
             in_module = full_mod_name,
-        ))
+        )
+        lowered_function_bodies.extend(mod_bodies)
+        meta['modules'][mod_name] = mod_meta
 
     for fn_name in module_expr.function_names:
         fn_def = module_expr.functions[fn_name]
@@ -34,8 +56,9 @@ def lower_module(module_expr, in_module = ()):
             fn_def,
             in_module = full_mod_name,
         ))
+        meta['functions'].append(fn_name)
 
-    return lowered_function_bodies
+    return lowered_function_bodies, meta
 
 
 def lower_function_body(body):

@@ -272,7 +272,7 @@ def emit_call(body : list, call_expr, state : State, slot : Slot):
     name = call_expr.name
     args = call_expr.args
 
-    print(call_expr, call_expr.to())
+    # print(call_expr, call_expr.to())
     if call_expr.to() in BUILTIN_FUNCTIONS:
         return emit_builtin_call(body, call_expr, state, slot)
 
