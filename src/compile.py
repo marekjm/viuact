@@ -46,9 +46,12 @@ def lex(source):
         token_types.If,
         token_types.Module,
         token_types.Import,
+        token_types.Extern,
 
         token_types.Struct,         # Basic-type ctors
         token_types.Vector,
+
+        token_types.Ellipsis,
 
         token_types.Or,             # Operators
         token_types.And,

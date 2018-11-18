@@ -17,6 +17,10 @@ class Module(Keyword):
     type_name = 'module'
     pattern = re.compile(r'\bmodule\b')
 
+class Extern(Keyword):
+    type_name = 'extern'
+    pattern = re.compile(r'\bextern\b')
+
 class Let(Keyword):
     type_name = 'let'
     pattern = re.compile(r'\blet\b')
@@ -114,6 +118,11 @@ class Div(Arithmetic_operator):
 class Dot(Operator):
     type_name = 'dot'
     pattern = re.compile(r'\.')
+
+
+class Ellipsis(Operator):
+    type_name = 'ellipsis'
+    pattern = re.compile(r'\.\.\.')
 
 
 class Punctuation(Token_type):
