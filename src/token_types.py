@@ -166,3 +166,7 @@ class Float(Literal):
 class Integer(Literal):
     type_name = 'integer'
     pattern = re.compile('(0|-?[1-9][0-9]*)')
+
+class Timeout(Literal):
+    type_name = 'timeout'
+    pattern = re.compile('((0|[1-9][0-9]*)m?s|infinity)')

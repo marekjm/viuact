@@ -77,6 +77,7 @@ def lex(source):
 
         token_types.String,         # Literals
         token_types.Float,
+        token_types.Timeout,
         token_types.Integer,
     ]
     # pats = [
@@ -178,7 +179,7 @@ def parse_expression(expr):
     leader_type = type(leader)
 
     name_types = (token_types.Module_name, token_types.Name,)
-    literal_types = (token_types.Integer, token_types.String,)
+    literal_types = (token_types.Integer, token_types.String, token_types.Timeout)
 
     if leader_type is token_types.Let:
         return group_types.Let_binding(

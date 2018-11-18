@@ -27,7 +27,7 @@
 
 (let delayed_print () (
     (print ("delayed_print() awaiting a message..."))
-    (let msg (receive ()))
+    (let msg (receive (10s)))
     (print (msg))
 ))
 
@@ -65,9 +65,10 @@
     (let ret_from_p (join (p)))
     (print (ret_from_p))
 
-    (let print_pid (actor delayed_print ()))
-    (let msg "Hello World (after delay)!")
-    (send (print_pid msg))
+    ;(let print_pid (actor delayed_print ()))
+    (let _ (actor delayed_print ()))
+    ;(let msg "Hello World (after delay)!")
+    ;(send (print_pid msg))
 
     (let _ 0)
 ))

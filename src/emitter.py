@@ -21,6 +21,9 @@ BUILTIN_FUNCTIONS = (
     'defer',
 )
 
+IGNORE_VALUE = '_'
+INFINITE_DURATION = 'infinity'
+
 
 class Slot:
     def __init__(self, name, index, register_set = DEFAULT_REGISTER_SET):
@@ -214,13 +217,24 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
             str(expr.token),
         ))
         return slot
+    elif leader_type is token_types.Timeout:
+        if slot is not None:
+            raise Exception('timeouts are not first class values')
+        body.append(Timeout(
+            str(expr.token),
+        ))
+        return slot
     else:
         raise Exception('expression could not be emitted', expr)
 
 
 def emit_let(body : list, let_expr, state : State, slot : Slot):
     # Let-bindings always create their own slots.
-    slot = state.get_slot(str(let_expr.name.token))
+    name = str(let_expr.name.token)
+    if name == IGNORE_VALUE:
+        slot = None
+    else:
+        slot = state.get_slot(name)
     emit_expr(body, let_expr.value, state, slot)
     return slot
 
@@ -238,9 +252,10 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             emit_expr(body, args[0], state).to_string()
         )))
     elif call_expr.to() == 'receive':
-        body.append(Verbatim('receive {} infinity'.format(
+        timeout = (args[0] if args else token_types.Timeout(INFINITE_DURATION))
+        body.append(Verbatim('receive {} {}'.format(
             Slot.to_address(slot),
-            # emit_expr(body, args[0], state).to_string()
+            str(timeout.token),
         )))
     elif call_expr.to() == 'send':
         pid_slot = emit_expr(body, args[0], state)
