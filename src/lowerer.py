@@ -37,7 +37,6 @@ def lower_file(expressions):
     for each in meta['functions']:
         flat_meta['functions'].append(each)
 
-    print(json.dumps(flat_meta, indent = 2))
     return lowered_function_bodies, flat_meta
 
 

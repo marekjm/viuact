@@ -351,7 +351,6 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     if call_expr.to() in BUILTIN_FUNCTIONS:
         return emit_builtin_call(body, call_expr, state, slot)
 
-    # print('function-call', call_expr, call_expr.to(), meta)
     check_function_visibility(call_expr, meta)
 
     applied_args = []
