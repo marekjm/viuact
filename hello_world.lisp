@@ -27,7 +27,7 @@
 
 (let delayed_print () (
     (print ("delayed_print() awaiting a message..."))
-    (let msg (receive (10s)))
+    (let msg (Std.Actor.receive (10s)))
     (print (msg))
 ))
 
@@ -62,13 +62,13 @@
 
     (let p (actor countdown (10)))
     (print (p))
-    (let ret_from_p (join (p 1s)))
+    (let ret_from_p (Std.Actor.join (p 1s)))
     (print (ret_from_p))
 
-    ;(let print_pid (actor delayed_print ()))
+    (let print_pid (actor delayed_print ()))
     (let _ (actor delayed_print ()))
-    ;(let msg "Hello World (after delay)!")
-    ;(send (print_pid msg))
+    (let msg "Hello World (after delay)!")
+    (Std.Actor.send (print_pid msg))
 
     (let _ 0)
 ))
