@@ -43,6 +43,7 @@
     (let b 41)
     (let c (+ (a b)))
     (print (c))
+    (print ((+ (a b))))
 
     ;(if (= (c 43))
     ;    (print ("Hell, yes!"))

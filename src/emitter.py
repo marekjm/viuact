@@ -351,8 +351,8 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
         arg_slot = state.get_slot(None)
         applied_args.append(emit_expr(body, each, state, arg_slot))
 
-    if slot is not None:
-        slot = state.slot_of(slot.name)
+    if slot is None:
+        slot = state.get_slot(None)
 
     operator_names = {
         '+': 'add',
