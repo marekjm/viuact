@@ -58,7 +58,7 @@ class Slot:
 
 
 class State:
-    def __init__(self, upper, visible_fns):
+    def __init__(self, upper, visible_fns, function_name):
         self.next_slot = {
             'local': 1,
             'static': 0,
@@ -70,6 +70,9 @@ class State:
         self.upper = upper
         self.used_upper_slots = {}
         self.visible_fns = visible_fns
+        if function_name is not None and type(function_name) is not str:
+            raise TypeError(function_name)
+        self.function_name = function_name
 
     def get_slot(self, name, register_set = DEFAULT_REGISTER_SET):
         if name not in self.name_to_slot:
@@ -175,17 +178,6 @@ class Call:
         )
 
 
-def check_function_visibility(expr, meta):
-    if meta is None:
-        return
-
-    return
-
-    name = expr.to()
-    if (name not in meta['functions']) and (name not in meta['local_functions']):
-        raise Exception('call to undefined function', name)
-
-
 def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : bool = False, meta = None):
     leader_type = type(expr)
 
@@ -236,7 +228,11 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
         return evaluated_slot
     elif leader_type is group_types.Function:
         nested_body = []
-        nested_state = State(state)
+        nested_state = State(
+            upper = state,
+            visible_fns = meta.nested_in(state.function_name),
+            function_name = state.function_name,
+        )
         emit_function(
             nested_body,
             expr,
@@ -245,6 +241,12 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
         )
         for fn in nested_state.nested_fns:
             state.nested_fns.append(fn)
+
+        meta.add_function(
+            name = str(expr.name.token),
+            arity = len(expr.arguments),
+            real_name = (state.function_name + '::' + str(expr.name.token)),
+        )
 
         if nested_state.used_upper_slots:
             nested_body[0].text = nested_body[0].text.replace('.function:', '.closure:')
@@ -352,7 +354,10 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     if call_expr.to() in BUILTIN_FUNCTIONS:
         return emit_builtin_call(body, call_expr, state, slot)
 
-    check_function_visibility(call_expr, meta)
+    print(state.visible_fns.functions)
+    if not state.has_slot(name):
+        print('about to call:', call_expr.to())
+        name = state.visible_fns.real_name(call_expr.to())
 
     applied_args = []
     for i, each in enumerate(args):
@@ -369,9 +374,9 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     if slot is not None:
         slot = state.slot_of(slot.name)
 
-    to = '{}/{}'.format(call_expr.to(), len(args))
-    if state.has_slot(call_expr.to()):
-        to = state.slot_of(call_expr.to()).to_string()
+    to = '{}/{}'.format(name, len(args))
+    if state.has_slot(name):
+        to = state.slot_of(name).to_string()
 
     body.append(Call(
         to = to,

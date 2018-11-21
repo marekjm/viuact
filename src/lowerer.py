@@ -5,11 +5,14 @@ import emitter
 
 
 class Visibility_information:
-    def __init__(self, prefix):
+    def __init__(self, prefix, function_prefix = None):
         # In case of top-level scope: None.
         # In case of module scope: name of the module.
         # In any other case: undefined.
         self.prefix = prefix
+
+        # Just in case the visibility is from a nested function.
+        self.function_prefix = function_prefix
 
         # A list of visible module names (strings).
         self.modules = []
@@ -35,8 +38,31 @@ class Visibility_information:
         else:
             raise TypeError(name)
 
-    def add_function(self, name, arity):
-        self.functions[name] = arity
+    def add_function(self, name, arity, real_name = None):
+        self.functions[name] = {
+            'arity': arity,
+            'real_name': (real_name or name),
+        }
+
+    def insert_function(self, name, value, prefix):
+        self.functions[name] = value
+        self.functions[name]['real_name'] = '{}::{}'.format(
+            prefix,
+            self.functions[name]['real_name'],
+        )
+
+    def real_name(self, name):
+        return self.functions[name]['real_name']
+
+    def nested_in(self, function_name):
+        v = Visibility_information(
+            prefix = self.prefix,
+            function_prefix = ((self.function_prefix or '') + '__' + function_name),
+        )
+        v.modules = self.modules[:]
+        for each in self.functions:
+            v.insert_function(each, self.functions[each])
+        return v
 
 
 def make_meta(name):
@@ -55,7 +81,14 @@ def lower_file(expressions, module_prefix):
 
             meta.add_module(mod_meta)
             for each in mod_meta.functions:
-                meta.add_function('{}.{}'.format(mod_meta.prefix, each), mod_meta.functions[each])
+                meta.insert_function(
+                    name = '{}::{}'.format(mod_meta.prefix, each),
+                    value = mod_meta.functions[each],
+                    prefix = mod_meta.prefix,
+                )
+
+    print('x-file-level: modules:  ', meta.modules)
+    print('x-file-level: functions:', meta.functions)
 
     for each in expressions:
         if type(each) is group_types.Function:
@@ -74,7 +107,7 @@ def lower_module(module_expr, in_module = ()):
     base_mod_name = str(module_expr.name.token)
     full_mod_name = in_module + (base_mod_name,)
 
-    meta = make_meta(name = '.'.join(full_mod_name))
+    meta = make_meta(name = '::'.join(full_mod_name))
 
     for mod_name in module_expr.module_names:
         mod_def = module_expr.modules[mod_name]
@@ -86,7 +119,11 @@ def lower_module(module_expr, in_module = ()):
 
         meta.add_module(mod_meta)
         for each in mod_meta.functions:
-            meta.add_function('{}.{}'.format(mod_name, each), mod_meta.functions[each])
+            meta.insert_function(
+                name = '{}::{}'.format(mod_name, each),
+                value = mod_meta.functions[each],
+                prefix = mod_name,
+            )
 
     for fn_name in module_expr.function_names:
         fn_def = module_expr.functions[fn_name]
@@ -129,6 +166,7 @@ def output_function_body(fn, in_module, meta):
 
     inner_body = []
     state = emitter.State(
+        function_name = '.'.join(full_fn_name),
         upper = None,
         visible_fns = meta,
     )
