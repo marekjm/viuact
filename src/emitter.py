@@ -58,7 +58,7 @@ class Slot:
 
 
 class State:
-    def __init__(self, upper = None):
+    def __init__(self, upper, visible_fns):
         self.next_slot = {
             'local': 1,
             'static': 0,
@@ -69,6 +69,7 @@ class State:
         self.nested_fns = []
         self.upper = upper
         self.used_upper_slots = {}
+        self.visible_fns = visible_fns
 
     def get_slot(self, name, register_set = DEFAULT_REGISTER_SET):
         if name not in self.name_to_slot:

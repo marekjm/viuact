@@ -60,7 +60,7 @@ def lower_file(expressions, module_prefix):
     for each in expressions:
         if type(each) is group_types.Function:
             meta.add_function(str(each.name.token), len(each.arguments))
-            lowered_function_bodies.extend(lower_function(each, upper_meta = meta))
+            lowered_function_bodies.extend(lower_function(each, meta = meta))
 
     print('file-level: modules:  ', meta.modules)
     print('file-level: functions:', meta.functions)
@@ -93,7 +93,7 @@ def lower_module(module_expr, in_module = ()):
         lowered_function_bodies.extend(lower_function(
             fn_def,
             in_module = full_mod_name,
-            upper_meta = meta,
+            meta = meta,
         ))
         meta.add_function(fn_name, len(fn_def.arguments))
 
@@ -118,7 +118,7 @@ def lower_function_body(body):
 
     return '\n'.join(instructions)
 
-def output_function_body(fn, in_module, upper_meta):
+def output_function_body(fn, in_module, meta):
     full_fn_name = in_module + (str(fn.name.token),)
     body = [
         emitter.Verbatim('.function: {}/{}'.format(
@@ -128,7 +128,10 @@ def output_function_body(fn, in_module, upper_meta):
     ]
 
     inner_body = []
-    state = emitter.State()
+    state = emitter.State(
+        upper = None,
+        visible_fns = meta,
+    )
 
     for i, each in enumerate(fn.arguments):
         source = emitter.Slot(
@@ -157,7 +160,7 @@ def output_function_body(fn, in_module, upper_meta):
             body = inner_body,
             expr = each,
             state = state,
-            meta = upper_meta,
+            meta = meta,
         )
         inner_body.append(emitter.Verbatim(''))
 
@@ -174,8 +177,8 @@ def output_function_body(fn, in_module, upper_meta):
     body.append(emitter.Verbatim('.end'))
     return state.nested_fns + [body]
 
-def lower_function(fn_expr, upper_meta, in_module = ()):
+def lower_function(fn_expr, meta, in_module = ()):
     # Bodies instead of a single body, because a function may contain
     # nested functions and thus compile to multiple bodies.
-    bodies = output_function_body(fn_expr, in_module, upper_meta)
+    bodies = output_function_body(fn_expr, in_module, meta)
     return [lower_function_body(each) for each in bodies]
