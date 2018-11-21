@@ -4,48 +4,76 @@ import group_types
 import emitter
 
 
-def make_meta(name = None):
-    return {
-        'name': name,
-        'modules': {
-        },
-        'functions': [],
-    }
+class Visibility_information:
+    def __init__(self, prefix):
+        # In case of top-level scope: None.
+        # In case of module scope: name of the module.
+        # In any other case: undefined.
+        self.prefix = prefix
+
+        # A list of visible module names (strings).
+        self.modules = []
+
+        # A dictionary of visible functions. Keys are names, values are
+        # arities.
+        # Why? Because Viuact does not need arities, but Viua assembly
+        # language does, and when you encounter syntax like this:
+        #
+        #       (let fn f)
+        #
+        # you need the arity information to produce output like this:
+        #
+        #       function %fn local f/1
+        #
+        self.functions = {}
+
+    def add_module(self, name):
+        if type(name) is Visibility_information:
+            self.modules.append(name.prefix)
+        elif type(name) is str:
+            self.modules.append(name)
+        else:
+            raise TypeError(name)
+
+    def add_function(self, name, arity):
+        self.functions[name] = arity
 
 
-def lower_file(expressions):
+def make_meta(name):
+    return Visibility_information(name)
+
+
+def lower_file(expressions, module_prefix):
     lowered_function_bodies = []
 
-    meta = make_meta()
+    meta = make_meta(name = module_prefix)
 
     for each in expressions:
         if type(each) is group_types.Module:
-            bodies, mod_meta = lower_module(each, upper_meta = meta)
+            bodies, mod_meta = lower_module(each)
             lowered_function_bodies.extend(bodies)
-            meta['modules'][str(each.name.token)] = mod_meta
+
+            meta.add_module(mod_meta)
+            for each in mod_meta.functions:
+                meta.add_function('{}.{}'.format(mod_meta.prefix, each), mod_meta.functions[each])
 
     for each in expressions:
         if type(each) is group_types.Function:
+            meta.add_function(str(each.name.token), len(each.arguments))
             lowered_function_bodies.extend(lower_function(each, upper_meta = meta))
 
-    flat_meta = {
-        'functions': [],
-    }
-    for each in meta['modules'].values():
-        for fn in each['functions']:
-            flat_meta['functions'].append(fn)
-    for each in meta['functions']:
-        flat_meta['functions'].append(each)
+    print('file-level: modules:  ', meta.modules)
+    print('file-level: functions:', meta.functions)
 
-    return lowered_function_bodies, flat_meta
+    return lowered_function_bodies, meta
 
 
-def lower_module(module_expr, upper_meta, in_module = ()):
+def lower_module(module_expr, in_module = ()):
     lowered_function_bodies = []
 
     full_mod_name = in_module + (str(module_expr.name.token),)
 
-    meta = make_meta()
+    meta = make_meta(name = '.'.join(full_mod_name))
 
     for mod_name in module_expr.module_names:
         mod_def = module_expr.modules[mod_name]
@@ -56,13 +84,13 @@ def lower_module(module_expr, upper_meta, in_module = ()):
         )
         lowered_function_bodies.extend(mod_bodies)
 
-        meta['modules'][mod_name] = mod_meta
-        for each in mod_meta['modules'].values():
-            for fn in each['functions']:
-                meta['functions'].append('{}::{}'.format(
-                    each['name'],
-                    fn,
-                ))
+        # meta['modules'][mod_name] = mod_meta
+        # for each in mod_meta['modules'].values():
+        #     for fn in each['functions']:
+        #         meta['functions'].append('{}::{}'.format(
+        #             each['name'],
+        #             fn,
+        #         ))
 
     for fn_name in module_expr.function_names:
         fn_def = module_expr.functions[fn_name]
@@ -71,7 +99,7 @@ def lower_module(module_expr, upper_meta, in_module = ()):
             in_module = full_mod_name,
             upper_meta = meta,
         ))
-        meta['functions'].append(fn_name)
+        meta.add_function(fn_name, len(fn_def.arguments))
 
     return lowered_function_bodies, meta
 

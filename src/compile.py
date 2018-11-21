@@ -335,6 +335,9 @@ def main(args):
     tokens = strip_comments(lex(source_code))
 
     groups = group(tokens)
+    if not groups:
+        sys.stderr.write('error: source file contains no expressions: {}\n'.format(source_file))
+        exit(1)
 
     expressions = parse(groups)
 
@@ -342,7 +345,10 @@ def main(args):
 
     lowered_function_bodies = []
     try:
-        lowered_function_bodies, meta = lowerer.lower_file(expressions)
+        lowered_function_bodies, meta = lowerer.lower_file(
+            expressions = expressions,
+            module_prefix = None,
+        )
     except exceptions.Emitter_exception as e:
         msg, cause = e.args
         line, character = 0, 0
