@@ -71,7 +71,8 @@ def lower_file(expressions, module_prefix):
 def lower_module(module_expr, in_module = ()):
     lowered_function_bodies = []
 
-    full_mod_name = in_module + (str(module_expr.name.token),)
+    base_mod_name = str(module_expr.name.token)
+    full_mod_name = in_module + (base_mod_name,)
 
     meta = make_meta(name = '.'.join(full_mod_name))
 
@@ -80,17 +81,12 @@ def lower_module(module_expr, in_module = ()):
         mod_bodies, mod_meta = lower_module(
             mod_def,
             in_module = full_mod_name,
-            upper_meta = meta,
         )
         lowered_function_bodies.extend(mod_bodies)
 
-        # meta['modules'][mod_name] = mod_meta
-        # for each in mod_meta['modules'].values():
-        #     for fn in each['functions']:
-        #         meta['functions'].append('{}::{}'.format(
-        #             each['name'],
-        #             fn,
-        #         ))
+        meta.add_module(mod_meta)
+        for each in mod_meta.functions:
+            meta.add_function('{}.{}'.format(mod_name, each), mod_meta.functions[each])
 
     for fn_name in module_expr.function_names:
         fn_def = module_expr.functions[fn_name]
@@ -100,6 +96,10 @@ def lower_module(module_expr, in_module = ()):
             upper_meta = meta,
         ))
         meta.add_function(fn_name, len(fn_def.arguments))
+
+
+    print('module-level: {}: modules:  '.format(meta.prefix), meta.modules)
+    print('module-level: {}: functions:'.format(meta.prefix), meta.functions)
 
     return lowered_function_bodies, meta
 
