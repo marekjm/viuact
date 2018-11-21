@@ -73,10 +73,12 @@
 
     (let g (x) (
         (let h (x) (
+            (print ("from h (inner function of g)"))
             (print (x))
         ))
-        (print ((+ (x 1))))
+        (h ((+ (x 1))))
     ))
+    (g (41))
 
     (let n 41)
     (let z 1)
