@@ -228,9 +228,25 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
         return evaluated_slot
     elif leader_type is group_types.Function:
         nested_body = []
+        v = meta.nested_in(state.function_name)
+        real_name = '{}::{}_{}'.format(
+            state.function_name,
+            str(expr.name.token),
+            hashlib.sha1(repr(expr).encode('utf-8')).hexdigest(),
+        )
+        v.add_function(
+            name = str(expr.name.token),
+            arity = len(expr.arguments),
+            real_name = real_name,
+        )
+        meta.add_function(
+            name = str(expr.name.token),
+            arity = len(expr.arguments),
+            real_name = real_name,
+        )
         nested_state = State(
             upper = state,
-            visible_fns = meta.nested_in(state.function_name),
+            visible_fns = v,
             function_name = state.function_name,
         )
         emit_function(
@@ -241,12 +257,6 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
         )
         for fn in nested_state.nested_fns:
             state.nested_fns.append(fn)
-
-        meta.add_function(
-            name = str(expr.name.token),
-            arity = len(expr.arguments),
-            real_name = (state.function_name + '::' + str(expr.name.token)),
-        )
 
         if nested_state.used_upper_slots:
             nested_body[0].text = nested_body[0].text.replace('.function:', '.closure:')
@@ -483,7 +493,7 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
 
 def emit_function(body : list, expr, state : State, slot : Slot):
     body.append(Verbatim('.function: {}/{}'.format(
-        str(expr.name.token),
+        state.visible_fns.real_name(str(expr.name.token)),
         len(expr.arguments),
     )))
 

@@ -61,7 +61,11 @@ class Visibility_information:
         )
         v.modules = self.modules[:]
         for each in self.functions:
-            v.insert_function(each, self.functions[each])
+            v.insert_function(
+                name = each,
+                value = self.functions[each],
+                prefix = function_name,
+            )
         return v
 
 
@@ -157,16 +161,10 @@ def lower_function_body(body):
 
 def output_function_body(fn, in_module, meta):
     full_fn_name = in_module + (str(fn.name.token),)
-    body = [
-        emitter.Verbatim('.function: {}/{}'.format(
-            '::'.join(full_fn_name),
-            len(fn.arguments),
-        )),
-    ]
 
     inner_body = []
     state = emitter.State(
-        function_name = '.'.join(full_fn_name),
+        function_name = '::'.join(full_fn_name),
         upper = None,
         visible_fns = meta,
     )
@@ -202,6 +200,12 @@ def output_function_body(fn, in_module, meta):
         )
         inner_body.append(emitter.Verbatim(''))
 
+    body = [
+        emitter.Verbatim('.function: {}/{}'.format(
+            state.function_name,
+            len(fn.arguments),
+        )),
+    ]
     body.append(emitter.Verbatim('allocate_registers %{} local'.format(
         state.next_slot[emitter.LOCAL_REGISTER_SET],
     )))
