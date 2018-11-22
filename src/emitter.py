@@ -275,7 +275,7 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
             body.append(Verbatim('closure {} {}'.format(
                 slot.to_string(),
                 '{}/{}'.format(
-                    str(expr.name.token),
+                    state.visible_fns.real_name(str(expr.name.token), token = expr.name.token),
                     len(expr.arguments),
                 )
             )))
@@ -363,13 +363,19 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     name = call_expr.name
     args = call_expr.args
 
+    name_token = None
+    if type(name) is group_types.Id:
+        name_token = name.name[-1].token
+    else:
+        name_token = name.token
+
     if call_expr.to() in BUILTIN_FUNCTIONS:
         return emit_builtin_call(body, call_expr, state, slot)
 
-    print(state.visible_fns.functions)
-    if not state.has_slot(name):
-        print('about to call:', call_expr.to())
-        name = state.visible_fns.real_name(call_expr.to(), token = name.token)
+    fn_name = call_expr.to()
+
+    if not state.has_slot(fn_name):
+        fn_name = state.visible_fns.real_name(fn_name, token = name_token)
 
     applied_args = []
     for i, each in enumerate(args):
@@ -385,9 +391,9 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     if slot is not None:
         slot = state.slot_of(slot.name)
 
-    to = '{}/{}'.format(name, len(args))
-    if state.has_slot(name):
-        to = state.slot_of(name).to_string()
+    to = '{}/{}'.format(fn_name, len(args))
+    if state.has_slot(fn_name):
+        to = state.slot_of(fn_name).to_string()
 
     body.append(Call(
         to = to,
