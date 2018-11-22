@@ -527,7 +527,7 @@ def emit_function(body : list, expr, state : State, slot : Slot):
             body = inner_body,
             expr = each,
             state = state,
-            meta = None,
+            meta = state.visible_fns,
         )
         inner_body.append(Verbatim(''))
 
