@@ -219,7 +219,9 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
         )
     elif leader_type is group_types.Name_ref:
         evaluated_slot = state.slot_of(str(expr.name.token))
-        if slot is not None and must_emit:
+        if must_emit:
+            if slot is None:
+                slot = state.get_slot(None)
             body.append(Move.make_copy(
                 dest = slot,
                 source = evaluated_slot,
@@ -371,8 +373,7 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
 
     applied_args = []
     for i, each in enumerate(args):
-        arg_slot = state.get_slot(None)
-        applied_args.append(emit_expr(body, each, state, arg_slot))
+        applied_args.append(emit_expr(body, each, state))
 
     body.append(Verbatim('frame %{}'.format(len(args))))
     for i, each in enumerate(applied_args):
