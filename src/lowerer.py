@@ -1,5 +1,6 @@
 import json
 
+import exceptions
 import group_types
 import emitter
 
@@ -51,7 +52,9 @@ class Visibility_information:
             self.functions[name]['real_name'],
         )
 
-    def real_name(self, name):
+    def real_name(self, name, token):
+        if name not in self.functions:
+            raise exceptions.No_such_function('no function named', token)
         return self.functions[name]['real_name']
 
     def nested_in(self, function_name):

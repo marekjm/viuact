@@ -369,7 +369,7 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     print(state.visible_fns.functions)
     if not state.has_slot(name):
         print('about to call:', call_expr.to())
-        name = state.visible_fns.real_name(call_expr.to())
+        name = state.visible_fns.real_name(call_expr.to(), token = name.token)
 
     applied_args = []
     for i, each in enumerate(args):
@@ -494,7 +494,7 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
 
 def emit_function(body : list, expr, state : State, slot : Slot):
     body.append(Verbatim('.function: {}/{}'.format(
-        state.visible_fns.real_name(str(expr.name.token)),
+        state.visible_fns.real_name(str(expr.name.token), token = expr.name.token),
         len(expr.arguments),
     )))
 

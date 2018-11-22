@@ -349,7 +349,7 @@ def main(args):
             expressions = expressions,
             module_prefix = None,
         )
-    except exceptions.Emitter_exception as e:
+    except (exceptions.Emitter_exception, exceptions.Lowerer_exception,) as e:
         msg, cause = e.args
         line, character = 0, 0
 
