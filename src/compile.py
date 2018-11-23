@@ -318,7 +318,42 @@ def print_error(s):
     text = '{}\n'.format(s)
     return sys.stderr.write(text)
 
+HELP = '''{man_executable}(1)
+
+NAME
+
+    {executable} - Viuact compiler
+
+SYNOPSIS
+
+    {executable} <file>
+    {exec_blank} --mode (module | exec | auto) <file>
+    {exec_blank} --help
+
+DESCRIPTION
+
+    Compiler from Viuact to Viua VM assembly language. Viuact is a
+    high-level programming language with a Lisp-like syntax.
+
+OPTIONS
+
+    --help      - display this message
+    --mode module | exec | auto
+                - set compilation mode; 'auto' is the default one
+'''
+
+def print_help(executable_name):
+    print(HELP.format(
+        man_executable = executable_name.upper(),
+        executable = executable_name,
+        exec_blank = (' ' * len(executable_name)),
+    ).strip())
+
 def main(executable_name, args):
+    if '--help' in args:
+        print_help(executable_name)
+        exit(0)
+
     if not args or len(args) not in (1, 3):
         print_error('error: invalid number of operands: expected 1 or 3')
         print_error('note: syntax: {} <file>'.format(executable_name))
@@ -344,6 +379,11 @@ def main(executable_name, args):
     if len(args) == 1:
         source_file = args[0]
     else:
+        if args[0] != '--mode':
+            print_error('error: unknown option: {}'.format(repr(args[0])))
+            print_error('note: run {} --help to get help'.format(executable_name))
+            exit(1)
+
         compile_as = args[1]
         source_file = args[2]
 
