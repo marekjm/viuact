@@ -449,9 +449,19 @@ def main(executable_name, args):
                 if len(module_path) > 1:
                     os.makedirs(os.path.join(output_directory, *module_path[:-1]), exist_ok = True)
 
-                module_path = os.path.join(*module_path) + '.asm'
-                with open(os.path.join(output_directory, module_path), 'w') as ofstream:
+                module_impl_path = os.path.join(*module_path) + '.asm'
+                with open(os.path.join(output_directory, module_impl_path), 'w') as ofstream:
                     ofstream.write('\n\n'.join(contents))
+
+                module_interface_path = os.path.join(*module_path) + '.i'
+                print('generating interface for: {} (in {})'.format(module_name, module_interface_path))
+                fns = [
+                    { 'arity': v['arity'], 'name': k, 'real_name': v['real_name'], }
+                    for k, v
+                    in meta.functions.items()
+                ]
+                with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
+                    ofstream.write(json.dumps({ 'fns': fns, }))
         elif compile_as == Compilation_mode.Executable:
             print('compiling executable: {} (from {})'.format(module_name, source_file))
 
