@@ -45,12 +45,8 @@ class Visibility_information:
             'real_name': (real_name or name),
         }
 
-    def insert_function(self, name, value, prefix):
+    def insert_function(self, name, value):
         self.functions[name] = value
-        self.functions[name]['real_name'] = '{}::{}'.format(
-            prefix,
-            self.functions[name]['real_name'],
-        )
 
     def real_name(self, name, token):
         if name not in self.functions:
@@ -125,11 +121,10 @@ def lower_module(module_expr, in_module = ()):
         lowered_function_bodies.extend(mod_bodies)
 
         meta.add_module(mod_meta)
-        for each in mod_meta.functions:
+        for fn_name, fn_value in mod_meta.functions.items():
             meta.insert_function(
-                name = '{}::{}'.format(mod_name, each),
-                value = mod_meta.functions[each],
-                prefix = mod_name,
+                name = fn_name,
+                value = fn_value,
             )
 
     for fn_name in module_expr.function_names:
@@ -139,8 +134,11 @@ def lower_module(module_expr, in_module = ()):
             in_module = full_mod_name,
             meta = meta,
         ))
-        meta.add_function(fn_name, len(fn_def.arguments))
-
+        meta.add_function(
+            name = fn_name,
+            arity = len(fn_def.arguments),
+            real_name = '{}::{}'.format('::'.join(full_mod_name), fn_name),
+        )
 
     print('module-level: {}: modules:  '.format(meta.prefix), meta.modules)
     print('module-level: {}: functions:'.format(meta.prefix), meta.functions)

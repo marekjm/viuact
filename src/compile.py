@@ -302,32 +302,55 @@ def parse(groups):
     return parsed
 
 
-def output_interface_file(expressions):
-    is_module = isinstance(expressions[0], group_types.Module)
-    if not is_module:
-        return
+class Compilation_mode:
+    Automatic = 'auto'
+    Executable = 'exec'
+    Module = 'module'
 
-    module_expr = expressions[0]
-    module_name = str(module_expr.name.token)
-
-    module_interface = {
-        'name': module_name,
-        'exports': {},
-        'imports': [],
-    }
-
-    # FIXME save the interface to file
-    for fn_name, fn_def in module_expr.functions.items():
-        module_interface['exports'][fn_name] = {
-            'arity': len(fn_def.arguments),
-        }
+Valid_compilation_modes = (
+    Compilation_mode.Automatic,
+    Compilation_mode.Executable,
+    Compilation_mode.Module,
+)
 
 
-def main(args):
+def print_error(s):
+    text = '{}\n'.format(s)
+    return sys.stderr.write(text)
+
+def main(executable_name, args):
+    if not args or len(args) not in (1, 3):
+        print_error('error: invalid number of operands: expected 1 or 3')
+        print_error('note: syntax: {} <file>'.format(executable_name))
+        print_error('              {} --mode {} <file>'.format(
+            executable_name,
+            Compilation_mode.Automatic,
+        ))
+        print_error('              {} --mode {} <file>'.format(
+            executable_name,
+            Compilation_mode.Executable,
+        ))
+        print_error('              {} --mode {} <file>'.format(
+            executable_name,
+            Compilation_mode.Module,
+        ))
+        exit(1)
+
     output_directory = './build/_default'
     os.makedirs(output_directory, exist_ok = True)
 
-    source_file = args[0]
+    compile_as = Compilation_mode.Automatic
+    source_file = None
+    if len(args) == 1:
+        source_file = args[0]
+    else:
+        compile_as = args[1]
+        source_file = args[2]
+
+    if compile_as not in Valid_compilation_modes:
+        print_error('error: invalid compilation mode: {}'.format(compile_as))
+        exit(1)
+
     source_code = None
     with open(source_file, 'r') as ifstream:
         source_code = ifstream.read()
@@ -341,33 +364,44 @@ def main(args):
 
     expressions = parse(groups)
 
-    output_interface_file(expressions)
+    if compile_as == Compilation_mode.Module:
+        module_name = os.path.basename(source_file).split('.')[0]
+        module_name = module_name[0].upper() + module_name[1:]
+        print('compiling module: {} (from {})'.format(module_name, source_file))
 
-    lowered_function_bodies = []
-    try:
-        lowered_function_bodies, meta = lowerer.lower_file(
-            expressions = expressions,
-            module_prefix = None,
-        )
-    except (exceptions.Emitter_exception, exceptions.Lowerer_exception,) as e:
-        msg, cause = e.args
-        line, character = 0, 0
+        lowered_function_bodies = []
+        try:
+            module = group_types.Module(name = token_types.Module_name(module_name))
+            for each in expressions:
+                if type(each) is group_types.Module:
+                    module.module_names.append(str(each.name.token))
+                    module.modules[module.module_names[-1]] = each
+                elif type(each) is group_types.Function:
+                    module.function_names.append(str(each.name.token))
+                    module.functions[module.function_names[-1]] = each
 
-        cause_type = type(cause)
-        if cause_type is group_types.Function:
-            token = cause.name.token
-            line, character = token.location()
+            lowered_function_bodies, meta = lowerer.lower_module(
+                module_expr = module,
+            )
+        except (exceptions.Emitter_exception, exceptions.Lowerer_exception,) as e:
+            msg, cause = e.args
+            line, character = 0, 0
 
-        print('{}:{}:{}: {}: {}'.format(
-            source_file,
-            line + 1,
-            character + 1,
-            msg,
-            cause,
-        ))
-        raise
+            cause_type = type(cause)
+            if cause_type is group_types.Function:
+                token = cause.name.token
+                line, character = token.location()
 
-    with open(os.path.join(output_directory, 'a.asm'), 'w') as ofstream:
-        ofstream.write('\n\n'.join(lowered_function_bodies))
+            print('{}:{}:{}: {}: {}'.format(
+                source_file,
+                line + 1,
+                character + 1,
+                msg,
+                cause,
+            ))
+            raise
 
-main(sys.argv[1:])
+        with open(os.path.join(output_directory, '{}.asm'.format(module_name)), 'w') as ofstream:
+            ofstream.write('\n\n'.join(lowered_function_bodies))
+
+main(sys.argv[0], sys.argv[1:])
