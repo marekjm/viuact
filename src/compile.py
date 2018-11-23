@@ -443,5 +443,35 @@ def main(executable_name, args):
 
         with open(os.path.join(output_directory, '{}.asm'.format(module_name)), 'w') as ofstream:
             ofstream.write('\n\n'.join(lowered_function_bodies))
+    elif compile_as == Compilation_mode.Executable:
+        module_name = os.path.basename(source_file).split('.')[0]
+        print('compiling executable: {} (from {})'.format(module_name, source_file))
+
+        lowered_function_bodies = []
+        try:
+            lowered_function_bodies, meta = lowerer.lower_file(
+                expressions = expressions,
+                module_prefix = None,
+            )
+        except (exceptions.Emitter_exception, exceptions.Lowerer_exception,) as e:
+            msg, cause = e.args
+            line, character = 0, 0
+
+            cause_type = type(cause)
+            if cause_type is group_types.Function:
+                token = cause.name.token
+                line, character = token.location()
+
+            print('{}:{}:{}: {}: {}'.format(
+                source_file,
+                line + 1,
+                character + 1,
+                msg,
+                cause,
+            ))
+            raise
+
+        with open(os.path.join(output_directory, '{}.asm'.format(module_name)), 'w') as ofstream:
+            ofstream.write('\n\n'.join(lowered_function_bodies))
 
 main(sys.argv[0], sys.argv[1:])

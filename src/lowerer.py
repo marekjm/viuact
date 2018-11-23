@@ -87,7 +87,6 @@ def lower_file(expressions, module_prefix):
                 meta.insert_function(
                     name = '{}::{}'.format(mod_meta.prefix, each),
                     value = mod_meta.functions[each],
-                    prefix = mod_meta.prefix,
                 )
 
     print('x-file-level: modules:  ', meta.modules)
