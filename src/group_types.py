@@ -20,6 +20,7 @@ class Module(Group_type):
         self.function_names = []
         self.modules = {}
         self.module_names = []
+        self.imports = []
 
     def to_string(self):
         s = ', '.join(map(lambda each: each.to_string(), self.functions.values()))
@@ -42,6 +43,16 @@ class Function(Group_type):
             str(self.name.token),
             ', '.join(map(lambda each: str(each.token), self.arguments)),
         )
+
+
+class Import(Group_type):
+    type_name = 'Import'
+
+    def __init__(self, name):
+        self.name = name
+
+    def to_string(self):
+        return self.name.to_string()
 
 
 class Let_binding(Group_type):

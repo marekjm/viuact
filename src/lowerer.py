@@ -130,6 +130,17 @@ def lower_module(module_expr, in_module = ()):
                 value = fn_value,
             )
 
+    for spec in module_expr.imports:
+        mod_name = spec.to_string()
+        if mod_name not in meta.modules:
+            std.stderr.write('warning: no such module: {}\n'.format(mod_name))
+        for _, each in list(meta.functions.items()):
+            if each['from_module'] == mod_name:
+                meta.insert_function(
+                    name = each['real_name'],
+                    value = each,
+                )
+
     for fn_name in module_expr.function_names:
         fn_def = module_expr.functions[fn_name]
 

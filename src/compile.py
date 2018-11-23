@@ -281,8 +281,12 @@ def parse_module(source):
             md = parse_module(each)
             mod.module_names.append(str(md.name.token))
             mod.modules[mod.module_names[-1]] = md
+        elif type(each[0]) is token_types.Import:
+            mod.imports.append(group_types.Import(name = group_types.Id(
+                (each[1] if type(each[1]) is list else [each[1]]),
+            )))
         else:
-            raise Exception('expected `module` or `let` keyword, got', each[0])
+            raise Exception('expected `module`, `import`, or `let` keyword, got', each[0])
 
     return mod
 
@@ -296,6 +300,10 @@ def parse(groups):
             parsed.append(parse_module(each))
         elif isinstance(leader, token_types.Let):
             parsed.append(parse_function(each))
+        elif isinstance(leader, token_types.Import):
+            parsed.append(group_types.Import(name = group_types.Id(
+                (each[1] if type(each[1]) is list else [each[1]]),
+            )))
         else:
             raise Exception('invalid leader', leader)
 
@@ -419,6 +427,10 @@ def main(executable_name, args):
                 elif type(each) is group_types.Function:
                     module.function_names.append(str(each.name.token))
                     module.functions[module.function_names[-1]] = each
+                elif type(each) is group_types.Import:
+                    module.imports.append(each)
+                else:
+                    raise Exception('expected `module`, `import`, or `let` keyword, got', each)
 
             lowered_function_bodies, meta = lowerer.lower_module(
                 module_expr = module,
