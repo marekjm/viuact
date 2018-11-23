@@ -39,10 +39,11 @@ class Visibility_information:
         else:
             raise TypeError(name)
 
-    def add_function(self, name, arity, real_name = None):
+    def add_function(self, name, arity, real_name = None, from_module = None):
         self.functions[name] = {
             'arity': arity,
             'real_name': (real_name or name),
+            'from_module': from_module,
         }
 
     def insert_function(self, name, value):
@@ -63,7 +64,6 @@ class Visibility_information:
             v.insert_function(
                 name = each,
                 value = self.functions[each],
-                prefix = function_name,
             )
         return v
 
@@ -94,7 +94,11 @@ def lower_file(expressions, module_prefix):
 
     for each in expressions:
         if type(each) is group_types.Function:
-            meta.add_function(str(each.name.token), len(each.arguments))
+            meta.add_function(
+                name = str(each.name.token),
+                arity = len(each.arguments),
+                from_module = module_prefix,
+            )
             lowered_function_bodies.extend(lower_function(each, meta = meta))
 
     print('file-level: modules:  ', meta.modules)
@@ -128,6 +132,8 @@ def lower_module(module_expr, in_module = ()):
 
     for fn_name in module_expr.function_names:
         fn_def = module_expr.functions[fn_name]
+
+        real_name = '{}::{}'.format('::'.join(full_mod_name), fn_name)
         lowered_function_bodies.extend(lower_function(
             fn_def,
             in_module = full_mod_name,
@@ -136,7 +142,8 @@ def lower_module(module_expr, in_module = ()):
         meta.add_function(
             name = fn_name,
             arity = len(fn_def.arguments),
-            real_name = '{}::{}'.format('::'.join(full_mod_name), fn_name),
+            real_name = real_name,
+            from_module = '::'.join(full_mod_name),
         )
 
     print('module-level: {}: modules:  '.format(meta.prefix), meta.modules)
