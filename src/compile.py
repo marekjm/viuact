@@ -423,6 +423,35 @@ def main(executable_name, args):
             lowered_function_bodies, meta = lowerer.lower_module(
                 module_expr = module,
             )
+
+            all_modules = set([
+                each['from_module']
+                for each
+                in meta.functions.values()
+            ])
+
+            module_function_mapping = {}
+            module_contents = {}
+
+            for each in all_modules:
+                module_function_mapping[each] = []
+                module_contents[each] = []
+            for each in meta.functions.values():
+                module_function_mapping[each['from_module']].append(each['real_name'])
+            for module_name, contained_functions in module_function_mapping.items():
+                for fn_name in contained_functions:
+                    module_contents[module_name].append(
+                        list(filter(lambda each: each[0] == fn_name, lowered_function_bodies))[0][1]
+                    )
+
+            for module_name, contents in module_contents.items():
+                module_path = module_name.split('::')
+                if len(module_path) > 1:
+                    os.makedirs(os.path.join(output_directory, *module_path[:-1]), exist_ok = True)
+
+                module_path = os.path.join(*module_path) + '.asm'
+                with open(os.path.join(output_directory, module_path), 'w') as ofstream:
+                    ofstream.write('\n\n'.join(contents))
         elif compile_as == Compilation_mode.Executable:
             print('compiling executable: {} (from {})'.format(module_name, source_file))
 
@@ -434,6 +463,9 @@ def main(executable_name, args):
                 expressions = expressions,
                 module_prefix = None,
             )
+
+            with open(os.path.join(output_directory, '{}.asm'.format(module_name)), 'w') as ofstream:
+                ofstream.write('\n\n'.join([each for (_, each) in lowered_function_bodies]))
     except (exceptions.Emitter_exception, exceptions.Lowerer_exception,) as e:
         msg, cause = e.args
         line, character = 0, 0
@@ -451,8 +483,5 @@ def main(executable_name, args):
             cause,
         ))
         raise
-
-    with open(os.path.join(output_directory, '{}.asm'.format(module_name)), 'w') as ofstream:
-        ofstream.write('\n\n'.join(lowered_function_bodies))
 
 main(sys.argv[0], sys.argv[1:])

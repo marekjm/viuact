@@ -224,10 +224,10 @@ def output_function_body(fn, in_module, meta):
     ))
     body.append(emitter.Verbatim('return'))
     body.append(emitter.Verbatim('.end'))
-    return state.nested_fns + [body]
+    return state.nested_fns + [('::'.join(full_fn_name), body,)]
 
 def lower_function(fn_expr, meta, in_module = ()):
     # Bodies instead of a single body, because a function may contain
     # nested functions and thus compile to multiple bodies.
     bodies = output_function_body(fn_expr, in_module, meta)
-    return [lower_function_body(each) for each in bodies]
+    return [(name, lower_function_body(each),) for (name, each) in bodies]
