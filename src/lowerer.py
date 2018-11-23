@@ -1,4 +1,5 @@
 import json
+import sys
 
 import exceptions
 import group_types
@@ -51,6 +52,7 @@ class Visibility_information:
 
     def real_name(self, name, token):
         if name not in self.functions:
+            print(type(name), repr(name), self.functions)
             raise exceptions.No_such_function('no function named', token)
         return self.functions[name]['real_name']
 
@@ -133,7 +135,7 @@ def lower_module(module_expr, in_module = ()):
     for spec in module_expr.imports:
         mod_name = spec.to_string()
         if mod_name not in meta.modules:
-            std.stderr.write('warning: no such module: {}\n'.format(mod_name))
+            sys.stderr.write('warning: no such module: {}\n'.format(mod_name))
         for _, each in list(meta.functions.items()):
             if each['from_module'] == mod_name:
                 meta.insert_function(
