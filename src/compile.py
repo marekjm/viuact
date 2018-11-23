@@ -404,13 +404,13 @@ def main(executable_name, args):
 
     expressions = parse(groups)
 
-    if compile_as == Compilation_mode.Module:
-        module_name = os.path.basename(source_file).split('.')[0]
-        module_name = module_name[0].upper() + module_name[1:]
-        print('compiling module: {} (from {})'.format(module_name, source_file))
+    module_name = os.path.basename(source_file).split('.')[0]
+    lowered_function_bodies = []
+    try:
+        if compile_as == Compilation_mode.Module:
+            module_name = module_name[0].upper() + module_name[1:]
+            print('compiling module: {} (from {})'.format(module_name, source_file))
 
-        lowered_function_bodies = []
-        try:
             module = group_types.Module(name = token_types.Module_name(module_name))
             for each in expressions:
                 if type(each) is group_types.Module:
@@ -423,55 +423,36 @@ def main(executable_name, args):
             lowered_function_bodies, meta = lowerer.lower_module(
                 module_expr = module,
             )
-        except (exceptions.Emitter_exception, exceptions.Lowerer_exception,) as e:
-            msg, cause = e.args
-            line, character = 0, 0
+        elif compile_as == Compilation_mode.Executable:
+            print('compiling executable: {} (from {})'.format(module_name, source_file))
 
-            cause_type = type(cause)
-            if cause_type is group_types.Function:
-                token = cause.name.token
-                line, character = token.location()
+            if not list(filter(lambda each: type(each) is group_types.Function, expressions)):
+                print_error('error: compiling as executable, but no functions were defined')
+                exit(1)
 
-            print('{}:{}:{}: {}: {}'.format(
-                source_file,
-                line + 1,
-                character + 1,
-                msg,
-                cause,
-            ))
-            raise
-
-        with open(os.path.join(output_directory, '{}.asm'.format(module_name)), 'w') as ofstream:
-            ofstream.write('\n\n'.join(lowered_function_bodies))
-    elif compile_as == Compilation_mode.Executable:
-        module_name = os.path.basename(source_file).split('.')[0]
-        print('compiling executable: {} (from {})'.format(module_name, source_file))
-
-        lowered_function_bodies = []
-        try:
             lowered_function_bodies, meta = lowerer.lower_file(
                 expressions = expressions,
                 module_prefix = None,
             )
-        except (exceptions.Emitter_exception, exceptions.Lowerer_exception,) as e:
-            msg, cause = e.args
-            line, character = 0, 0
+    except (exceptions.Emitter_exception, exceptions.Lowerer_exception,) as e:
+        msg, cause = e.args
+        line, character = 0, 0
 
-            cause_type = type(cause)
-            if cause_type is group_types.Function:
-                token = cause.name.token
-                line, character = token.location()
+        cause_type = type(cause)
+        if cause_type is group_types.Function:
+            token = cause.name.token
+            line, character = token.location()
 
-            print('{}:{}:{}: {}: {}'.format(
-                source_file,
-                line + 1,
-                character + 1,
-                msg,
-                cause,
-            ))
-            raise
+        print('{}:{}:{}: {}: {}'.format(
+            source_file,
+            line + 1,
+            character + 1,
+            msg,
+            cause,
+        ))
+        raise
 
-        with open(os.path.join(output_directory, '{}.asm'.format(module_name)), 'w') as ofstream:
-            ofstream.write('\n\n'.join(lowered_function_bodies))
+    with open(os.path.join(output_directory, '{}.asm'.format(module_name)), 'w') as ofstream:
+        ofstream.write('\n\n'.join(lowered_function_bodies))
 
 main(sys.argv[0], sys.argv[1:])
