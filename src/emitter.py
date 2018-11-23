@@ -240,11 +240,13 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
             name = str(expr.name.token),
             arity = len(expr.arguments),
             real_name = real_name,
+            from_module = meta.prefix,
         )
         meta.add_function(
             name = str(expr.name.token),
             arity = len(expr.arguments),
             real_name = real_name,
+            from_module = meta.prefix,
         )
         nested_state = State(
             upper = state,
