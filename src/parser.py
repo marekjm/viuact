@@ -143,7 +143,7 @@ def parse_module(source):
     if not isinstance(source[1], token_types.Module_name):
         raise Exception('expected module name, got', source[1])
 
-    mod = group_types.Module(name = source[1])
+    mod = group_types.Inline_module(name = source[1])
 
     module_contents = source[2]
     for each in module_contents:

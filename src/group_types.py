@@ -11,8 +11,8 @@ class Group_type:
         )
 
 
-class Module(Group_type):
-    type_name = 'Module'
+class Inline_module(Group_type):
+    type_name = 'Inline_module'
 
     def __init__(self, name):
         self.name = name
@@ -28,6 +28,16 @@ class Module(Group_type):
             str(self.name.token),
             (s or 'no functions'),
         )
+
+
+class Module(Group_type):
+    type_name = 'Module'
+
+    def __init__(self, name):
+        self.name = name
+
+    def to_string(self):
+        return self.name.token
 
 
 class Function(Group_type):

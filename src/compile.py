@@ -116,6 +116,7 @@ def main(executable_name, args):
         exit(1)
 
     expressions = parser.parse(groups)
+    print(expressions)
 
     module_name = os.path.basename(source_file).split('.')[0]
     lowered_function_bodies = []
@@ -124,9 +125,9 @@ def main(executable_name, args):
             module_name = module_name[0].upper() + module_name[1:]
             print('compiling module: {} (from {})'.format(module_name, source_file))
 
-            module = group_types.Module(name = token_types.Module_name(module_name))
+            module = group_types.Inline_module(name = token_types.Module_name(module_name))
             for each in expressions:
-                if type(each) is group_types.Module:
+                if type(each) is group_types.Inline_module:
                     module.module_names.append(str(each.name.token))
                     module.modules[module.module_names[-1]] = each
                 elif type(each) is group_types.Function:

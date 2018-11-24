@@ -52,7 +52,6 @@ class Visibility_information:
 
     def real_name(self, name, token):
         if name not in self.functions:
-            print(type(name), repr(name), self.functions)
             raise exceptions.No_such_function('no function named', token)
         return self.functions[name]['real_name']
 
@@ -80,7 +79,7 @@ def lower_file(expressions, module_prefix):
     meta = make_meta(name = module_prefix)
 
     for each in expressions:
-        if type(each) is group_types.Module:
+        if type(each) is group_types.Inline_module:
             bodies, mod_meta = lower_module(each)
             lowered_function_bodies.extend(bodies)
 
@@ -91,8 +90,8 @@ def lower_file(expressions, module_prefix):
                     value = mod_meta.functions[each],
                 )
 
-    print('x-file-level: modules:  ', meta.modules)
-    print('x-file-level: functions:', meta.functions)
+    # print('x-file-level: modules:  ', meta.modules)
+    # print('x-file-level: functions:', meta.functions)
 
     for each in expressions:
         if type(each) is group_types.Function:
@@ -103,8 +102,8 @@ def lower_file(expressions, module_prefix):
             )
             lowered_function_bodies.extend(lower_function(each, meta = meta))
 
-    print('file-level: modules:  ', meta.modules)
-    print('file-level: functions:', meta.functions)
+    # print('file-level: modules:  ', meta.modules)
+    # print('file-level: functions:', meta.functions)
 
     return lowered_function_bodies, meta
 
@@ -161,8 +160,8 @@ def lower_module(module_expr, in_module = ()):
             from_module = '::'.join(full_mod_name),
         )
 
-    print('module-level: {}: modules:  '.format(meta.prefix), meta.modules)
-    print('module-level: {}: functions:'.format(meta.prefix), meta.functions)
+    # print('module-level: {}: modules:  '.format(meta.prefix), meta.modules)
+    # print('module-level: {}: functions:'.format(meta.prefix), meta.functions)
 
     return lowered_function_bodies, meta
 
