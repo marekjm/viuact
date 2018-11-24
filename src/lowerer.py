@@ -125,6 +125,8 @@ def lower_module(module_expr, in_module = ()):
         )
         lowered_function_bodies.extend(mod_bodies)
 
+        for each in mod_meta.modules:
+            meta.add_module(each)
         meta.add_module(mod_meta)
         for fn_name, fn_value in mod_meta.functions.items():
             meta.insert_function(
