@@ -462,11 +462,12 @@ def main(executable_name, args):
                     os.makedirs(os.path.join(output_directory, *module_path[:-1]), exist_ok = True)
 
                 module_impl_path = os.path.join(*module_path) + '.asm'
+                print('generating definition for: {} (in {})'.format(module_name, module_impl_path))
                 with open(os.path.join(output_directory, module_impl_path), 'w') as ofstream:
                     ofstream.write('\n\n'.join(contents))
 
                 module_interface_path = os.path.join(*module_path) + '.i'
-                print('generating interface for: {} (in {})'.format(module_name, module_interface_path))
+                print('generating interface for:  {} (in {})'.format(module_name, module_interface_path))
                 fns = [
                     { 'arity': v['arity'], 'name': k, 'real_name': v['real_name'], }
                     for k, v
