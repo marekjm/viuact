@@ -77,14 +77,18 @@ def make_meta(name):
     return Visibility_information(name)
 
 
-def lower_file(expressions, module_prefix):
+def lower_file(expressions, module_prefix, compilation_filesystem_root):
     lowered_function_bodies = []
 
     meta = make_meta(name = module_prefix)
 
     for each in expressions:
         if type(each) is group_types.Inline_module:
-            bodies, mod_meta = lower_module(each)
+            bodies, mod_meta = lower_module(
+                module_expr = each,
+                in_module = (),
+                compilation_filesystem_root = compilation_filesystem_root,
+            )
             lowered_function_bodies.extend(bodies)
 
             meta.add_module(mod_meta)

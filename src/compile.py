@@ -119,6 +119,7 @@ def main(executable_name, args):
     print(expressions)
 
     module_name = os.path.basename(source_file).split('.')[0]
+    compilation_filesystem_root = os.path.dirname(source_file)
     lowered_function_bodies = []
     try:
         if compile_as == Compilation_mode.Module:
@@ -144,7 +145,7 @@ def main(executable_name, args):
             lowered_function_bodies, meta = lowerer.lower_module(
                 module_expr = module,
                 in_module = (),
-                compilation_filesystem_root = os.path.dirname(source_file),
+                compilation_filesystem_root = compilation_filesystem_root,
             )
 
             all_modules = set([
@@ -196,6 +197,7 @@ def main(executable_name, args):
             lowered_function_bodies, meta = lowerer.lower_file(
                 expressions = expressions,
                 module_prefix = None,
+                compilation_filesystem_root = compilation_filesystem_root,
             )
 
             with open(os.path.join(output_directory, '{}.asm'.format(module_name)), 'w') as ofstream:
