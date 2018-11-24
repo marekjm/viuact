@@ -1,8 +1,12 @@
 import json
+import os
 import sys
 
 import exceptions
+import token_types
 import group_types
+import lexer
+import parser
 import emitter
 
 
@@ -169,6 +173,31 @@ def lower_module(module_expr, in_module = ()):
     if type(module_expr) is group_types.Inline_module:
         return lower_module_impl(module_expr, in_module)
 
+    base_mod_name = str(module_expr.name.token)
+    full_mod_name = in_module + (base_mod_name,)
+    mod_path = os.path.join(*in_module, '{}.lisp'.format(base_mod_name))
+
+    with open(mod_path, 'r') as ifstream:
+        tokens = lexer.strip_comments(lexer.lex(ifstream.read()))
+        expressions = parser.parse(parser.group(tokens))
+
+        module = group_types.Inline_module(name = token_types.Module_name(base_mod_name))
+        for each in expressions:
+            if type(each) is group_types.Inline_module:
+                module.module_names.append(str(each.name.token))
+                module.modules[module.module_names[-1]] = each
+            elif type(each) is group_types.Module:
+                module.module_names.append(str(each.name.token))
+                module.modules[module.module_names[-1]] = each
+            elif type(each) is group_types.Function:
+                module.function_names.append(str(each.name.token))
+                module.functions[module.function_names[-1]] = each
+            elif type(each) is group_types.Import:
+                module.imports.append(each)
+            else:
+                raise Exception('expected `module`, `import`, or `let` keyword, got', each)
+
+        return lower_module_impl(module, in_module)
 
 def lower_function_body(body):
     instructions = [

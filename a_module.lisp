@@ -9,6 +9,8 @@
     ))
 ))
 
+(module X_module)
+
 (import A_module.B_module)
 (import A_module.B_module.C_module)
 

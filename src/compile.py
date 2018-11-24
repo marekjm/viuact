@@ -130,6 +130,9 @@ def main(executable_name, args):
                 if type(each) is group_types.Inline_module:
                     module.module_names.append(str(each.name.token))
                     module.modules[module.module_names[-1]] = each
+                elif type(each) is group_types.Module:
+                    module.module_names.append(str(each.name.token))
+                    module.modules[module.module_names[-1]] = each
                 elif type(each) is group_types.Function:
                     module.function_names.append(str(each.name.token))
                     module.functions[module.function_names[-1]] = each
