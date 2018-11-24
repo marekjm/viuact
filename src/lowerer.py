@@ -108,7 +108,7 @@ def lower_file(expressions, module_prefix):
     return lowered_function_bodies, meta
 
 
-def lower_module(module_expr, in_module = ()):
+def lower_module_impl(module_expr, in_module = ()):
     lowered_function_bodies = []
 
     base_mod_name = str(module_expr.name.token)
@@ -164,6 +164,10 @@ def lower_module(module_expr, in_module = ()):
     # print('module-level: {}: functions:'.format(meta.prefix), meta.functions)
 
     return lowered_function_bodies, meta
+
+def lower_module(module_expr, in_module = ()):
+    if type(module_expr) is group_types.Inline_module:
+        return lower_module_impl(module_expr, in_module)
 
 
 def lower_function_body(body):
