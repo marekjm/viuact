@@ -112,7 +112,7 @@ def lower_file(expressions, module_prefix):
     return lowered_function_bodies, meta
 
 
-def lower_module_impl(module_expr, in_module = ()):
+def lower_module_impl(module_expr, in_module, compilation_filesystem_root):
     lowered_function_bodies = []
 
     base_mod_name = str(module_expr.name.token)
@@ -123,8 +123,9 @@ def lower_module_impl(module_expr, in_module = ()):
     for mod_name in module_expr.module_names:
         mod_def = module_expr.modules[mod_name]
         mod_bodies, mod_meta = lower_module(
-            mod_def,
+            module_expr = mod_def,
             in_module = full_mod_name,
+            compilation_filesystem_root = compilation_filesystem_root,
         )
         lowered_function_bodies.extend(mod_bodies)
 
@@ -169,13 +170,13 @@ def lower_module_impl(module_expr, in_module = ()):
 
     return lowered_function_bodies, meta
 
-def lower_module(module_expr, in_module = ()):
+def lower_module(module_expr, in_module, compilation_filesystem_root):
     if type(module_expr) is group_types.Inline_module:
-        return lower_module_impl(module_expr, in_module)
+        return lower_module_impl(module_expr, in_module, compilation_filesystem_root)
 
     base_mod_name = str(module_expr.name.token)
     full_mod_name = in_module + (base_mod_name,)
-    mod_path = os.path.join(*in_module, '{}.lisp'.format(base_mod_name))
+    mod_path = os.path.join(compilation_filesystem_root, *in_module, '{}.lisp'.format(base_mod_name))
 
     with open(mod_path, 'r') as ifstream:
         tokens = lexer.strip_comments(lexer.lex(ifstream.read()))
@@ -197,7 +198,11 @@ def lower_module(module_expr, in_module = ()):
             else:
                 raise Exception('expected `module`, `import`, or `let` keyword, got', each)
 
-        return lower_module_impl(module, in_module)
+        return lower_module_impl(
+            module_expr = module,
+            in_module = in_module,
+            compilation_filesystem_root = compilation_filesystem_root,
+        )
 
 def lower_function_body(body):
     instructions = [

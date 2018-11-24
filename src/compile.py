@@ -143,6 +143,8 @@ def main(executable_name, args):
 
             lowered_function_bodies, meta = lowerer.lower_module(
                 module_expr = module,
+                in_module = (),
+                compilation_filesystem_root = os.path.dirname(source_file),
             )
 
             all_modules = set([
