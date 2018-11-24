@@ -451,7 +451,7 @@ def main(executable_name, args):
             for each in meta.functions.values():
                 module_function_mapping[each['from_module']].append(each['real_name'])
             for module_name, contained_functions in module_function_mapping.items():
-                for fn_name in contained_functions:
+                for fn_name in set(contained_functions):
                     module_contents[module_name].append(
                         list(filter(lambda each: each[0] == fn_name, lowered_function_bodies))[0][1]
                     )
