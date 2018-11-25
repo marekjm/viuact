@@ -13,6 +13,7 @@
 
 (import A_module.B_module)
 (import A_module.B_module.C_module)
+(import A_module.X_module)
 
 (let foo (x) (
     (let adder (a b) (
@@ -26,4 +27,5 @@
     (foo (41))
     (A_module.B_module.bar ())
     (A_module.B_module.C_module.grill ())
+    (A_module.X_module.drugs ())
 ))
