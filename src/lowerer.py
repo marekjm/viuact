@@ -8,6 +8,7 @@ import group_types
 import lexer
 import parser
 import emitter
+import env
 
 
 class Visibility_information:
@@ -77,6 +78,9 @@ def make_meta(name):
     return Visibility_information(name)
 
 
+def parse_interface_file(source):
+    return json.loads(source)
+
 def perform_imports(import_expressions, meta):
     for spec in import_expressions:
         mod_name = spec.to_string()
@@ -88,6 +92,27 @@ def perform_imports(import_expressions, meta):
                         name = each['real_name'],
                         value = each,
                     )
+            continue
+
+        found = False
+        for each in env.VIUAC_LIBRARY_PATH:
+            print('checking {} for module {}'.format(each, mod_name))
+
+            mod_interface_path = os.path.join(each, *mod_name.split('.')) + '.i'
+            if os.path.isfile(mod_interface_path):
+                print('    found {}'.format(mod_interface_path))
+                found = True
+                with open(mod_interface_path, 'r') as ifstream:
+                    interface = parse_interface_file(ifstream.read())
+                    for each in interface['fns']:
+                        if each['from_module'] == mod_name:
+                            meta.insert_function(
+                                name = each['real_name'],
+                                value = each,
+                            )
+                break
+
+        if found:
             continue
 
         sys.stderr.write('warning: available modules: {}\n'.format(', '.join(meta.modules)))
