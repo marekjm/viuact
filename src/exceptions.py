@@ -9,3 +9,6 @@ class Lowerer_exception(Exception):
 
 class No_such_function(Lowerer_exception):
     pass
+
+class No_such_module(Exception):
+    pass

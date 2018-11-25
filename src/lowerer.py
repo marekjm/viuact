@@ -88,8 +88,10 @@ def perform_imports(import_expressions, meta):
                         name = each['real_name'],
                         value = each,
                     )
+            continue
 
-        sys.stderr.write('warning: no such module: {}\n'.format(mod_name))
+        sys.stderr.write('warning: available modules: {}\n'.format(', '.join(meta.modules)))
+        raise exceptions.No_such_module('no such module: {}'.format(mod_name), spec)
 
 
 def lower_file(expressions, module_prefix, compilation_filesystem_root):
