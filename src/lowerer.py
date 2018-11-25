@@ -56,7 +56,7 @@ class Visibility_information:
 
     def real_name(self, name, token):
         if name not in self.functions:
-            raise exceptions.No_such_function('no function named', token)
+            raise exceptions.No_such_function('no function named: {}()'.format(name), token)
         return self.functions[name]['real_name']
 
     def nested_in(self, function_name):
@@ -77,6 +77,19 @@ def make_meta(name):
     return Visibility_information(name)
 
 
+def perform_imports(import_expressions, meta):
+    for spec in import_expressions:
+        mod_name = spec.to_string()
+        if mod_name not in meta.modules:
+            sys.stderr.write('warning: no such module: {}\n'.format(mod_name))
+        for _, each in list(meta.functions.items()):
+            if each['from_module'] == mod_name:
+                meta.insert_function(
+                    name = each['real_name'],
+                    value = each,
+                )
+
+
 def lower_file(expressions, module_prefix, compilation_filesystem_root):
     lowered_function_bodies = []
 
@@ -91,12 +104,19 @@ def lower_file(expressions, module_prefix, compilation_filesystem_root):
             )
             lowered_function_bodies.extend(bodies)
 
-            meta.add_module(mod_meta)
-            for each in mod_meta.functions:
-                meta.insert_function(
-                    name = '{}::{}'.format(mod_meta.prefix, each),
-                    value = mod_meta.functions[each],
-                )
+        for each in mod_meta.modules:
+            meta.add_module(each)
+        meta.add_module(mod_meta)
+        for fn_name, fn_value in mod_meta.functions.items():
+            meta.insert_function(
+                name = fn_name,
+                value = fn_value,
+            )
+
+    perform_imports(
+        import_expressions = filter(lambda each: type(each) is group_types.Import, expressions),
+        meta = meta,
+    )
 
     # print('x-file-level: modules:  ', meta.modules)
     # print('x-file-level: functions:', meta.functions)
@@ -142,16 +162,10 @@ def lower_module_impl(module_expr, in_module, compilation_filesystem_root):
                 value = fn_value,
             )
 
-    for spec in module_expr.imports:
-        mod_name = spec.to_string()
-        if mod_name not in meta.modules:
-            sys.stderr.write('warning: no such module: {}\n'.format(mod_name))
-        for _, each in list(meta.functions.items()):
-            if each['from_module'] == mod_name:
-                meta.insert_function(
-                    name = each['real_name'],
-                    value = each,
-                )
+    perform_imports(
+        import_expressions = module_expr.imports,
+        meta = meta,
+    )
 
     for fn_name in module_expr.function_names:
         fn_def = module_expr.functions[fn_name]

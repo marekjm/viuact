@@ -13,6 +13,7 @@ import exceptions
 import lexer
 import parser
 import lowerer
+import env
 
 
 class Compilation_mode:
@@ -86,6 +87,9 @@ def main(executable_name, args):
 
     output_directory = './build/_default'
     os.makedirs(output_directory, exist_ok = True)
+
+    print('output directory:    {}'.format(env.DEFAULT_OUTPUT_DIRECTORY))
+    print('library search path: {}'.format(' '.join(map(repr, env.VIUAC_LIBRARY_PATH))))
 
     compile_as = Compilation_mode.Automatic
     source_file = None
