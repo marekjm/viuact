@@ -80,14 +80,16 @@ def make_meta(name):
 def perform_imports(import_expressions, meta):
     for spec in import_expressions:
         mod_name = spec.to_string()
-        if mod_name not in meta.modules:
-            sys.stderr.write('warning: no such module: {}\n'.format(mod_name))
-        for _, each in list(meta.functions.items()):
-            if each['from_module'] == mod_name:
-                meta.insert_function(
-                    name = each['real_name'],
-                    value = each,
-                )
+
+        if mod_name in meta.modules:
+            for _, each in list(meta.functions.items()):
+                if each['from_module'] == mod_name:
+                    meta.insert_function(
+                        name = each['real_name'],
+                        value = each,
+                    )
+
+        sys.stderr.write('warning: no such module: {}\n'.format(mod_name))
 
 
 def lower_file(expressions, module_prefix, compilation_filesystem_root):
