@@ -185,12 +185,17 @@ def main(executable_name, args):
                 module_interface_path = os.path.join(*module_path) + '.i'
                 print('generating interface for:  {} (in {})'.format(module_name, module_interface_path))
                 fns = [
-                    { 'arity': v['arity'], 'name': k, 'real_name': v['real_name'], }
+                    {
+                        'arity': v['arity'],
+                        'name': k,
+                        'real_name': v['real_name'],
+                        'from_module': v['from_module'],
+                    }
                     for k, v
                     in meta.functions.items()
                 ]
                 with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
-                    ofstream.write(json.dumps({ 'fns': fns, }))
+                    ofstream.write(json.dumps({ 'fns': fns, }, indent = 4))
         elif compile_as == Compilation_mode.Executable:
             print('compiling executable: {} (from {})'.format(module_name, source_file))
 
