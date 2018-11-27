@@ -37,6 +37,10 @@ class Visibility_information:
         #
         self.functions = {}
 
+        # List of functions that need to have `.signature:` directive
+        # in emitted assembly source code.
+        self.signatures = []
+
     def add_module(self, name):
         if type(name) is Visibility_information:
             self.modules.append(name.prefix)
@@ -59,6 +63,12 @@ class Visibility_information:
         if name not in self.functions:
             raise exceptions.No_such_function('no function named: {}()'.format(name), token)
         return self.functions[name]['real_name']
+
+    def add_signature_for(self, name):
+        self.signatures.append('{name}/{arity}'.format(
+            name = name,
+            arity = self.functions[name]['arity']
+        ))
 
     def nested_in(self, function_name):
         v = Visibility_information(
@@ -92,6 +102,7 @@ def perform_imports(import_expressions, meta):
                         name = each['real_name'],
                         value = each,
                     )
+                    meta.add_signature_for(each['real_name'])
             continue
 
         found = False
@@ -110,6 +121,7 @@ def perform_imports(import_expressions, meta):
                                 name = each['real_name'],
                                 value = each,
                             )
+                            meta.add_signature_for(each['real_name'])
                 break
 
         if found:

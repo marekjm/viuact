@@ -180,6 +180,15 @@ def main(executable_name, args):
                 module_impl_path = os.path.join(*module_path) + '.asm'
                 print('generating definition for: {} (in {})'.format(module_name, module_impl_path))
                 with open(os.path.join(output_directory, module_impl_path), 'w') as ofstream:
+                    if meta.signatures:
+                        ofstream.write('\n'.join(map(
+                            lambda each: '.signature: {}'.format(each),
+                            meta.signatures,
+                        )))
+                        ofstream.write('\n\n')
+                    ofstream.write(';\n; Function definitions of module {}\n;\n\n'.format(
+                        module_name
+                    ))
                     ofstream.write('\n\n'.join(contents))
 
                 module_interface_path = os.path.join(*module_path) + '.i'
@@ -210,6 +219,12 @@ def main(executable_name, args):
             )
 
             with open(os.path.join(output_directory, '{}.asm'.format(module_name)), 'w') as ofstream:
+                if meta.signatures:
+                    ofstream.write('\n'.join(map(
+                        lambda each: '.signature: {}'.format(each),
+                        meta.signatures,
+                    )))
+                    ofstream.write('\n\n')
                 ofstream.write('\n\n'.join([each for (_, each) in lowered_function_bodies]))
     except (exceptions.Emitter_exception, exceptions.Lowerer_exception,) as e:
         msg, cause = e.args
