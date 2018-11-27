@@ -1,3 +1,4 @@
+; an inline module
 (module B_module (
     (module C_module (
         (let grill () (
@@ -9,8 +10,10 @@
     ))
 ))
 
+; a non-inline module
 (module X_module)
 
+; imprting modules (even nested modules must be imported before use)
 (import A_module.B_module)
 (import A_module.B_module.C_module)
 (import A_module.X_module)
