@@ -50,6 +50,11 @@ def lex(source):
 
         token_types.Ellipsis,
 
+        token_types.String,         # Literals
+        token_types.Timeout,
+        token_types.Integer,
+        token_types.Float,
+
         token_types.Or,             # Operators
         token_types.And,
         token_types.Not,
@@ -71,11 +76,6 @@ def lex(source):
         token_types.Module_name,
 
         token_types.Comment,
-
-        token_types.String,         # Literals
-        token_types.Float,
-        token_types.Timeout,
-        token_types.Integer,
     ]
 
     i = 0
