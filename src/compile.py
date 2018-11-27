@@ -202,6 +202,7 @@ def main(executable_name, args):
                     }
                     for k, v
                     in meta.functions.items()
+                    if v['from_module'] == module_name
                 ]
                 with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
                     ofstream.write(json.dumps({ 'fns': fns, }, indent = 4))
