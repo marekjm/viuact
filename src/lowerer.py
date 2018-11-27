@@ -221,6 +221,28 @@ def lower_module_impl(module_expr, in_module, compilation_filesystem_root):
 
     return lowered_function_bodies, meta
 
+def load_as_inline_module(source, base_mod_name):
+    tokens = lexer.strip_comments(lexer.lex(source))
+    expressions = parser.parse(parser.group(tokens))
+
+    module = group_types.Inline_module(name = token_types.Module_name(base_mod_name))
+    for each in expressions:
+        if type(each) is group_types.Inline_module:
+            module.module_names.append(str(each.name.token))
+            module.modules[module.module_names[-1]] = each
+        elif type(each) is group_types.Module:
+            module.module_names.append(str(each.name.token))
+            module.modules[module.module_names[-1]] = each
+        elif type(each) is group_types.Function:
+            module.function_names.append(str(each.name.token))
+            module.functions[module.function_names[-1]] = each
+        elif type(each) is group_types.Import:
+            module.imports.append(each)
+        else:
+            raise Exception('expected `module`, `import`, or `let` keyword, got', each)
+
+    return module
+
 def lower_module(module_expr, in_module, compilation_filesystem_root):
     if type(module_expr) is group_types.Inline_module:
         return lower_module_impl(module_expr, in_module, compilation_filesystem_root)
@@ -230,25 +252,10 @@ def lower_module(module_expr, in_module, compilation_filesystem_root):
     mod_path = os.path.join(compilation_filesystem_root, *in_module, '{}.lisp'.format(base_mod_name))
 
     with open(mod_path, 'r') as ifstream:
-        tokens = lexer.strip_comments(lexer.lex(ifstream.read()))
-        expressions = parser.parse(parser.group(tokens))
-
-        module = group_types.Inline_module(name = token_types.Module_name(base_mod_name))
-        for each in expressions:
-            if type(each) is group_types.Inline_module:
-                module.module_names.append(str(each.name.token))
-                module.modules[module.module_names[-1]] = each
-            elif type(each) is group_types.Module:
-                module.module_names.append(str(each.name.token))
-                module.modules[module.module_names[-1]] = each
-            elif type(each) is group_types.Function:
-                module.function_names.append(str(each.name.token))
-                module.functions[module.function_names[-1]] = each
-            elif type(each) is group_types.Import:
-                module.imports.append(each)
-            else:
-                raise Exception('expected `module`, `import`, or `let` keyword, got', each)
-
+        module = load_as_inline_module(
+            source = ifstream.read(),
+            base_mod_name = base_mod_name,
+        )
         return lower_module_impl(
             module_expr = module,
             in_module = in_module,
