@@ -453,6 +453,10 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
         '*': 'mul',
         '/': 'div',
         '=': 'eq',
+        '<': 'lt',
+        '<=': 'lte',
+        '>': 'gt',
+        '>=': 'gte',
     }
 
     body.append(Verbatim('{} {} {} {}'.format(
