@@ -182,12 +182,14 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
     leader_type = type(expr)
 
     if leader_type is group_types.Let_binding:
-        return emit_let(
+        slot = emit_let(
             body,
             expr,
             state,
             slot,
         )
+        state.last_used_slot = slot
+        return slot
     elif leader_type is group_types.Function_call:
         if must_emit and slot is None:
             slot = state.get_slot(None)
