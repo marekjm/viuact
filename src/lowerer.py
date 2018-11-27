@@ -153,13 +153,15 @@ def lower_file(expressions, module_prefix, compilation_filesystem_root):
     # print('x-file-level: functions:', meta.functions)
 
     for each in expressions:
-        if type(each) is group_types.Function:
-            meta.add_function(
-                name = str(each.name.token),
-                arity = len(each.arguments),
-                from_module = module_prefix,
-            )
-            lowered_function_bodies.extend(lower_function(each, meta = meta))
+        if type(each) is not group_types.Function:
+            continue
+
+        meta.add_function(
+            name = str(each.name.token),
+            arity = len(each.arguments),
+            from_module = module_prefix,
+        )
+        lowered_function_bodies.extend(lower_function(each, meta = meta))
 
     # print('file-level: modules:  ', meta.modules)
     # print('file-level: functions:', meta.functions)
