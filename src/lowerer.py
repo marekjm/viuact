@@ -125,13 +125,15 @@ def lower_file(expressions, module_prefix, compilation_filesystem_root):
     meta = make_meta(name = module_prefix)
 
     for each in expressions:
-        if type(each) is group_types.Inline_module:
-            bodies, mod_meta = lower_module(
-                module_expr = each,
-                in_module = (),
-                compilation_filesystem_root = compilation_filesystem_root,
-            )
-            lowered_function_bodies.extend(bodies)
+        if type(each) not in (group_types.Inline_module, group_types.Module,):
+            continue
+
+        bodies, mod_meta = lower_module(
+            module_expr = each,
+            in_module = (),
+            compilation_filesystem_root = compilation_filesystem_root,
+        )
+        lowered_function_bodies.extend(bodies)
 
         for each in mod_meta.modules:
             meta.add_module(each)
