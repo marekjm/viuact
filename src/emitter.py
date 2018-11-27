@@ -189,6 +189,8 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
             slot,
         )
     elif leader_type is group_types.Function_call:
+        if must_emit and slot is None:
+            slot = state.get_slot(None)
         return emit_call(
             body = body,
             call_expr = expr,
@@ -336,7 +338,7 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
 
     if call_expr.to() == 'print':
         body.append(Verbatim('print {}'.format(
-            emit_expr(body, args[0], state).to_string()
+            emit_expr(body, args[0], state, must_emit = True).to_string()
         )))
     elif call_expr.to() == 'Std::Actor::join':
         timeout = (args[1] if len(args) > 1 else token_types.Timeout(INFINITE_DURATION))
