@@ -477,8 +477,7 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
     condition = if_expr.condition
     arms = if_expr.arms
 
-    cond_slot = state.get_slot(None)
-    emit_expr(body, condition, state, cond_slot)
+    cond_slot = emit_expr(body, condition, state, None, must_emit = True)
 
     true_arm_id = 'if_arm_{}'.format(hashlib.sha1(repr(arms[0]).encode('utf-8')).hexdigest())
     false_arm_id = 'if_arm_{}'.format(hashlib.sha1(repr(arms[1]).encode('utf-8')).hexdigest())
