@@ -504,6 +504,8 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(if_end_id)))
 
+    state.last_used_slot = slot
+
     return slot
 
 
