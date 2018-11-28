@@ -136,6 +136,14 @@ class Right_paren(Punctuation):
     type_name = 'Right_paren'
     pattern = re.compile('\)')
 
+class Left_curly(Punctuation):
+    type_name = 'Left_curly'
+    pattern = re.compile('\{')
+
+class Right_curly(Punctuation):
+    type_name = 'Right_curly'
+    pattern = re.compile('\}')
+
 
 class Name(Token_type):
     type_name = 'Name'
@@ -170,3 +178,12 @@ class Integer(Literal):
 class Timeout(Literal):
     type_name = 'timeout'
     pattern = re.compile('((0|[1-9][0-9]*)m?s|infinity)')
+
+
+class Internal_marker(Token_type):
+    def __repr__(self):
+        return 'Internal_{}: {}'.format(self.type_name.lower(), self.token)
+
+class Compound_expression_marker(Internal_marker):
+    type_name = 'Compound_expression_marker'
+    pattern = None

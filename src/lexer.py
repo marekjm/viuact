@@ -37,6 +37,8 @@ def lex(source):
     patterns = [
         token_types.Left_paren,     # Punctuation
         token_types.Right_paren,
+        token_types.Left_curly,
+        token_types.Right_curly,
 
         token_types.Let,            # Keywords
         token_types.Rec,

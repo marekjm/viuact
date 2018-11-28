@@ -165,3 +165,16 @@ class If(Group_type):
 
     def to_string(self):
         return 'if ({})'.format(self.condition)
+
+
+class Compound_expression(Group_type):
+    type_name = 'Compound_expression'
+
+    def __init__(self, expressions):
+        self.expressions = expressions
+
+    def to_string(self):
+        return '({})'.format(' '.join(map(
+            (lambda x: '({})'.format(x.to_string())),
+            self.expressions
+        )))

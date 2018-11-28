@@ -2,7 +2,7 @@ import token_types
 import group_types
 
 
-def group_impl(tokens):
+def group_impl(tokens, break_on = token_types.Right_paren):
     grouped = [tokens[0]]
 
     i = 1
@@ -37,7 +37,7 @@ def group_impl(tokens):
         grouped.append(each)
         i += 1
 
-        if isinstance(each, token_types.Right_paren):
+        if isinstance(each, break_on):
             return grouped, i
 
     return grouped, i
@@ -109,6 +109,10 @@ def parse_expression(expr):
         return group_types.Actor_call(
             name = parse_expression(expr[1]),
             args = [parse_expression(each) for each in expr[2]],
+        )
+    elif leader_type is token_types.Compound_expression_marker:
+        return group_types.Compound_expression(
+            expressions = [ parse_expression(each) for each in expr[1] ],
         )
     else:
         raise Exception('invalid expression in function body', expr)
