@@ -329,6 +329,9 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
             must_emit,
             meta,
         )
+    elif leader_type is list:
+        raise exceptions.Emitter_exception(
+            'expression could not be emitted, try removing parentheses surrounding it', expr)
     else:
         raise exceptions.Emitter_exception('expression could not be emitted', expr)
 

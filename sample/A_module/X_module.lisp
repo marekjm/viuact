@@ -1,11 +1,11 @@
 (let sex () (
-    (print ("Sex!"))
+    (print "Sex!")
 ))
 
 (let drugs () (
-    (print ("Drugs!"))
+    (print "Drugs!")
 ))
 
 (let rock_n_roll () (
-    (print ("Rock 'n Roll!"))
+    (print "Rock 'n Roll!")
 ))

@@ -2,11 +2,11 @@
 (module B_module (
     (module C_module (
         (let grill () (
-            (print ("Let's eat"))
+            (print "Let's eat")
         ))
     ))
     (let bar () (
-        (print ("Let's drink!"))
+        (print "Let's drink!")
     ))
 ))
 
@@ -20,15 +20,15 @@
 
 (let foo (x) (
     (let adder (a b) (
-        (+ (a b))
+        (+ a b)
     ))
-    (adder (x 1))
+    (adder x 1)
 ))
 
 (let fn (x) (
-    (print (x))
-    (foo (41))
-    (A_module.B_module.bar ())
-    (A_module.B_module.C_module.grill ())
-    (A_module.X_module.drugs ())
+    (print x)
+    (foo 41)
+    (A_module.B_module.bar)
+    (A_module.B_module.C_module.grill)
+    (A_module.X_module.drugs)
 ))

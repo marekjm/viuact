@@ -84,12 +84,12 @@ def parse_expression(expr):
     elif leader_type is token_types.Name and type(expr) is list:
         return group_types.Function_call(
             name = expr[0],
-            args = [parse_expression(each) for each in expr[1]],
+            args = [parse_expression(each) for each in expr[1:]],
         )
     elif leader_type is list and type(leader[0]) in name_types:
         return group_types.Function_call(
             name = parse_expression(expr[0]),
-            args = [parse_expression(each) for each in expr[1]],
+            args = [parse_expression(each) for each in expr[1:]],
         )
     elif leader_type in name_types and type(expr) is list and type(expr[1]) is token_types.Dot:
         return group_types.Id(
@@ -102,7 +102,7 @@ def parse_expression(expr):
     elif isinstance(leader, (token_types.Logic_operator, token_types.Arithmetic_operator)) and type(expr) is list:
         return group_types.Operator_call(
             operator = expr[0],
-            args = [parse_expression(each) for each in expr[1]],
+            args = [parse_expression(each) for each in expr[1:]],
         )
     elif leader_type is token_types.If:
         return group_types.If(
