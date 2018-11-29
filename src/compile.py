@@ -120,7 +120,6 @@ def main(executable_name, args):
         exit(1)
 
     expressions = parser.parse(groups)
-    print(expressions)
 
     module_name = os.path.basename(source_file).split('.')[0]
     compilation_filesystem_root = os.path.dirname(source_file)
@@ -239,8 +238,6 @@ def main(executable_name, args):
                         list(filter(lambda each: each[0] == fn_name, lowered_function_bodies))[0][1]
                     )
 
-            print(module_function_mapping)
-
             for mod_name, contents in module_contents.items():
                 if mod_name is None:
                     continue
@@ -288,7 +285,6 @@ def main(executable_name, args):
                         meta.signatures,
                     )))
                     ofstream.write('\n\n')
-                print([(x, (x in module_function_mapping[None])) for (x, _) in lowered_function_bodies])
                 ofstream.write('\n\n'.join([
                     each
                     for (_, each)
