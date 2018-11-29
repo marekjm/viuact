@@ -111,10 +111,10 @@ def parse_expression(expr):
         )
     elif leader_type in literal_types:
         return expr
-    elif leader_type is token_types.Actor and type(expr[1]) is token_types.Name and type(expr[2]) is list:
+    elif leader_type is token_types.Actor and type(expr[1]) is token_types.Name:
         return group_types.Actor_call(
             name = parse_expression(expr[1]),
-            args = [parse_expression(each) for each in expr[2]],
+            args = [parse_expression(each) for each in expr[2:]],
         )
     elif leader_type is token_types.Compound_expression_marker:
         return group_types.Compound_expression(

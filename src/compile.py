@@ -219,6 +219,68 @@ def main(executable_name, args):
                 compilation_filesystem_root = compilation_filesystem_root,
             )
 
+            all_modules = set([
+                each['from_module']
+                for each
+                in meta.functions.values()
+            ])
+
+            module_function_mapping = {}
+            module_contents = {}
+
+            for each in all_modules:
+                module_function_mapping[each] = []
+                module_contents[each] = []
+            for each in meta.functions.values():
+                module_function_mapping[each['from_module']].append(each['real_name'])
+            for mod_name, contained_functions in module_function_mapping.items():
+                for fn_name in set(contained_functions):
+                    module_contents[mod_name].append(
+                        list(filter(lambda each: each[0] == fn_name, lowered_function_bodies))[0][1]
+                    )
+
+            print(module_function_mapping)
+
+            for mod_name, contents in module_contents.items():
+                if mod_name is None:
+                    continue
+
+                module_path = mod_name.split('::')
+                if len(module_path) > 1:
+                    os.makedirs(os.path.join(output_directory, *module_path[:-1]), exist_ok = True)
+
+                module_impl_path = os.path.join(*module_path) + '.asm'
+                print('generating definition for: {} (in {})'.format(module_name, module_impl_path))
+                with open(os.path.join(output_directory, module_impl_path), 'w') as ofstream:
+                    if meta.signatures:
+                        ofstream.write('\n'.join([
+                            '.signature: {}'.format(each)
+                            for each
+                            in meta.signatures
+                            if each not in module_function_mapping[mod_name]
+                        ]))
+                        ofstream.write('\n\n')
+                    ofstream.write(';\n; Function definitions of module {}\n;\n\n'.format(
+                        mod_name
+                    ))
+                    ofstream.write('\n\n'.join(contents))
+
+                module_interface_path = os.path.join(*module_path) + '.i'
+                print('generating interface for:  {} (in {})'.format(mod_name, module_interface_path))
+                fns = [
+                    {
+                        'arity': v['arity'],
+                        'name': k,
+                        'real_name': v['real_name'],
+                        'from_module': v['from_module'],
+                    }
+                    for k, v
+                    in meta.functions.items()
+                    if v['from_module'] == module_name
+                ]
+                with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
+                    ofstream.write(json.dumps({ 'fns': fns, }, indent = 4))
+
             with open(os.path.join(output_directory, '{}.asm'.format(module_name)), 'w') as ofstream:
                 if meta.signatures:
                     ofstream.write('\n'.join(map(
@@ -226,7 +288,13 @@ def main(executable_name, args):
                         meta.signatures,
                     )))
                     ofstream.write('\n\n')
-                ofstream.write('\n\n'.join([each for (_, each) in lowered_function_bodies]))
+                print([(x, (x in module_function_mapping[None])) for (x, _) in lowered_function_bodies])
+                ofstream.write('\n\n'.join([
+                    each
+                    for (_, each)
+                    in lowered_function_bodies
+                    if meta.functions.get(_, {}).get('from_module') is None
+                ]))
     except (exceptions.Emitter_exception, exceptions.Lowerer_exception,) as e:
         msg, cause = e.args
         line, character = 0, 0
