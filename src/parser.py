@@ -34,6 +34,12 @@ def group_impl(tokens, break_on = token_types.Right_paren):
             i += 2
             continue
 
+        if isinstance(each, token_types.Left_curly):
+            g, n = group_impl(tokens[i:], break_on = token_types.Right_curly)
+            grouped.append([ token_types.Compound_expression_marker(tokens[i]) ] + [ g[1:-1] ])
+            i += n
+            continue
+
         grouped.append(each)
         i += 1
 

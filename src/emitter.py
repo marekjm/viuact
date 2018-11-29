@@ -320,6 +320,15 @@ def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : 
             str(expr.token),
         ))
         return slot
+    elif leader_type is group_types.Compound_expression:
+        return emit_compound_expr(
+            body,
+            expr,
+            state,
+            slot,
+            must_emit,
+            meta,
+        )
     else:
         raise exceptions.Emitter_exception('expression could not be emitted', expr)
 
@@ -561,3 +570,16 @@ def emit_function(body : list, expr, state : State, slot : Slot):
     body.append(Verbatim('.end'))
 
     return
+
+
+def emit_compound_expr(body : list, expr, state : State, slot : Slot = None, must_emit : bool = False, meta = None):
+    for each in expr.expressions[:-1]:
+        emit_expr(body, each, state)
+    return emit_expr(
+        body = body,
+        expr = expr.expressions[-1],
+        state = state,
+        slot = slot,
+        must_emit = must_emit,
+        meta = meta,
+    )
