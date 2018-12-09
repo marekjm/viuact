@@ -35,12 +35,12 @@
 (import Std.Posix.Io)
 
 (let main () (
-    ;(let s "Hello World!")
-    ;(Main.foo s)
-    ;(let i (Main.zero))
-    ;(print i)
-    ;(let x (Std.Posix.Io.open "./foo.asm"))
-    ;(print x)
+    (let s "Hello World!")
+    (Main.foo s)
+    (let i (Main.zero))
+    (print i)
+    (let x (Std.Posix.Io.open "./foo.asm"))
+    (print x)
 
     (let a 1)
     (let b 41)
