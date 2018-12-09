@@ -291,6 +291,11 @@ def main(executable_name, args):
                     in lowered_function_bodies
                     if meta.functions.get(_, {}).get('from_module') is None
                 ]))
+
+            with open(os.path.join(output_directory, '{}.d'.format(module_name)), 'w') as ofstream:
+                ofstream.write(json.dumps({
+                    'imports': meta.imports,
+                }, indent = 2))
     except (exceptions.Emitter_exception, exceptions.Lowerer_exception,) as e:
         msg, cause = e.args
         line, character = 0, 0

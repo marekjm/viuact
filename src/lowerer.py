@@ -41,6 +41,9 @@ class Visibility_information:
         # in emitted assembly source code.
         self.signatures = []
 
+        # List of imported modules.
+        self.imports = []
+
     def add_module(self, name):
         if type(name) is Visibility_information:
             self.modules.append(name.prefix)
@@ -83,6 +86,9 @@ class Visibility_information:
             )
         return v
 
+    def add_import(self, module_name):
+        self.imports.append(module_name)
+
 
 def make_meta(name):
     return Visibility_information(name)
@@ -103,6 +109,7 @@ def perform_imports(import_expressions, meta):
                         value = each,
                     )
                     meta.add_signature_for(each['real_name'])
+            meta.add_import(mod_name)
             continue
 
         found = False
@@ -122,6 +129,7 @@ def perform_imports(import_expressions, meta):
                                 value = each,
                             )
                             meta.add_signature_for(each['real_name'])
+                meta.add_import(mod_name)
                 break
 
         if found:
