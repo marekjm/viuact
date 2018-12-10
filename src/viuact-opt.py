@@ -13,10 +13,10 @@ VIUA_ASM_PATH = os.environ.get('VIUA_ASM_PATH', '../core/viuavm/build/bin/vm/asm
 
 
 def main(args):
-    main_file = args[0]
-    main_dependency_file = '{}.d'.format(os.path.splitext(main_file)[0])
+    main_source_file = args[0]
+    main_dependency_file = '{}.d'.format(os.path.splitext(main_source_file)[0])
 
-    print('main file:            {}'.format(main_file))
+    print('main file:            {}'.format(main_source_file))
     print('main dependency file: {}'.format(main_dependency_file))
 
     main_imports = []
@@ -72,13 +72,25 @@ def main(args):
         source_path = import_paths[each]
         output_path = '{}.out'.format(os.path.splitext(source_path)[0])
         print('assembling: {} -> {}'.format(source_path, output_path))
+
         asm_process = subprocess.Popen(
             args = (env.VIUA_ASM_PATH, '-c', '-o', output_path, source_path),
         )
+
         asm_exit_code = asm_process.wait()
         if asm_exit_code:
             sys.stderr.write('error: failed to assemble module {}\n'.format(each))
             exit(asm_exit_code)
+
+        library_files_to_link.append(output_path)
+
+    main_output_file = (args[1] if len(args) >= 2 else 'a.out')
+    asm_process = subprocess.Popen(
+        args = (env.VIUA_ASM_PATH, '-o', main_output_file, main_source_file,) + tuple(library_files_to_link)
+    )
+    asm_exit_code = asm_process.wait()
+    if asm_exit_code:
+        exit(asm_exit_code)
 
 
 main(sys.argv[1:])
