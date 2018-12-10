@@ -14,6 +14,7 @@ import lexer
 import parser
 import lowerer
 import env
+import logs
 
 
 class Compilation_mode:
@@ -88,8 +89,8 @@ def main(executable_name, args):
     output_directory = './build/_default'
     os.makedirs(output_directory, exist_ok = True)
 
-    print('output directory:    {}'.format(env.DEFAULT_OUTPUT_DIRECTORY))
-    print('library search path: {}'.format(' '.join(map(repr, env.VIUAC_LIBRARY_PATH))))
+    logs.info('output directory:    {}'.format(env.DEFAULT_OUTPUT_DIRECTORY))
+    logs.info('library search path: {}'.format(' '.join(map(repr, env.VIUAC_LIBRARY_PATH))))
 
     compile_as = Compilation_mode.Automatic
     source_file = None
@@ -127,7 +128,7 @@ def main(executable_name, args):
     try:
         if compile_as == Compilation_mode.Module:
             module_name = module_name[0].upper() + module_name[1:]
-            print('compiling module: {} (from {})'.format(module_name, source_file))
+            logs.verbose('compiling module: {} (from {})'.format(module_name, source_file))
 
             module = group_types.Inline_module(name = token_types.Module_name(module_name))
             for each in expressions:
@@ -177,7 +178,7 @@ def main(executable_name, args):
                     os.makedirs(os.path.join(output_directory, *module_path[:-1]), exist_ok = True)
 
                 module_impl_path = os.path.join(*module_path) + '.asm'
-                print('generating definition for: {} (in {})'.format(module_name, module_impl_path))
+                logs.debug('generating definition for: {} (in {})'.format(module_name, module_impl_path))
                 with open(os.path.join(output_directory, module_impl_path), 'w') as ofstream:
                     if meta.signatures:
                         ofstream.write('\n'.join(map(
@@ -191,7 +192,7 @@ def main(executable_name, args):
                     ofstream.write('\n\n'.join(contents))
 
                 module_interface_path = os.path.join(*module_path) + '.i'
-                print('generating interface for:  {} (in {})'.format(module_name, module_interface_path))
+                logs.debug('generating interface for:  {} (in {})'.format(module_name, module_interface_path))
                 fns = [
                     {
                         'arity': v['arity'],
@@ -206,7 +207,7 @@ def main(executable_name, args):
                 with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
                     ofstream.write(json.dumps({ 'fns': fns, }, indent = 4))
         elif compile_as == Compilation_mode.Executable:
-            print('compiling executable: {} (from {})'.format(module_name, source_file))
+            logs.verbose('compiling executable: {} (from {})'.format(module_name, source_file))
 
             if not list(filter(lambda each: type(each) is group_types.Function, expressions)):
                 print_error('error: compiling as executable, but no functions were defined')
@@ -247,7 +248,7 @@ def main(executable_name, args):
                     os.makedirs(os.path.join(output_directory, *module_path[:-1]), exist_ok = True)
 
                 module_impl_path = os.path.join(*module_path) + '.asm'
-                print('generating definition for: {} (in {})'.format(module_name, module_impl_path))
+                logs.debug('generating definition for: {} (in {})'.format(module_name, module_impl_path))
                 with open(os.path.join(output_directory, module_impl_path), 'w') as ofstream:
                     if meta.signatures:
                         ofstream.write('\n'.join([
@@ -263,7 +264,7 @@ def main(executable_name, args):
                     ofstream.write('\n\n'.join(contents))
 
                 module_interface_path = os.path.join(*module_path) + '.i'
-                print('generating interface for:  {} (in {})'.format(mod_name, module_interface_path))
+                logs.debug('generating interface for:  {} (in {})'.format(mod_name, module_interface_path))
                 fns = [
                     {
                         'arity': v['arity'],

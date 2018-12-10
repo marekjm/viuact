@@ -10,3 +10,11 @@ VIUAC_LIBRARY_PATH = (
 )
 
 VIUA_ASM_PATH = os.environ.get('VIUA_ASM_PATH', '../core/viuavm/build/bin/vm/asm')
+
+
+def bool_of_string(s):
+    return (s.lower() in ('1', 'true', 'yes',))
+
+VIUAC_VERBOSE = bool_of_string(os.environ.get('VIUAC_VERBOSE', ''))
+VIUAC_DEBUGGING = bool_of_string(os.environ.get('VIUAC_DEBUGGING', ''))
+VIUAC_INFO = bool_of_string(os.environ.get('VIUAC_INFO', ''))
