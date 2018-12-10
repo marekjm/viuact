@@ -254,7 +254,7 @@ def main(executable_name, args):
                             '.signature: {}'.format(each)
                             for each
                             in meta.signatures
-                            if each not in module_function_mapping[mod_name]
+                            if each.split('/')[0] not in module_function_mapping[mod_name]
                         ]))
                         ofstream.write('\n\n')
                     ofstream.write(';\n; Function definitions of module {}\n;\n\n'.format(
