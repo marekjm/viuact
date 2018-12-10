@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import subprocess
 import sys
 import os
 
@@ -65,6 +66,19 @@ def main(args):
             exit(1)
 
     print(import_paths)
+
+    library_files_to_link = []
+    for each in main_imports:
+        source_path = import_paths[each]
+        output_path = '{}.out'.format(os.path.splitext(source_path)[0])
+        print('assembling: {} -> {}'.format(source_path, output_path))
+        asm_process = subprocess.Popen(
+            args = (env.VIUA_ASM_PATH, '-c', '-o', output_path, source_path),
+        )
+        asm_exit_code = asm_process.wait()
+        if asm_exit_code:
+            sys.stderr.write('error: failed to assemble module {}\n'.format(each))
+            exit(asm_exit_code)
 
 
 main(sys.argv[1:])

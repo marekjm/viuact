@@ -8,3 +8,5 @@ VIUAC_LIBRARY_PATH = (
     ))
     + (DEFAULT_OUTPUT_DIRECTORY,)
 )
+
+VIUA_ASM_PATH = os.environ.get('VIUA_ASM_PATH', '../core/viuavm/build/bin/vm/asm')
