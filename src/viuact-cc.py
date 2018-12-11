@@ -235,9 +235,11 @@ def main(executable_name, args):
                 module_function_mapping[each['from_module']].append(each['real_name'])
             for mod_name, contained_functions in module_function_mapping.items():
                 for fn_name in set(contained_functions):
-                    module_contents[mod_name].append(
-                        list(filter(lambda each: each[0] == fn_name, lowered_function_bodies))[0][1]
-                    )
+                    res = list(filter(lambda each: each[0] == fn_name, lowered_function_bodies))
+                    if res:
+                        module_contents[mod_name].append(
+                            res[0][1]
+                        )
 
             for mod_name, contents in module_contents.items():
                 if mod_name is None:
