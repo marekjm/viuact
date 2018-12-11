@@ -248,7 +248,7 @@ def main(executable_name, args):
                     os.makedirs(os.path.join(output_directory, *module_path[:-1]), exist_ok = True)
 
                 module_impl_path = os.path.join(*module_path) + '.asm'
-                logs.debug('generating definition for: {} (in {})'.format(module_name, module_impl_path))
+                logs.debug('generating definition for: {} (in {})'.format(mod_name, module_impl_path))
                 with open(os.path.join(output_directory, module_impl_path), 'w') as ofstream:
                     if meta.signatures:
                         ofstream.write('\n'.join([
