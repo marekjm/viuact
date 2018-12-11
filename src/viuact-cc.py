@@ -245,6 +245,13 @@ def main(executable_name, args):
                 if mod_name is None:
                     continue
 
+                # Module is a pure import.
+                # If its name is not in modules defined in this file do
+                # not emit files for it.
+                if mod_name not in meta.modules:
+                    logs.debug('module {} is a pure import'.format(mod_name))
+                    continue
+
                 module_path = mod_name.split('::')
                 if len(module_path) > 1:
                     os.makedirs(os.path.join(output_directory, *module_path[:-1]), exist_ok = True)
