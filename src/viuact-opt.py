@@ -72,8 +72,10 @@ def main(args):
         output_path = '{}.out'.format(os.path.splitext(source_path)[0])
         logs.debug('assembling: {} -> {}'.format(source_path, output_path))
 
+        asm_process_args = (env.VIUA_ASM_PATH, '-c', '-o', output_path, source_path)
+        logs.debug(' '.join(asm_process_args))
         asm_process = subprocess.Popen(
-            args = (env.VIUA_ASM_PATH, '-c', '-o', output_path, source_path),
+            args = asm_process_args,
         )
 
         asm_exit_code = asm_process.wait()
@@ -84,8 +86,11 @@ def main(args):
         library_files_to_link.append(output_path)
 
     main_output_file = (args[1] if len(args) >= 2 else 'a.out')
+
+    asm_process_args = (env.VIUA_ASM_PATH, '-o', main_output_file, main_source_file,) + tuple(library_files_to_link)
+    logs.debug(' '.join(asm_process_args))
     asm_process = subprocess.Popen(
-        args = (env.VIUA_ASM_PATH, '-o', main_output_file, main_source_file,) + tuple(library_files_to_link)
+        args = asm_process_args,
     )
     asm_exit_code = asm_process.wait()
     if asm_exit_code:
