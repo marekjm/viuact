@@ -27,34 +27,13 @@ Valid_compilation_modes = (
 )
 
 
-def compile(executable_name, args):
-    output_directory = './build/_default'
-    os.makedirs(output_directory, exist_ok = True)
-
-    logs.info('output directory:    {}'.format(env.DEFAULT_OUTPUT_DIRECTORY))
-    logs.info('library search path: {}'.format(' '.join(map(repr, env.VIUAC_LIBRARY_PATH))))
-
-    compile_as = Compilation_mode.Automatic
-    source_file = None
-    if len(args) == 1:
-        source_file = args[0]
-    else:
-        if args[0] != '--mode':
-            print_error('error: unknown option: {}'.format(repr(args[0])))
-            print_error('note: run {} --help to get help'.format(executable_name))
-            exit(1)
-
-        compile_as = args[1]
-        source_file = args[2]
-
-    if compile_as not in Valid_compilation_modes:
-        print_error('error: invalid compilation mode: {}'.format(compile_as))
-        exit(1)
-
-    source_code = None
-    with open(source_file, 'r') as ifstream:
-        source_code = ifstream.read()
-
+def compile_text(
+        executable_name,
+        source_file,
+        source_code,
+        compile_as,
+        output_directory = './build/_default',
+        ):
     tokens = lexer.strip_comments(lexer.lex(source_code))
 
     groups = parser.group(tokens)
@@ -265,3 +244,27 @@ def compile(executable_name, args):
             cause,
         ))
         raise
+
+def compile_file(
+        executable_name,
+        args,
+        source_file,
+        compile_as,
+        output_directory = './build/_default',
+        ):
+    os.makedirs(output_directory, exist_ok = True)
+
+    logs.info('output directory:    {}'.format(env.DEFAULT_OUTPUT_DIRECTORY))
+    logs.info('library search path: {}'.format(' '.join(map(repr, env.VIUAC_LIBRARY_PATH))))
+
+    source_code = None
+    with open(source_file, 'r') as ifstream:
+        source_code = ifstream.read()
+
+    compile_text(
+        executable_name = executable_name,
+        source_file = source_file,
+        source_code = source_code,
+        compile_as = compile_as,
+        output_directory = output_directory,
+    )

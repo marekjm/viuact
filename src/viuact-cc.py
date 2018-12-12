@@ -75,6 +75,28 @@ def main(executable_name, args):
         ))
         exit(1)
 
-    driver.compile(executable_name, args)
+    compile_as = driver.Compilation_mode.Automatic
+    source_file = None
+    if len(args) == 1:
+        source_file = args[0]
+    else:
+        if args[0] != '--mode':
+            print_error('error: unknown option: {}'.format(repr(args[0])))
+            print_error('note: run {} --help to get help'.format(executable_name))
+            exit(1)
+
+        compile_as = args[1]
+        source_file = args[2]
+
+    if compile_as not in driver.Valid_compilation_modes:
+        print_error('error: invalid compilation mode: {}'.format(compile_as))
+        exit(1)
+
+    driver.compile_file(
+        executable_name = executable_name,
+        args = args,
+        source_file = source_file,
+        compile_as = compile_as,
+    )
 
 main(sys.argv[0], sys.argv[1:])
