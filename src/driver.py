@@ -50,6 +50,8 @@ def compile_text(
     module_name = os.path.basename(source_file).split('.')[0]
     compilation_filesystem_root = os.path.dirname(source_file)
     lowered_function_bodies = []
+
+    main_module_output_name = os.path.join(output_directory, '{}.asm'.format(module_name))
     try:
         if compile_as == Compilation_mode.Module:
             module_name = module_name[0].upper() + module_name[1:]
@@ -213,7 +215,7 @@ def compile_text(
                 with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
                     ofstream.write(json.dumps({ 'fns': fns, }, indent = 4))
 
-            with open(os.path.join(output_directory, '{}.asm'.format(module_name)), 'w') as ofstream:
+            with open(main_module_output_name, 'w') as ofstream:
                 if meta.signatures:
                     ofstream.write('\n'.join(map(
                         lambda each: '.signature: {}'.format(each),
@@ -249,6 +251,8 @@ def compile_text(
         ))
         raise
 
+    return main_module_output_name
+
 def compile_file(
         executable_name,
         args,
@@ -265,7 +269,7 @@ def compile_file(
     with open(source_file, 'r') as ifstream:
         source_code = ifstream.read()
 
-    compile_text(
+    return compile_text(
         executable_name = executable_name,
         source_file = source_file,
         source_code = source_code,
