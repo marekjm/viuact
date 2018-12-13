@@ -31,7 +31,7 @@ This is a list of expressions supported by Viua Lisp.
 
 ## Let bindings
 
-    (let x (...))
+    (let x ...)
     
 Normally, the `(...)` expression would be assigned an anonymous slot and
 used immediately by some other expression. The `let x` just gives a
@@ -42,12 +42,12 @@ beginning with `_` are reserved.
 
 Viua lisp allows name rebinding, i.e. this code is valid:
 
-    (let x (42))
-    (let x ("Hello World!"))
+    (let x 42)
+    (let x "Hello World!")
     
 ## Mutable let bindings
 
-    (let mutable x (...))
+    (let mutable x ...)
     
 Values are immutable by default. The `mutable` keyword marks the value
 to which the binding is made as mutable.
@@ -59,7 +59,7 @@ illusion away.
 
 ## Static let bindings
 
-    (let static x (...))
+    (let static x ...)
     
 Values use the "local" lifetime by default. The `static` keyword changes
 that and makes the value use "static" lifetime.
@@ -69,10 +69,9 @@ set; "static" lifetime means using the `static` register set.
 
 ## `(...)` vs `...`
 
-Adding extra parentheses does not change the meaning of an expression, i.e.
-both `42` and `(42)` represent the number 42.
-Where a parenthesis is required by syntax rules adding too many parentheses
-will prevent the code from being compiled instead of failing at runtime.
+Adding extra parentheses may sometimes change the meaning of an expression.
+For example, function *calls* must be wrapped in parentheses, otherwise they
+are just references to function's name.
 
 ## Literals
 
@@ -101,9 +100,18 @@ as platform-independent arithmetic (checked, wrapping, saturating).
 
 ## Function definitions
 
-    (let f (x) (...))
+    (let f (x) ...)
     
-For example
+Functions are parameterised expressions. A function's formal parameters
+must be wrapped in parentheses.
+
+## Compound expressions
+
+    { ... }
+
+A compound expression may be supplied wherever a simple expression is
+expected. Its return value is the value of the last expression of the compound
+expression.
 
 ## Module definitions
 
