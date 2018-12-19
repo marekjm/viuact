@@ -334,6 +334,7 @@ def assemble_and_link(main_source_file, main_output_file):
 
         asm_process_args = (
             env.VIUA_ASM_PATH,
+            '-Wunused-register',
             '-c',
             '-o',
             output_path,
@@ -353,6 +354,7 @@ def assemble_and_link(main_source_file, main_output_file):
 
     asm_process_args = (
         env.VIUA_ASM_PATH,
+        '-Wunused-register',
         '-o',
         main_output_file,
         main_source_file,
