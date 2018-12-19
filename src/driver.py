@@ -16,9 +16,6 @@ import env
 import logs
 
 
-VIUA_ASM_PATH = os.environ.get('VIUA_ASM_PATH', '../core/viuavm/build/bin/vm/asm')
-
-
 class Compilation_mode:
     Automatic = 'auto'
     Executable = 'exec'
