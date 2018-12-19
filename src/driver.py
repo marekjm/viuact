@@ -332,7 +332,13 @@ def assemble_and_link(main_source_file, main_output_file):
         output_path = '{}.out'.format(os.path.splitext(source_path)[0])
         logs.debug('assembling: {} -> {}'.format(source_path, output_path))
 
-        asm_process_args = (env.VIUA_ASM_PATH, '-c', '-o', output_path, source_path)
+        asm_process_args = (
+            env.VIUA_ASM_PATH,
+            '-c',
+            '-o',
+            output_path,
+            source_path,
+        )
         logs.debug(' '.join(asm_process_args))
         asm_process = subprocess.Popen(
             args = asm_process_args,
@@ -345,7 +351,12 @@ def assemble_and_link(main_source_file, main_output_file):
 
         library_files_to_link.append(output_path)
 
-    asm_process_args = (env.VIUA_ASM_PATH, '-o', main_output_file, main_source_file,) + tuple(library_files_to_link)
+    asm_process_args = (
+        env.VIUA_ASM_PATH,
+        '-o',
+        main_output_file,
+        main_source_file,
+    ) + tuple(library_files_to_link)
     logs.debug(' '.join(asm_process_args))
     asm_process = subprocess.Popen(
         args = asm_process_args,
