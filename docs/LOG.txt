@@ -1,0 +1,31 @@
+
+                        VIUACT COMPILER DEVELOPMENT LOG
+
+-------------------------------------------------------------------------------
+
+This file describes the history of, and events that occured during, the Viuact
+compiler development.
+
+On every day when something related to the project is done, a relevant entry is
+made in this file. An example entry looks like this:
+
+>   TITLE OF THE ENTRY
+>   (2018-12-22 16:29)
+>
+>   Contents of the entry.
+
+Contents of each entry may be short (e.g. "A new issue was added."), or long
+(e.g. a description of how a problem was resolved, or summary of a discussion).
+
+-------------------------------------------------------------------------------
+
+FIRST ENTRY
+(2018-12-22 16:31)
+
+The log file was established. It will be maintained as a log of what happened
+during Viuact development, when, and why. I decided to start writing it after
+a discussion with Krzysztof - we came to the conclusion (which was put forward
+by Krzysztof) that *whatever* is done that has its root cause in the Viuact
+project should be documented. This way we will be able to put the entire
+history of the project and its supporting work inside the final "paper" (or
+whatever it will be called).
