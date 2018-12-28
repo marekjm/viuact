@@ -19,6 +19,38 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 -------------------------------------------------------------------------------
 
+CHANGES IN MODULE IMPLEMENTATION ON VIUA VM SIDE
+(2018-12-28 14:56)
+
+Viua VM was using a ".vlib" extension for files containing modules (linkable
+bytecode). Now, to accommodate Viuact, the extension was changed to ".module".
+Commit 89889b5acbc79f1d4d5c023669f775fdef539f30 introduces the change.
+
+Static imports work on Viua VM side. A module (or an executable) can request
+that another module be statically linked to it by using the ".import:"
+directive with "static" attribute:
+
+    .import: [[static]] A_module
+
+This will make the linker look for "A_module.module" file, and statically link
+it to the current "main" module.
+
+There is also basic support for dynamic imports, but it is not finished yet.
+You can specify a dynamic link using the ".import:" directive with "dynamic"
+attribute...
+
+    .import: [[dynamic]] A_module
+
+...and it will pass the verification stage, but there will be nothing in the
+assembled module that will tell the runtime linker to look for a module and
+link it. You will have to use the "VIUAPRELINK" environment variable to
+instruct the VM to link required modules before invoking the main function of
+the loaded executable:
+
+    $ VIUAPRELINK=A_module viua-vm ./a.out
+
+-------------------------------------------------------------------------------
+
 FIRST ENTRY
 (2018-12-22 16:31)
 
