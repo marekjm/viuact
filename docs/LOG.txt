@@ -1,7 +1,7 @@
 
                         VIUACT COMPILER DEVELOPMENT LOG
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 This file describes the history of, and events that occured during, the Viuact
 compiler development.
@@ -17,7 +17,25 @@ made in this file. An example entry looks like this:
 Contents of each entry may be short (e.g. "A new issue was added."), or long
 (e.g. a description of how a problem was resolved, or summary of a discussion).
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+BASIC SUPPORT DYNAMIC IMPORTS ON VIUA VM SIDE
+(2018-12-30 10:35)
+
+Information about dynamic imports is now stored inside bytecode modules (both
+linkable and executable). It is reported by the loader to the kernel during
+program startup; the kernel then invokes the module loading routine for the
+requested module.
+
+This means that manually setting the VIUAPRELINK environment variable is no
+longer necessary.
+
+One limitation of current implementation is that dynamic imports of dynamic
+imports are resolved at compile time instead of at run time. This means that
+even if there is a newer version of a module that is dynamically imported its
+dependencies will be imported as if the older version was run.
+
+--------------------------------------------------------------------------------
 
 CHANGES IN MODULE IMPLEMENTATION ON VIUA VM SIDE
 (2018-12-28 14:56)
@@ -49,7 +67,7 @@ the loaded executable:
 
     $ VIUAPRELINK=A_module viua-vm ./a.out
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 FIRST ENTRY
 (2018-12-22 16:31)
