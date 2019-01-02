@@ -360,6 +360,15 @@ def emit_expr(
             str(expr.token),
         ))
         return slot
+    elif leader_type is group_types.Struct:
+        if slot is None:
+            slot = state.get_slot(None)
+        body.append(Ctor(
+            'struct',
+            slot,
+            '',
+        ))
+        return slot
     elif leader_type is group_types.Compound_expression:
         return emit_compound_expr(
             body,

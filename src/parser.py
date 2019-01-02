@@ -120,6 +120,8 @@ def parse_expression(expr):
         return group_types.Compound_expression(
             expressions = [ parse_expression(each) for each in expr[1] ],
         )
+    elif leader_type is token_types.Struct:
+        return group_types.Struct()
     else:
         raise Exception('invalid expression in function body', expr)
 

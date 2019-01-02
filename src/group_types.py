@@ -178,3 +178,13 @@ class Compound_expression(Group_type):
             (lambda x: '({})'.format(x.to_string())),
             self.expressions
         )))
+
+
+class Struct(Group_type):
+    type_name = 'Struct'
+
+    def __init__(self):
+        pass
+
+    def to_string(self):
+        return 'struct'
