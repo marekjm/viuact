@@ -19,6 +19,19 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+FIX BRANCH NAME GENERATION
+(2019-01-02 21:53)
+
+I fixed a bug that caused infinite loops in code with if expressions. If
+branches that had the same body were assigned the same ID, which caused jumps to
+be calculated wrongly and under specific conditions caused infinite loops to be
+generated.
+
+Viua VM assembler must be fixed to disallow reusing names of branches in the
+same code block.
+
+--------------------------------------------------------------------------------
+
 BASIC SUPPORT DYNAMIC IMPORTS ON VIUA VM SIDE
 (2018-12-30 10:35)
 
