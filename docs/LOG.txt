@@ -92,3 +92,7 @@ by Krzysztof) that *whatever* is done that has its root cause in the Viuact
 project should be documented. This way we will be able to put the entire
 history of the project and its supporting work inside the final "paper" (or
 whatever it will be called).
+
+--------------------------------------------------------------------------------
+
+vim:textwidth=80
