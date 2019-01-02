@@ -19,6 +19,28 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+FIX USELESS COPIES IN PRINTS
+(2019-01-02 22:01)
+
+The compiler no longer emits a copy instruction for calls to print() where the
+argument is a simple name. In other words, such code:
+
+    (print x)
+
+is compiled to:
+
+    print %x local
+
+instead of:
+
+    copy %y local %x local
+    print %y local
+
+This means the emitted code is more performant (avoiding unnecessary copies) and
+correct (for the same reason).
+
+--------------------------------------------------------------------------------
+
 FIX BRANCH NAME GENERATION
 (2019-01-02 21:53)
 
