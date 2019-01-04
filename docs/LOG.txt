@@ -19,6 +19,19 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+IMPLEMENT SIMPLE STRUCT FIELD UPDATES
+(2019-01-04 20:28)
+
+It is now possible to update values of fields in structs. A special-purpose
+struct field update operator is used to do this:
+
+    (:= a_struct.field_name 42)
+
+This will update the value of the field named `field_name` of struct named
+`a_struct` to be integer 42.
+
+--------------------------------------------------------------------------------
+
 FIX USELESS COPIES IN PRINTS
 (2019-01-02 22:01)
 
