@@ -104,6 +104,12 @@ def parse_expression(expr):
             operator = expr[0],
             args = [parse_expression(each) for each in expr[1:]],
         )
+    elif leader_type is token_types.Field_assignment and type(expr) is list:
+        return group_types.Field_assignment(
+            operator = expr[0],
+            field = expr[1],
+            value = parse_expression(expr[2]),
+        )
     elif leader_type is token_types.If:
         return group_types.If(
             condition = parse_expression(expr[1]),

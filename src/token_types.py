@@ -119,8 +119,8 @@ class Dot(Operator):
     type_name = 'dot'
     pattern = re.compile(r'\.')
 
-class Assignment(Operator):
-    type_name = 'assignment'
+class Field_assignment(Operator):
+    type_name = 'field_assignment'
     pattern = re.compile(r':=')
 
 

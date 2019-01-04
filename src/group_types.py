@@ -188,3 +188,17 @@ class Struct(Group_type):
 
     def to_string(self):
         return 'struct'
+
+
+class Field_assignment(Group_type):
+    type_name = 'Field_assignment'
+
+    def __init__(self, operator, field, value):
+        self.operator = operator
+        self.field = field
+        self.value = value
+
+    def to_string(self):
+        return '{} := ...'.format(
+            ''.join(map(lambda each: str(each.token), self.field)),
+        )
