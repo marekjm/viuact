@@ -74,7 +74,17 @@ class State:
             raise TypeError(function_name)
         self.function_name = function_name
 
-    def get_slot(self, name, register_set = DEFAULT_REGISTER_SET):
+    def get_slot(self, name, register_set = DEFAULT_REGISTER_SET, anonymous = False):
+        if anonymous:
+            slot = Slot(
+                None,
+                self.next_slot[register_set],
+                register_set,
+            )
+            self.next_slot[register_set] += 1
+            self.last_used_slot = slot
+            return slot
+
         if name not in self.name_to_slot:
             self.name_to_slot[name] = Slot(
                 name,
