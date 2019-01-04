@@ -254,6 +254,13 @@ def emit_expr(
             state,
             slot,
         )
+    elif leader_type is group_types.Field_assignment:
+        return emit_field_assignment(
+            body,
+            expr,
+            state,
+            slot,
+        )
     elif leader_type is group_types.If:
         return emit_if(
             body,
@@ -741,3 +748,31 @@ def emit_compound_expr(body : list, expr, state : State, slot : Slot = None, mus
         meta = meta,
         toplevel = False,
     )
+
+
+def emit_field_assignment(body : list, expr, state : State, slot : Slot):
+    field = expr.field
+
+    base_target_slot = state.slot_of(str(field[0].token))
+
+    field_name = str(field[2].token)
+
+    slot = emit_expr(
+        body = body,
+        expr = expr.value,
+        state = state,
+        slot = slot,
+    )
+
+    field_name_slot = state.get_slot(None, anonymous = True)
+    body.append(Verbatim('atom {} {}'.format(
+        field_name_slot.to_string(),
+        repr(field_name),
+    )))
+    body.append(Verbatim('structinsert {} {} {}'.format(
+        base_target_slot.to_string(),
+        field_name_slot.to_string(),
+        slot.to_string(),
+    )))
+
+    return slot

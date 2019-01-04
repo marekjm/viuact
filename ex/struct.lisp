@@ -4,4 +4,7 @@
 
     (:= x.foo 42)
     (print x)
+
+    (:= x.foo "Hello World!")
+    (print x)
 ))
