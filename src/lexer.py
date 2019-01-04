@@ -71,6 +71,7 @@ def lex(source):
         token_types.Mul,
         token_types.Div,
         token_types.Dot,
+        token_types.Assignment,
 
         token_types.Actor,          # Keywords
 

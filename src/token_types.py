@@ -119,6 +119,10 @@ class Dot(Operator):
     type_name = 'dot'
     pattern = re.compile(r'\.')
 
+class Assignment(Operator):
+    type_name = 'assignment'
+    pattern = re.compile(r':=')
+
 
 class Ellipsis(Operator):
     type_name = 'ellipsis'
