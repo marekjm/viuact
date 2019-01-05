@@ -19,6 +19,20 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+IMPLEMENT NESTED STRUCT FIELD UPDATES
+(2019-01-05 13:09)
+
+It is now possible to update values of fields in structs nested structs. This
+allows the creation of more complex data structers. Fields of nested structs are
+specified after a operator dot:
+
+    (:= a_struct.inner_struct.more_inner_struct.field_name 42)
+
+The implicit requirement is that all but the last name point to a struct typed
+value.
+
+--------------------------------------------------------------------------------
+
 IMPLEMENT SIMPLE STRUCT FIELD UPDATES
 (2019-01-04 20:28)
 
