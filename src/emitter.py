@@ -35,6 +35,7 @@ class Slot:
         self.name = name
         self.index = index
         self.register_set = register_set
+        self.is_pointer = False
 
     def __str__(self):
         return '{} = %{} {}'.format(
@@ -50,8 +51,12 @@ class Slot:
     def is_void(self):
         return self.index is None
 
-    def to_string(self):
-        return '%{} {}'.format(
+    def to_string(self, pointer_dereference = None):
+        as_pointer = self.is_pointer
+        if pointer_dereference is not None:
+            as_pointer = pointer_dereference
+        return '{}{} {}'.format(
+            ('*' if as_pointer else '%'),
             self.index,
             self.register_set,
         )
@@ -751,12 +756,6 @@ def emit_compound_expr(body : list, expr, state : State, slot : Slot = None, mus
 
 
 def emit_field_assignment(body : list, expr, state : State, slot : Slot):
-    field = expr.field
-
-    base_target_slot = state.slot_of(str(field[0].token))
-
-    field_name = str(field[2].token)
-
     slot = emit_expr(
         body = body,
         expr = expr.value,
@@ -764,15 +763,44 @@ def emit_field_assignment(body : list, expr, state : State, slot : Slot):
         slot = slot,
     )
 
+    field = expr.field
+    base_target_slot = state.slot_of(str(field[0].token))
+
     field_name_slot = state.get_slot(None, anonymous = True)
+    field_names = list(filter(lambda each: str(each.token) != '.', field[1:]))
+
+    inner_struct_slot = None
+    if len(field_names) > 1:
+        inner_struct_slot = state.get_slot(None, anonymous = True)
+
+    for i, field_name in enumerate(field_names[:-1]):
+        body.append(Verbatim('atom {} {}'.format(
+            field_name_slot.to_string(),
+            repr(field_name.token),
+        )))
+        body.append(Verbatim('structat {} {} {}'.format(
+            inner_struct_slot.to_string(),
+            base_target_slot.to_string(i > 0),
+            field_name_slot.to_string(),
+        )))
+        base_target_slot = inner_struct_slot
+
+    field_name = str(field_names[-1].token)
     body.append(Verbatim('atom {} {}'.format(
         field_name_slot.to_string(),
         repr(field_name),
     )))
     body.append(Verbatim('structinsert {} {} {}'.format(
-        base_target_slot.to_string(),
+        base_target_slot.to_string(inner_struct_slot is not None),
         field_name_slot.to_string(),
         slot.to_string(),
     )))
+
+    # FIXME Figure out what to do if we want struct field updates to return values.
+    # body.append(Verbatim('structat {} {} {}'.format(
+    #     slot.to_string(),
+    #     base_target_slot.to_string(inner_struct_slot is not None),
+    #     field_name_slot.to_string(),
+    # )))
 
     return slot
