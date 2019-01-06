@@ -334,6 +334,7 @@ def output_function_body(fn, in_module, meta):
             expr = each,
             state = state,
             meta = meta,
+            toplevel = True,
         )
         inner_body.append(emitter.Verbatim(''))
 

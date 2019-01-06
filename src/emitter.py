@@ -178,7 +178,37 @@ class Call:
         )
 
 
-def emit_expr(body : list, expr, state : State, slot : Slot = None, must_emit : bool = False, meta = None):
+def emit_expr(
+        body : list,    # Body is a list of instructions which were emitted by
+                        # already processed expressions. New instructions that
+                        # will be emitted by this expression should be appended
+                        # to it.
+        expr,   # Current expression to emit. A single expression may evaluate
+                # to a single expression (if it is a simple literal ctor), or to
+                # a complex sequence of instructions (as is the case with
+                # function calls, compound expressions, etc.).
+        state : State,  # Current state of the function's register sets. It is
+                        # used to request new slots and fetch indexes of
+                        # existing variables.
+        slot : Slot = None, # Target slot into which the current expression
+                            # should return its final value. This is assigned by
+                            # the parent expression. If the slot is none the
+                            # value produced by the expression should be
+                            # discarded.
+        must_emit : bool = False,   # Specifies whether the expression must emit
+                                    # at least one instruction. This is
+                                    # sometimes required to produce valid
+                                    # instruction sequences, and to represent
+                                    # tempoarary values.
+        meta = None,    # Various meta data about the function and its
+                        # environment. It contains information about visible
+                        # functions, imports, etc.
+        toplevel = False,   # Whether this expression is a top-level expression
+                            # inside a function's body. A top-level expression
+                            # may avoid storing its result if it is not
+                            # presistent (e.g. a let binding will emit, a
+                            # temporary may not).
+    ):
     leader_type = type(expr)
 
     if leader_type is group_types.Let_binding:
@@ -343,7 +373,15 @@ def emit_let(body : list, let_expr, state : State, slot : Slot):
         slot = None
     else:
         slot = state.get_slot(name)
-    emit_expr(body, let_expr.value, state, slot)
+    emit_expr(
+        body = body,
+        expr = let_expr.value,
+        state = state,
+        slot = slot,
+        must_emit = False,
+        meta = None,
+        toplevel = False,
+    )
     return slot
 
 
@@ -352,13 +390,29 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
 
     if call_expr.to() == 'print':
         body.append(Verbatim('print {}'.format(
-            emit_expr(body, args[0], state).to_string()
+            emit_expr(
+                body = body,
+                expr = args[0],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string()
         )))
     elif call_expr.to() == 'Std::Actor::join':
         timeout = (args[1] if len(args) > 1 else token_types.Timeout(INFINITE_DURATION))
         body.append(Verbatim('join {} {} {}'.format(
             Slot.to_address(slot),
-            emit_expr(body, args[0], state).to_string(),
+            emit_expr(
+                body = body,
+                expr = args[0],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
             str(timeout.token),
         )))
     elif call_expr.to() == 'Std::Actor::receive':
@@ -368,8 +422,24 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             str(timeout.token),
         )))
     elif call_expr.to() == 'Std::Actor::send':
-        pid_slot = emit_expr(body, args[0], state)
-        message_slot = emit_expr(body, args[1], state)
+        pid_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        message_slot = emit_expr(
+            body = body,
+            expr = args[1],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
         body.append(Verbatim('send {} {}'.format(
             pid_slot.to_string(),
             message_slot.to_string(),
@@ -397,7 +467,15 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
 
     applied_args = []
     for i, each in enumerate(args):
-        applied_args.append(emit_expr(body, each, state))
+        applied_args.append(emit_expr(
+            body = body,
+            expr = each,
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        ))
 
     body.append(Verbatim('frame %{}'.format(len(args))))
     for i, each in enumerate(applied_args):
@@ -431,7 +509,15 @@ def emit_actor_call(body : list, call_expr, state : State, slot : Slot):
     applied_args = []
     for i, each in enumerate(args):
         arg_slot = state.get_slot(None)
-        applied_args.append(emit_expr(body, each, state, arg_slot))
+        applied_args.append(emit_expr(
+            body = body,
+            expr = each,
+            state = state,
+            slot = arg_slot,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        ))
 
     body.append(Verbatim('frame %{}'.format(len(args))))
     for i, each in enumerate(applied_args):
@@ -458,7 +544,15 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
     applied_args = []
     for i, each in enumerate(args):
         arg_slot = state.get_slot(None)
-        applied_args.append(emit_expr(body, each, state, arg_slot))
+        applied_args.append(emit_expr(
+            body = body,
+            expr = each,
+            state = state,
+            slot = arg_slot,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        ))
 
     if slot is None:
         slot = state.get_slot(None)
@@ -489,7 +583,15 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
     condition = if_expr.condition
     arms = if_expr.arms
 
-    cond_slot = emit_expr(body, condition, state, None, must_emit = True)
+    cond_slot = emit_expr(
+        body = body,
+        expr = condition,
+        state = state,
+        slot = None,
+        must_emit = True,
+        meta = None,
+        toplevel = False,
+    )
 
     true_arm_id = 'if_arm_true_{}'.format(hashlib.sha1(
         repr(arms[0]).encode('utf-8') + repr(if_expr).encode('utf-8') + repr(id(arms[0])).encode('utf-8')
@@ -510,12 +612,28 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(true_arm_id)))
-    emit_expr(body, arms[0], state, slot, must_emit = True)
+    emit_expr(
+        body = body,
+        expr = arms[0],
+        state = state,
+        slot = slot,
+        must_emit = True,
+        meta = None,
+        toplevel = False,
+    )
     body.append(Verbatim('jump {}'.format(if_end_id)))
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(false_arm_id)))
-    emit_expr(body, arms[1], state, slot, must_emit = True)
+    emit_expr(
+        body = body,
+        expr = arms[1],
+        state = state,
+        slot = slot,
+        must_emit = True,
+        meta = None,
+        toplevel = False,
+    )
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(if_end_id)))
@@ -560,7 +678,10 @@ def emit_function(body : list, expr, state : State, slot : Slot):
             body = inner_body,
             expr = each,
             state = state,
+            slot = None,
+            must_emit = False,
             meta = state.visible_fns,
+            toplevel = False,
         )
         inner_body.append(Verbatim(''))
 
@@ -581,7 +702,17 @@ def emit_function(body : list, expr, state : State, slot : Slot):
 
 def emit_compound_expr(body : list, expr, state : State, slot : Slot = None, must_emit : bool = False, meta = None):
     for each in expr.expressions[:-1]:
-        emit_expr(body, each, state)
+        emit_expr(
+            body = body,
+            expr = each,
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = meta,
+            toplevel = True,    # True because non-final expressions inside a
+                                # compound expression do not need to return a
+                                # visible value.
+        )
     return emit_expr(
         body = body,
         expr = expr.expressions[-1],
@@ -589,4 +720,5 @@ def emit_compound_expr(body : list, expr, state : State, slot : Slot = None, mus
         slot = slot,
         must_emit = must_emit,
         meta = meta,
+        toplevel = False,
     )
