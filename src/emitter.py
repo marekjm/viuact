@@ -536,9 +536,6 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
             each.index,
         )))
 
-    if slot is not None:
-        slot = state.slot_of(slot.name)
-
     to = '{}/{}'.format(fn_name, len(args))
     if state.has_slot(fn_name):
         to = state.slot_of(fn_name).to_string()
