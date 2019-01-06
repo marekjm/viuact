@@ -1,7 +1,10 @@
 all: compile
 
-OUTPUT_DIR=./build/_default
+BUILD_DIR=./build
+OUTPUT_DIR=$(BUILD_DIR)/_default
 ASM_OUTPUT=a.asm
+
+.PHONY: test
 
 compile: $(OUTPUT_DIR)/$(ASM_OUTPUT)
 
@@ -16,3 +19,8 @@ run: $(OUTPUT_DIR)/$(ASM_OUTPUT)
 
 clean:
 	@rm -rf $(OUTPUT_DIR)/
+
+test:
+	@mkdir -p $(BUILD_DIR)
+	rm -r $(BUILD_DIR)
+	python3 ./tests.py --all
