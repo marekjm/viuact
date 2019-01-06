@@ -27,7 +27,12 @@ def run_test(test_name):
 
     print(HEADER_TEST)
 
-    make_stage = subprocess.Popen(('bash', './ex/{}.sh'.format(test_name), 'make'), stdout=subprocess.PIPE)
+    make_stage = subprocess.Popen(
+        args = ('bash', './ex/{}.sh'.format(test_name), 'make'),
+        stdout = subprocess.PIPE,
+        env = {
+            'VIUAVM_ASM_COLOUR': 'always',
+        },)
     make_stage_stdout, make_stage_stderr = make_stage.communicate()
     make_stage_exit = make_stage.returncode
     if make_stage_exit:
