@@ -1,0 +1,35 @@
+tailcall
+wektor
+przykład na aktory
+wartości bool
+
+----
+
+Przykład formy pośredniej (jakiś zrzut do pliku, albo screen czy coś).
+
+Analiza leksykalna i składniowa:
+
+- gdzie w kodzie to jest (pliki itd.)
+- opis jak wygląda algorytm parsowania (analizy składniowej)
+
+Emitowanie kodu w języku assemblera:
+
+- porównanie: linijka kodu w Viuact i linijki w asm
+
+Opisanie jak wygląda proces kompilacji: od wczytania pliku Viuact do wyplucia bytecode.
+Wyszukanie "smaczków" w implementacji i pokazanie ich, jakieś elementy, które są inne
+niż w reszcie kompilatorów.
+
+----
+
+Opisać dlaczego raportowanie błędów jest tylko na etapie asemblacji (czyli ./build/bin/vm/asm).
+
+----
+
+Dostarczyć:
+
+- diagramy przypadków użycia (musi być)
+- diagram klas (opcjonalny jeśli dobrze będzie opisana architektura kompilatora)
+- manual do tego jak kompilować kod: od Viuact do bytecode
+
+Dopytać dziekana na jakiej podstawie będzie przyznawał ocenę (bo to jest aż 80% całości).
