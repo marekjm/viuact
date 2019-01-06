@@ -52,6 +52,10 @@ class Actor(Keyword):
     type_name = 'actor'
     pattern = re.compile(r'\bactor\b')
 
+class Tailcall(Keyword):
+    type_name = 'Tailcall'
+    pattern = re.compile(r'\btailcall\b')
+
 
 class Operator(Token_type):
     def __repr__(self):
