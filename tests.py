@@ -20,6 +20,7 @@ TESTS = (
     'struct',
     'nested_struct',
     'struct_field_access',
+    'struct_field_update',
 )
 
 

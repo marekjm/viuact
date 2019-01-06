@@ -19,6 +19,21 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+IMPLEMENT STRUCT FIELD ACCESS
+(2019-01-06 17:02)
+
+It is now possible to refer to struct fields in expressions, for example:
+
+    (print (+ some_struct.some_field 1))
+
+This means that struct mutation is now avalable:
+
+    (:= x.some.field (+ x.some.field 1))
+
+What is left: concurrency, error handling, vectors, and FFI libraries.
+
+--------------------------------------------------------------------------------
+
 IMPLEMENT NESTED STRUCT FIELD UPDATES
 (2019-01-05 13:09)
 
