@@ -17,6 +17,7 @@ TESTS = (
     'separate_module',
     'struct',
     'nested_struct',
+    'struct_field_access',
 )
 
 
