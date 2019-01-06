@@ -9,9 +9,9 @@
 ))
 
 (let main () (
-    (print (fibonacci 0))
-    (print (fibonacci 1))
-    (print (fibonacci 4))
-    (print (fibonacci 6))
-    (print (fibonacci 14))
+    (print (fibonacci 0))   ; 0
+    (print (fibonacci 1))   ; 1
+    (print (fibonacci 4))   ; 3
+    (print (fibonacci 6))   ; 8
+    (print (fibonacci 14))  ; 377
 ))
