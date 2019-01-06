@@ -284,6 +284,27 @@ def emit_expr(
             ))
             return slot
         return evaluated_slot
+    elif leader_type is group_types.Id:
+        name = expr.name[0]
+
+        if str(name.token).isupper():
+            return emit_function_ref(
+                body,
+                expr,
+                state,
+                slot,
+                must_emit,
+                meta,
+            )
+        else:
+            return emit_struct_field_access(
+                body,
+                expr,
+                state,
+                slot,
+                must_emit,
+                meta,
+            )
     elif leader_type is group_types.Function:
         nested_body = []
         v = meta.nested_in(state.function_name)
@@ -803,4 +824,30 @@ def emit_field_assignment(body : list, expr, state : State, slot : Slot):
     #     field_name_slot.to_string(),
     # )))
 
+    return slot
+
+
+def emit_struct_field_access(body : list, expr, state : State, slot : Slot, must_emit = False, meta = None):
+    field = expr.name
+    base_source_slot = state.slot_of(str(field[0].token))
+
+    field_name_slot = state.get_slot(None, anonymous = True)
+    field_names = list(filter(lambda each: str(each.token) != '.', field[1:]))
+
+    if slot is None:
+        slot = state.get_slot(None)
+
+    for i, field_name in enumerate(field_names):
+        body.append(Verbatim('atom {} {}'.format(
+            field_name_slot.to_string(),
+            repr(field_name.token),
+        )))
+        body.append(Verbatim('structat {} {} {}'.format(
+            slot.to_string(),
+            base_source_slot.to_string(i > 0),
+            field_name_slot.to_string(),
+        )))
+        base_source_slot = slot
+
+    slot.is_pointer = True
     return slot

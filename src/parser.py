@@ -81,6 +81,10 @@ def parse_expression(expr):
         )
     elif leader_type is token_types.Let and len(expr) == 4:
         return parse_function(expr)
+    elif leader_type in name_types and type(expr) is list and len(expr) >= 2 and type(expr[1]) is token_types.Dot:
+        return group_types.Id(
+            name = expr,
+        )
     elif leader_type is token_types.Name and type(expr) is list:
         return group_types.Function_call(
             name = expr[0],
@@ -90,10 +94,6 @@ def parse_expression(expr):
         return group_types.Function_call(
             name = parse_expression(expr[0]),
             args = [parse_expression(each) for each in expr[1:]],
-        )
-    elif leader_type in name_types and type(expr) is list and type(expr[1]) is token_types.Dot:
-        return group_types.Id(
-            name = expr,
         )
     elif leader_type is token_types.Name:
         return group_types.Name_ref(
