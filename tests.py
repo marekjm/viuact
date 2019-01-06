@@ -21,6 +21,7 @@ TESTS = (
     'nested_struct',
     'struct_field_access',
     'struct_field_update',
+    'simple_message_exchange',
 )
 
 
