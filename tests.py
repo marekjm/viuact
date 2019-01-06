@@ -6,6 +6,7 @@ import sys
 
 
 TESTS = (
+    'anonymous_values',
     'closure_holds_state',
     'closure',
     'compound_expr',
@@ -13,6 +14,7 @@ TESTS = (
     'fn_in_a_module',
     'function_call',
     'hello_world',
+    'let_binding_of_call_result',
     'nested_fn',
     'separate_module',
     'struct',
