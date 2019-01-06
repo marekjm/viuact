@@ -80,6 +80,9 @@ class State:
         self.function_name = function_name
 
     def get_slot(self, name, register_set = DEFAULT_REGISTER_SET, anonymous = False):
+        if name is None and not anonymous:
+            raise Exception('requested slot without a name')
+
         if anonymous:
             slot = Slot(
                 None,
@@ -237,7 +240,7 @@ def emit_expr(
         return slot
     elif leader_type is group_types.Function_call:
         if not toplevel and slot is None:
-            slot = state.get_slot(None)
+            slot = state.get_slot(None, anonymous = True)
         return emit_call(
             body = body,
             call_expr = expr,
@@ -370,7 +373,7 @@ def emit_expr(
         return None
     elif leader_type is token_types.String:
         if slot is None:
-            slot = state.get_slot(None)
+            slot = state.get_slot(None, anonymous = True)
         body.append(Ctor(
             'text',
             slot,
@@ -379,7 +382,7 @@ def emit_expr(
         return slot
     elif leader_type is token_types.Integer:
         if slot is None:
-            slot = state.get_slot(None)
+            slot = state.get_slot(None, anonymous = True)
         body.append(Ctor(
             'integer',
             slot,
@@ -395,7 +398,7 @@ def emit_expr(
         return slot
     elif leader_type is group_types.Struct:
         if slot is None:
-            slot = state.get_slot(None)
+            slot = state.get_slot(None, anonymous = True)
         body.append(Ctor(
             'struct',
             slot,
@@ -592,19 +595,18 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
 
     applied_args = []
     for i, each in enumerate(args):
-        arg_slot = state.get_slot(None)
         applied_args.append(emit_expr(
             body = body,
             expr = each,
             state = state,
-            slot = arg_slot,
+            slot = None,
             must_emit = False,
             meta = None,
             toplevel = False,
         ))
 
     if slot is None:
-        slot = state.get_slot(None)
+        slot = state.get_slot(None, anonymous = True)
 
     operator_names = {
         '+': 'add',
@@ -657,7 +659,7 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
     )))
 
     if slot is None:
-        slot = state.get_slot(None)
+        slot = state.get_slot(None, anonymous = True)
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(true_arm_id)))
@@ -832,7 +834,7 @@ def emit_struct_field_access(body : list, expr, state : State, slot : Slot, must
     field_names = list(filter(lambda each: str(each.token) != '.', field[1:]))
 
     if slot is None:
-        slot = state.get_slot(None)
+        slot = state.get_slot(None, anonymous = True)
 
     for i, field_name in enumerate(field_names):
         body.append(Verbatim('atom {} {}'.format(
