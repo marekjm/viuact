@@ -181,6 +181,7 @@ class Call:
     class Kind:
         Synchronous = 'call'
         Actor = 'process'
+        Tail = 'tailcall'
         Deferred = 'defer'
 
     def __init__(self, to : str, slot : Slot, kind = Kind.Synchronous):
@@ -191,7 +192,7 @@ class Call:
     def to_string(self):
         return '{kind} {dest} {fn}'.format(
             kind = self.kind,
-            dest = Slot.to_address(self.slot),
+            dest = ('' if self.kind == Call.Kind.Tail else Slot.to_address(self.slot)),
             fn = self.to,
         )
 
@@ -250,6 +251,13 @@ def emit_expr(
         )
     elif leader_type is group_types.Actor_call:
         return emit_actor_call(
+            body,
+            expr,
+            state,
+            slot,
+        )
+    elif leader_type is group_types.Tail_call:
+        return emit_tail_call(
             body,
             expr,
             state,
@@ -584,6 +592,44 @@ def emit_actor_call(body : list, call_expr, state : State, slot : Slot):
         to = '{}/{}'.format(call_expr.to(), len(args)),
         slot = slot,
         kind = Call.Kind.Actor,
+    ))
+
+    return slot
+
+
+def emit_tail_call(body : list, call_expr, state : State, slot : Slot):
+    name = call_expr.name
+    args = call_expr.args
+
+    if call_expr.to() in BUILTIN_FUNCTIONS:
+        raise Exception('cannot tail call built-in function', call_expr)
+
+    applied_args = []
+    for i, each in enumerate(args):
+        arg_slot = state.get_slot(None)
+        applied_args.append(emit_expr(
+            body = body,
+            expr = each,
+            state = state,
+            slot = arg_slot,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        ))
+
+    body.append(Verbatim('frame %{}'.format(len(args))))
+    for i, each in enumerate(applied_args):
+        body.append(Verbatim('copy %{} arguments %{} local'.format(
+            i,
+            each.index,
+        )))
+
+    if slot is not None:
+        slot = state.slot_of(slot.name)
+    body.append(Call(
+        to = '{}/{}'.format(call_expr.to(), len(args)),
+        slot = None,
+        kind = Call.Kind.Tail,
     ))
 
     return slot

@@ -122,6 +122,11 @@ def parse_expression(expr):
             name = parse_expression(expr[1]),
             args = [parse_expression(each) for each in expr[2:]],
         )
+    elif leader_type is token_types.Tailcall and type(expr[1]) is token_types.Name:
+        return group_types.Tail_call(
+            name = parse_expression(expr[1]),
+            args = [parse_expression(each) for each in expr[2:]],
+        )
     elif leader_type is token_types.Compound_expression_marker:
         return group_types.Compound_expression(
             expressions = [ parse_expression(each) for each in expr[1] ],
