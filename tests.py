@@ -16,6 +16,7 @@ TESTS = (
     'nested_fn',
     'separate_module',
     'struct',
+    'nested_struct',
 )
 
 
