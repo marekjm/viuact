@@ -19,6 +19,19 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+IMPLEMENT TAIL CALLS
+(2019-01-06 22:03)
+
+It is now possible to instruct the compiler that a call should be a tail call.
+To do so, you prepend the "tailcall" keyword before the call (similarly to how
+actors are spawned - with the "actor" keyword):
+
+    (tailcall fn 42)
+
+This will emit a tail call instead of a normal call.
+
+--------------------------------------------------------------------------------
+
 IMPLEMENT STRUCT FIELD ACCESS
 (2019-01-06 17:02)
 
