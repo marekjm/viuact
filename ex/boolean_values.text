@@ -1,2 +1,15 @@
 true
 false
+not:
+false
+true
+or:
+false
+true
+true
+true
+and:
+false
+false
+false
+true

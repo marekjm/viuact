@@ -681,14 +681,24 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
         '<=': 'lte',
         '>': 'gt',
         '>=': 'gte',
+        'not': 'not',
+        'and': 'and',
+        'or': 'or',
     }
 
-    body.append(Verbatim('{} {} {} {}'.format(
-        operator_names[str(name.token)],
-        slot.to_string(),
-        applied_args[0].to_string(),
-        applied_args[1].to_string(),
-    )))
+    if str(name.token) == 'not':
+        body.append(Verbatim('{} {} {}'.format(
+            operator_names[str(name.token)],
+            slot.to_string(),
+            applied_args[0].to_string(),
+        )))
+    else:
+        body.append(Verbatim('{} {} {} {}'.format(
+            operator_names[str(name.token)],
+            slot.to_string(),
+            applied_args[0].to_string(),
+            applied_args[1].to_string(),
+        )))
 
     return slot
 
