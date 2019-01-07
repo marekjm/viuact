@@ -19,6 +19,22 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+DUMP INTERMEDIATE FORM REPRESENTATIONS TO DISK
+(2019-01-07 21:38)
+
+The compiler is able to dump a representation of the in-memory structures used
+to represent source program. Available "dump points" are:
+
+- after lexical analysis
+- after syntactical analysis
+
+Since the compiler does very little semantic analysis (it is pretty simple) the
+representation that is used during assembly code emission is not dumpable as it
+would not be useful - the assembly output is actually a good representation of
+what the final intermediate form looks like.
+
+--------------------------------------------------------------------------------
+
 IMPLEMENT TAIL CALLS
 (2019-01-06 22:03)
 
