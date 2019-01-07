@@ -25,6 +25,21 @@ class Token:
     def location(self):
         return (self.line, self.character,)
 
+    @staticmethod
+    def to_data(self):
+        return {
+            'text': self._text,
+            'line': self.line,
+            'char': self.character,
+        }
+
+    @staticmethod
+    def from_data(data):
+        return Token(
+            text = data['text'],
+            line = data['line'],
+            character = data['char'],
+        )
 
 def lex(source):
     """Lexing turns a stream of characters into a stream of tokens.
@@ -119,6 +134,12 @@ def lex(source):
         raise Exception('unexpected token', repr(source[i]))
 
     return tokens
+
+def to_data(lexeme):
+    return {
+        'token': Token.to_data(lexeme.token),
+        'type': lexeme.type_name,
+    }
 
 def strip_comments(tokens):
     return list(filter(lambda each: (not isinstance(each, token_types.Comment)), tokens))

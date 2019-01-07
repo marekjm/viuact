@@ -45,6 +45,15 @@ def compile_text(
     expressions = parser.parse(groups)
 
     module_name = os.path.basename(source_file).split('.')[0]
+
+    if env.Dump_intermediate.Tokens in env.VIUAC_DUMP_INTERMEDIATE:
+        intermediate_tokens_path = os.path.join(output_directory, '{}.tokens'.format(module_name))
+        with open(intermediate_tokens_path, 'w') as ofstream:
+            ofstream.write(json.dumps({
+                'source_file': source_file,
+                'tokens': list(map(lexer.to_data, tokens)),
+            }, indent = 4))
+
     compilation_filesystem_root = os.path.dirname(source_file)
     lowered_function_bodies = []
 

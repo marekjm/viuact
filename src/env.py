@@ -18,3 +18,15 @@ def bool_of_string(s):
 VIUAC_VERBOSE = bool_of_string(os.environ.get('VIUAC_VERBOSE', ''))
 VIUAC_DEBUGGING = bool_of_string(os.environ.get('VIUAC_DEBUGGING', ''))
 VIUAC_INFO = bool_of_string(os.environ.get('VIUAC_INFO', ''))
+
+class Dump_intermediate:
+    Tokens = 'tokens'
+    Groups = 'groups'
+
+VIUAC_DUMP_INTERMEDIATE = list(
+    filter(lambda each: each in (
+        Dump_intermediate.Tokens,
+        Dump_intermediate.Groups,
+    ),
+    os.environ.get('VIUAC_DUMP_INTERMEDIATE', '').split(','),
+))
