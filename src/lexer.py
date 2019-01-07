@@ -56,6 +56,7 @@ def lex(source):
         token_types.Timeout,
         token_types.Integer,
         token_types.Float,
+        token_types.Boolean,
 
         token_types.Or,             # Operators
         token_types.And,

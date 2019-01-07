@@ -187,6 +187,10 @@ class Timeout(Literal):
     type_name = 'timeout'
     pattern = re.compile('((0|[1-9][0-9]*)m?s|infinity)')
 
+class Boolean(Literal):
+    type_name = 'boolean'
+    pattern = re.compile(r'\b(true|false)\b')
+
 
 class Internal_marker(Token_type):
     def __repr__(self):

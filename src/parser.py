@@ -72,7 +72,13 @@ def parse_expression(expr):
     leader_type = type(leader)
 
     name_types = (token_types.Module_name, token_types.Name,)
-    literal_types = (token_types.Integer, token_types.String, token_types.Timeout)
+    literal_types = (
+        token_types.Integer,
+        token_types.Float,
+        token_types.String,
+        token_types.Timeout,
+        token_types.Boolean,
+    )
 
     if leader_type is token_types.Let and len(expr) == 3:
         return group_types.Let_binding(

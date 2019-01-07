@@ -404,6 +404,23 @@ def emit_expr(
             str(expr.token),
         ))
         return slot
+    elif leader_type is token_types.Boolean:
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        # Booleans are constructed by creating an integer that would be interpreted as
+        # false and using the "not constructor" idiom (since Viua has a representation of
+        # boolean values, but lacks a direct constructor for them).
+        body.append(Verbatim('izero {dest}'.format(dest = slot.to_string())))
+
+        # After the integer is stored, we convert it to a boolean by negating it. This
+        # step also inverts the logical value that is contained in a register, effectively
+        # turning it into a "true".
+        body.append(Verbatim('not {dest} {dest}'.format(dest = slot.to_string())))
+
+        if str(expr.token) == 'false':
+            # If we need a "false" value a second negation is needed.
+            body.append(Verbatim('not {dest} {dest}'.format(dest = slot.to_string())))
+        return slot
     elif leader_type is group_types.Struct:
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
