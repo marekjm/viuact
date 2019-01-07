@@ -1,5 +1,4 @@
 wektor
-wartości bool
 
 ----
 
