@@ -585,7 +585,7 @@ def emit_actor_call(body : list, call_expr, state : State, slot : Slot):
 
     applied_args = []
     for i, each in enumerate(args):
-        arg_slot = state.get_slot(None)
+        arg_slot = state.get_slot(None, anonymous = True)
         applied_args.append(emit_expr(
             body = body,
             expr = each,
@@ -603,8 +603,6 @@ def emit_actor_call(body : list, call_expr, state : State, slot : Slot):
             each.index,
         )))
 
-    if slot is not None:
-        slot = state.slot_of(slot.name)
     body.append(Call(
         to = '{}/{}'.format(call_expr.to(), len(args)),
         slot = slot,
@@ -623,7 +621,7 @@ def emit_tail_call(body : list, call_expr, state : State, slot : Slot):
 
     applied_args = []
     for i, each in enumerate(args):
-        arg_slot = state.get_slot(None)
+        arg_slot = state.get_slot(None, anonymous = True)
         applied_args.append(emit_expr(
             body = body,
             expr = each,
@@ -641,8 +639,6 @@ def emit_tail_call(body : list, call_expr, state : State, slot : Slot):
             each.index,
         )))
 
-    if slot is not None:
-        slot = state.slot_of(slot.name)
     body.append(Call(
         to = '{}/{}'.format(call_expr.to(), len(args)),
         slot = None,

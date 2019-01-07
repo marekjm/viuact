@@ -80,6 +80,13 @@ def parse_expression(expr):
         token_types.Boolean,
     )
 
+    def can_be_considered_name(some_expr):
+        if type(some_expr) is token_types.Name:
+            return True
+        if type(some_expr) is list and some_expr and type(some_expr[0]) in name_types:
+            return True
+        return False
+
     if leader_type is token_types.Let and len(expr) == 3:
         return group_types.Let_binding(
             name = expr[1],
@@ -123,12 +130,12 @@ def parse_expression(expr):
         )
     elif leader_type in literal_types:
         return expr
-    elif leader_type is token_types.Actor and type(expr[1]) is token_types.Name:
+    elif leader_type is token_types.Actor and can_be_considered_name(expr[1]):
         return group_types.Actor_call(
             name = parse_expression(expr[1]),
             args = [parse_expression(each) for each in expr[2:]],
         )
-    elif leader_type is token_types.Tailcall and type(expr[1]) is token_types.Name:
+    elif leader_type is token_types.Tailcall and can_be_considered_name(expr[1]):
         return group_types.Tail_call(
             name = parse_expression(expr[1]),
             args = [parse_expression(each) for each in expr[2:]],

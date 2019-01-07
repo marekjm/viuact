@@ -10,6 +10,15 @@ class Group_type:
             s,
         )
 
+    def to_content(self):
+        return None
+
+    def to_data(self):
+        return {
+            'data': self.to_content(),
+            'type': self.type_name,
+        }
+
 
 class Inline_module(Group_type):
     type_name = 'Inline_module'
@@ -29,6 +38,16 @@ class Inline_module(Group_type):
             (s or 'no functions'),
         )
 
+    def to_content(self):
+        return {
+            'name': self.name.to_data(),
+            'functions': dict([(name, fn.to_data(),) for name, fn in self.functions.items()]),
+            'function_names': self.function_names,
+            'modules': dict([(name, mod.to_data(),) for name, mod in self.modules.items()]),
+            'module_names': self.module_names,
+            'imports': self.imports,
+        }
+
 
 class Module(Group_type):
     type_name = 'Module'
@@ -38,6 +57,11 @@ class Module(Group_type):
 
     def to_string(self):
         return self.name.token
+
+    def to_content(self):
+        return {
+            'name': self.name.to_data(),
+        }
 
 
 class Function(Group_type):
@@ -54,6 +78,13 @@ class Function(Group_type):
             ', '.join(map(lambda each: str(each.token), self.arguments)),
         )
 
+    def to_content(self):
+        return {
+            'name': self.name.to_data(),
+            'arguments': [each.to_data() for each in self.arguments],
+            'body': [each.to_data() for each in self.body],
+        }
+
 
 class Import(Group_type):
     type_name = 'Import'
@@ -63,6 +94,11 @@ class Import(Group_type):
 
     def to_string(self):
         return self.name.to_string()
+
+    def to_content(self):
+        return {
+            'target': self.name.to_data(),
+        }
 
 
 class Let_binding(Group_type):
@@ -78,6 +114,11 @@ class Let_binding(Group_type):
             str(self.value),
         )
 
+    def to_content(self):
+        return {
+            'name': self.name.to_data(),
+            'value': self.value.to_data(),
+        }
 
 class Function_call(Group_type):
     type_name = 'Function_call'
@@ -94,6 +135,12 @@ class Function_call(Group_type):
             self.to(),
             ', '.join(map(str, self.args)),
         )
+
+    def to_content(self):
+        return {
+            'to': self.name.to_data(),
+            'args': [each.to_data() for each in self.args],
+        }
 
 
 class Operator_call(Group_type):
@@ -114,6 +161,12 @@ class Operator_call(Group_type):
             ', '.join(map(str, self.args)),
         )
 
+    def to_content(self):
+        return {
+            'operator': self.operator.to_data(),
+            'args': [each.to_data() for each in self.args],
+        }
+
 
 class Actor_call(Group_type):
     type_name = 'Actor_call'
@@ -130,6 +183,9 @@ class Actor_call(Group_type):
             self.to(),
             ', '.join(map(str, self.args)),
         )
+
+    def to_content(self):
+        return Function_call.to_content(self)
 
 
 class Tail_call(Group_type):
@@ -148,6 +204,9 @@ class Tail_call(Group_type):
             ', '.join(map(str, self.args)),
         )
 
+    def to_content(self):
+        return Function_call.to_content(self)
+
 
 class Name_ref(Group_type):
     type_name = 'Name_ref'
@@ -159,6 +218,11 @@ class Name_ref(Group_type):
         return '{}'.format(
             str(self.name.token),
         )
+
+    def to_content(self):
+        return {
+            'name': self.name.to_data(),
+        }
 
 
 class Id(Group_type):
@@ -172,6 +236,11 @@ class Id(Group_type):
             map(lambda each: ('::' if each == '.' else each),
             map(lambda each: str(each.token), self.name)))
 
+    def to_content(self):
+        return {
+            'id': [each.to_data() for each in self.name],
+        }
+
 
 class If(Group_type):
     type_name = 'If'
@@ -182,6 +251,13 @@ class If(Group_type):
 
     def to_string(self):
         return 'if ({})'.format(self.condition)
+
+    def to_content(self):
+        return {
+            'condition': self.condition.to_data(),
+            'true_arm': self.arms[0].to_data(),
+            'false_arm': self.arms[1].to_data(),
+        }
 
 
 class Compound_expression(Group_type):
@@ -195,6 +271,11 @@ class Compound_expression(Group_type):
             (lambda x: '({})'.format(x.to_string())),
             self.expressions
         )))
+
+    def to_content(self):
+        return {
+            'expressions': [each.to_data() for each in self.expressions],
+        }
 
 
 class Struct(Group_type):
@@ -219,3 +300,10 @@ class Field_assignment(Group_type):
         return '{} := ...'.format(
             ''.join(map(lambda each: str(each.token), self.field)),
         )
+
+    def to_content(self):
+        return {
+            'operator': self.operator.to_data(),
+            'field': [each.to_data() for each in self.field],
+            'value': self.value.to_data(),
+        }

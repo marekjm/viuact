@@ -22,11 +22,13 @@ VIUAC_INFO = bool_of_string(os.environ.get('VIUAC_INFO', ''))
 class Dump_intermediate:
     Tokens = 'tokens'
     Groups = 'groups'
+    Expressions = 'exprs'
 
 VIUAC_DUMP_INTERMEDIATE = list(
     filter(lambda each: each in (
         Dump_intermediate.Tokens,
         Dump_intermediate.Groups,
+        Dump_intermediate.Expressions,
     ),
     os.environ.get('VIUAC_DUMP_INTERMEDIATE', '').split(','),
 ))

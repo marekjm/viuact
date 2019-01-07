@@ -8,6 +8,12 @@ class Token_type:
     def __repr__(self):
         return '{}: {}'.format(self.type_name, self.token)
 
+    def to_data(self):
+        return {
+            'token': self.token.to_data(self.token),
+            'type': self.type_name,
+        }
+
 
 class Keyword(Token_type):
     def __repr__(self):

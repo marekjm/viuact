@@ -54,6 +54,14 @@ def compile_text(
                 'tokens': list(map(lexer.to_data, tokens)),
             }, indent = 4))
 
+    if env.Dump_intermediate.Expressions in env.VIUAC_DUMP_INTERMEDIATE:
+        intermediate_exprs_path = os.path.join(output_directory, '{}.expressions'.format(module_name))
+        with open(intermediate_exprs_path, 'w') as ofstream:
+            ofstream.write(json.dumps({
+                'source_file': source_file,
+                'expressions': list(map(lambda each: each.to_data(), expressions)),
+            }, indent = 2))
+
     compilation_filesystem_root = os.path.dirname(source_file)
     lowered_function_bodies = []
 
