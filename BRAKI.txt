@@ -1,6 +1,4 @@
-tailcall
 wektor
-przykład na aktory
 wartości bool
 
 ----
