@@ -120,6 +120,7 @@ class Let_binding(Group_type):
             'value': self.value.to_data(),
         }
 
+
 class Function_call(Group_type):
     type_name = 'Function_call'
 
