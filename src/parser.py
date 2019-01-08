@@ -112,7 +112,7 @@ def parse_expression(expr):
         return group_types.Name_ref(
             name = expr,
         )
-    elif isinstance(leader, (token_types.Logic_operator, token_types.Arithmetic_operator)) and type(expr) is list:
+    elif leader_type in token_types.OPERATOR_TYPES and type(expr) is list:
         return group_types.Operator_call(
             operator = expr[0],
             args = [parse_expression(each) for each in expr[1:]],

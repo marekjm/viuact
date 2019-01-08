@@ -152,7 +152,7 @@ class Operator_call(Group_type):
 
     def to(self):
         return (str(self.operator.token)
-                if isinstance(self.operator, (token_types.Logic_operator, token_types.Arithmetic_operator))
+                if (type(self.operator) in token_types.OPERATOR_TYPES)
                 else self.operator.to_string())
 
     def to_string(self):
