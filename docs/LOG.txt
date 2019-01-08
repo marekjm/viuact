@@ -19,6 +19,35 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+FIXES IN VIUA VM
+(2019-01-08 19:39)
+
+I needed to fix two bugs in Viua VM.
+
+The first one was inside the static analyser; the SA continued analysing a
+control flow path after encountering a tail call which is clearly incorrect as a
+tail call replaces the current frame of execution rendering any analysis *after*
+a tail call pointless since at runtime the control flow path analysed would
+cease to exist.
+
+The second one was inside the linker. It was calculating symbol offsets
+incorrectly, thus trying to load all modules specified for static linking on the
+command line at the same address. This bug was triggered only when more than one
+module was specified to be linked during a single run; the following invocation
+produced the correct result:
+
+    $ viua-asm --verbose foo.asm bar.out
+
+...but a one like this would produce an error informing the user that functions
+A and B (coming from bar.out and baz.out) were loaded at the same address:
+
+    $ viua-asm --verbose foo.asm bar.out baz.out
+
+These bugs were easy to find and fix, and were discovered due to Viuact compiler
+stress-testing Viua's tooling.
+
+--------------------------------------------------------------------------------
+
 DUMP INTERMEDIATE FORM REPRESENTATIONS TO DISK
 (2019-01-07 21:38)
 
