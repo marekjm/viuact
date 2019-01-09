@@ -47,18 +47,63 @@ send it a message.
 --------------------------------------------------------------------------------
 USAGE
 
+To compile a canonical "Hello World!" example...
+
+    (let main () (
+        (print "Hello World!")
+        0
+    ))
+
+...you would have to execute the following shell commands (assuming you stored
+the above exapmle source code in the `hello_world.lisp` file):
+
+    $ viuact-cc --mode exec hello_world.lisp
+    $ viuact-opt build/_default/hello_world.asm
+
+The resulting executable bytecode is stored in "build/_default/hello_world.bc"
+file. You can run it using Viua VM kernel:
+
+    $ viua-vm build/_default/hello_world.bc
+    Hello World!
+
+The "hello_world.bc" (the "bc" extension is from "bytecode") file name is
+derived from the name of the main source file. Inside the build directory (named
+"build/_default") you will find several other files:
+
+- hello_world.asm: compiled, assembly language version of the original Viuact
+  source of the example program
+- hello_world.d: a "dependency specification" for the "hello_world" program;
+  this is the file that is read by viuact-opt to automatically discover what it
+  needs to link to the main program
+
+After the compilation, you will have four files in total:
+
+- hello_world.lisp
+- build/_default/hello_world.asm
+- build/_default/hello_world.d
+- build/_default/hello_world.bc
+
+--------------------------------------------------------------------------------
+COMPILATION PROCESS EXPLAINED
+
 Compilation from Viuact to executable bytecode is split into two stages:
 
 - compilation
 - assembly and linkage
 
-Why are assembly and linkage merged into one stage?
+Why are assembly and linkage merged into a single stage?
 
 Assembly (turning a sequence of assembly language instructions into a
 machine-readable bytecode) and linkage (linking two or more bytecode modules
 together while resolving and possibly relocating symbols) are usually two
 separate stages Viuact merges them. This is entirely due to the specifics of the
 tooling supplied by Viua VM.
+
+To compile a Viuact program two programs are used:
+
+- `viuact-cc.py`: the compiler
+- `viuact-opt.py`: the assembler-linker that drives the tooling provided by Viua
+  VM
 
 --------------------------------------------------------------------------------
 
