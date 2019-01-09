@@ -19,6 +19,15 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+CREATE A USER MANUAL
+(2019-01-09 19:15)
+
+A kind of a "user manual" is available in docs directory. It describes how to
+compile a simple "Hello World!" program, what options does the compiler provide,
+and a stub description of the compilation process.
+
+--------------------------------------------------------------------------------
+
 IMPLEMENT DEFERRED CALLS
 (2019-01-09 06:49)
 
