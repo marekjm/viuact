@@ -19,6 +19,17 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+IMPLEMENT DEFERRED CALLS
+(2019-01-09 06:49)
+
+Deferred calls may be scheduled in Viuact. This is a feature of Viua VM
+(inspired by Golang's "go" feature) that is incredibly useful in writing correct
+resource management code as it allows scheduling clean-up code to be run at the
+end of the function's life near the place where the resource is acquired. It
+approaches the power of RAII (as known from C++) if properly used.
+
+--------------------------------------------------------------------------------
+
 FIXES IN VIUA VM
 (2019-01-08 19:39)
 
