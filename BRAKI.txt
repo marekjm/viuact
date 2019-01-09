@@ -2,8 +2,6 @@ wektor
 
 ----
 
-Przykład formy pośredniej (jakiś zrzut do pliku, albo screen czy coś).
-
 Analiza leksykalna i składniowa:
 
 - gdzie w kodzie to jest (pliki itd.)
