@@ -88,5 +88,5 @@ def cc(executable_name, args):
 def opt(args):
     return {
         'main_source_file': args[0],
-        'main_output_file': (args[1] if len(args) >= 2 else 'a.out'),
+        'main_output_file': (args[1] if len(args) >= 2 else None),
     }

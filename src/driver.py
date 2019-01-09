@@ -294,7 +294,11 @@ def compile_file(
 def assemble_and_link(main_source_file, main_output_file):
     main_dependency_file = '{}.d'.format(os.path.splitext(main_source_file)[0])
 
+    if main_output_file is None:
+        main_output_file = '{}.bc'.format(os.path.splitext(main_source_file)[0])
+
     logs.verbose('main file:            {}'.format(main_source_file))
+    logs.verbose('main output file:     {}'.format(main_output_file))
     logs.verbose('main dependency file: {}'.format(main_dependency_file))
 
     main_imports = []
