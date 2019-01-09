@@ -18,5 +18,5 @@ if [[ $MODE == 'make' ]]; then
 fi
 if [[ $MODE == 'run' ]]; then
     echo "running $FILE_NAME..."
-    ../core/viuavm/build/bin/vm/kernel a.out
+    ../core/viuavm/build/bin/vm/kernel build/_default/$FILE_NAME.bc
 fi
