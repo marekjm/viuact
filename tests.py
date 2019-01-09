@@ -23,6 +23,7 @@ TESTS = (
     'struct_field_update',
     'simple_message_exchange',
     'tailcall',
+    'deferred_call',
     'boolean_values',
 )
 

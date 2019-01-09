@@ -89,8 +89,9 @@ def lex(source):
         token_types.Dot,
         token_types.Field_assignment,
 
-        token_types.Actor,          # Keywords
+        token_types.Actor,          # Call keywords
         token_types.Tailcall,
+        token_types.Defer,
 
         token_types.Name,           # Names and ids
         token_types.Module_name,

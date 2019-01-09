@@ -56,8 +56,12 @@ class Actor(Token_type):
     pattern = re.compile(r'\bactor\b')
 
 class Tailcall(Token_type):
-    type_name = 'Keyword_Tailcall'
+    type_name = 'keyword_tailcall'
     pattern = re.compile(r'\btailcall\b')
+
+class Defer(Token_type):
+    type_name = 'keyword_defer'
+    pattern = re.compile(r'\bdefer\b')
 
 class Or(Token_type):
     type_name = 'Operator_or'
