@@ -786,10 +786,11 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
     else:
         body.append(Verbatim('{} {} {} {}'.format(
             operator_names[str(name.token)],
-            slot.to_string(),
+            slot.to_string(pointer_dereference = False),
             applied_args[0].to_string(),
             applied_args[1].to_string(),
         )))
+        slot.is_pointer = False
 
     return slot
 
@@ -974,8 +975,12 @@ def emit_field_assignment(body : list, expr, state : State, slot : Slot):
         field_name_slot.to_string(),
         repr(field_name),
     )))
+
+    target_is_pointer = None
+    if inner_struct_slot is not None:
+        target_is_pointer = True
     body.append(Verbatim('structinsert {} {} {}'.format(
-        base_target_slot.to_string(inner_struct_slot is not None),
+        base_target_slot.to_string(target_is_pointer),
         field_name_slot.to_string(),
         slot.to_string(),
     )))
