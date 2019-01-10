@@ -309,6 +309,16 @@ class Struct(Group_type):
         return 'struct'
 
 
+class Vector(Group_type):
+    type_name = 'Vector'
+
+    def __init__(self):
+        pass
+
+    def to_string(self):
+        return 'vector'
+
+
 class Field_assignment(Group_type):
     type_name = 'Field_assignment'
 

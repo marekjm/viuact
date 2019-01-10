@@ -442,6 +442,15 @@ def emit_expr(
             '',
         ))
         return slot
+    elif leader_type is group_types.Vector:
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        body.append(Ctor(
+            'vector',
+            slot,
+            '',
+        ))
+        return slot
     elif leader_type is group_types.Compound_expression:
         return emit_compound_expr(
             body,

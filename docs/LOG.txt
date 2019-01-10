@@ -19,6 +19,13 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+IMPLEMENT VECTOR CTOR
+(2019-01-10 06:44)
+
+The vector data type provided by Viua VM is exposed to Viuact.
+
+--------------------------------------------------------------------------------
+
 CREATE A USER MANUAL
 (2019-01-09 19:15)
 

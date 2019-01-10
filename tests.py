@@ -25,6 +25,7 @@ TESTS = (
     'tailcall',
     'deferred_call',
     'boolean_values',
+    'vector',
 )
 
 

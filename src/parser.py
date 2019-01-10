@@ -151,6 +151,8 @@ def parse_expression(expr):
         )
     elif leader_type is token_types.Struct:
         return group_types.Struct()
+    elif leader_type is token_types.Vector:
+        return group_types.Vector()
     else:
         raise Exception('invalid expression in function body', expr)
 
