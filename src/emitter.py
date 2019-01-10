@@ -25,6 +25,9 @@ BUILTIN_FUNCTIONS = (
 
     'Std::String::to_string',
     'Std::String::concat',
+
+    'Std::Vector::push',
+    'Std::Vector::at',
 )
 
 IGNORE_VALUE = '_'
@@ -585,6 +588,62 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
                 toplevel = False,
             ).to_string(),
         )))
+        return slot
+    elif call_expr.to() == 'Std::Vector::push':
+        vector_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        value_slot = emit_expr(
+            body = body,
+            expr = args[1],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        body.append(Verbatim('vpush {} {}'.format(
+            vector_slot.to_string(),
+            value_slot.to_string(),
+        )))
+
+        # We don't create or use a slot provided by the caller because we need
+        # to return the slot in which the vector resides.
+        return vector_slot
+    elif call_expr.to() == 'Std::Vector::at':
+        vector_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        index_slot = emit_expr(
+            body = body,
+            expr = args[1],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        body.append(Verbatim('vat {} {} {}'.format(
+            slot.to_string(),
+            vector_slot.to_string(),
+            index_slot.to_string(),
+        )))
+
+        slot.is_pointer = True
         return slot
     else:
         raise Exception('unimplemented built-in', call_expr.to())
