@@ -24,6 +24,13 @@ IMPLEMENT VECTOR CTOR
 
 The vector data type provided by Viua VM is exposed to Viuact.
 
+Implementing functions to manipulate structs (like push() and at()) forced me to
+attempt implementing automatic pointer dereference. Automatic pointer
+dereferencing is required if I want to avoid adding the pointer dereference
+operator. However, manual pointer management may need to be added anyway if I do
+not manage to make the compiler "smart" enough to produce correct pointer
+dereferencing code reliably and consistently.
+
 --------------------------------------------------------------------------------
 
 CREATE A USER MANUAL
