@@ -1,7 +1,3 @@
-wektor
-
-----
-
 Analiza leksykalna i składniowa:
 
 - gdzie w kodzie to jest (pliki itd.)
@@ -28,3 +24,23 @@ Dostarczyć:
 - manual do tego jak kompilować kod: od Viuact do bytecode
 
 Dopytać dziekana na jakiej podstawie będzie przyznawał ocenę (bo to jest aż 80% całości).
+
+----
+
+Optymalizacja zużycia rejestrów.
+Przykład: sklejanie stringów.
+
+1. sklejanie anoninowych stringów: tworzenie mnóstwa anonimowych rejestrów (czyli duże zużycie, O(n²))
+2. ręczna optymalizacja: sklejanie do akulmulatora: tworzenie jednego rejestru per sklejenie z anonimową
+   warnością zamiast dwóch
+3. optymalizacja kompilatorowa: drastyczne zmniejszenie użycie rejestrów
+
+----
+
+Przykłady:
+
+- Hello World!
+- simple_message_exchange ale podrasowany (komentarze i nie XXX)
+- czytanie inputu od użytkownika, a w tle asynchronicznie wiadomości pisane na konsolę
+  - czytanie liczb i "Daj mi X", użytkownik wpisuje X, to potem "Daj mi Y" (albo zgadywanie)
+  - wartości do podania są losowane
