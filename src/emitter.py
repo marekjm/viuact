@@ -493,16 +493,17 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
     args = call_expr.args
 
     if call_expr.to() == 'print':
+        slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = slot,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
         body.append(Verbatim('print {}'.format(
-            emit_expr(
-                body = body,
-                expr = args[0],
-                state = state,
-                slot = slot,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string()
+            slot.to_string()
         )))
     elif call_expr.to() == 'Std::Actor::join':
         timeout = (args[1] if len(args) > 1 else token_types.Timeout(INFINITE_DURATION))
