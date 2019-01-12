@@ -943,23 +943,15 @@ def emit_function(body : list, expr, state : State, slot : Slot):
     if expr.arguments:
         inner_body.append(Verbatim(''))
 
-    for each in expr.body:
-        # Expressions evaluated at function-level are given anonymous
-        # slots.
-        # Why? Because they are not assigned to anything. If an
-        # expression is assigned to an anonymous slot it can decide for
-        # itself what to do with this situation; function calls will
-        # return to void, literals and let-bindings will be created.
-        emit_expr(
-            body = inner_body,
-            expr = each,
-            state = state,
-            slot = None,
-            must_emit = False,
-            meta = state.visible_fns,
-            toplevel = False,
-        )
-        inner_body.append(Verbatim(''))
+    emit_expr(
+        body = inner_body,
+        expr = expr.body,
+        state = state,
+        slot = None,
+        must_emit = False,
+        meta = state.visible_fns,
+        toplevel = False,
+    )
 
     body.append(Verbatim('allocate_registers %{} local'.format(
         state.next_slot[LOCAL_REGISTER_SET],

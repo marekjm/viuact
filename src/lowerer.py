@@ -322,21 +322,13 @@ def output_function_body(fn, in_module, meta):
     if fn.arguments:
         inner_body.append(emitter.Verbatim(''))
 
-    for each in fn.body:
-        # Expressions evaluated at function-level are given anonymous
-        # slots.
-        # Why? Because they are not assigned to anything. If an
-        # expression is assigned to an anonymous slot it can decide for
-        # itself what to do with this situation; function calls will
-        # return to void, literals and let-bindings will be created.
-        emitter.emit_expr(
-            body = inner_body,
-            expr = each,
-            state = state,
-            meta = meta,
-            toplevel = True,
-        )
-        inner_body.append(emitter.Verbatim(''))
+    return_slot = emitter.emit_expr(
+        body = inner_body,
+        expr = fn.body,
+        state = state,
+        meta = meta,
+        toplevel = True,
+    )
 
     body = [
         emitter.Verbatim('.function: {}/{}'.format(
@@ -350,7 +342,7 @@ def output_function_body(fn, in_module, meta):
     body.append(emitter.Verbatim(''))
     body.extend(inner_body)
     body.append(emitter.Move.make_move(
-        state.last_used_slot,
+        return_slot,
         emitter.Slot(None, 0,)
     ))
     body.append(emitter.Verbatim('return'))
