@@ -498,7 +498,7 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
                 body = body,
                 expr = args[0],
                 state = state,
-                slot = None,
+                slot = slot,
                 must_emit = False,
                 meta = None,
                 toplevel = False,
@@ -647,6 +647,8 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
         return slot
     else:
         raise Exception('unimplemented built-in', call_expr.to())
+
+    return slot
 
 def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     name = call_expr.name
