@@ -327,7 +327,7 @@ def output_function_body(fn, in_module, meta):
         expr = fn.body,
         state = state,
         meta = meta,
-        toplevel = True,
+        toplevel = False,
     )
 
     body = [
