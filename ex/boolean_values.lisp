@@ -1,4 +1,4 @@
-(let main () (
+(let main () {
     (let bt true)
     (let bf false)
 
@@ -22,4 +22,4 @@
     (print (and true  true))
 
     0
-))
+})

@@ -1,5 +1,5 @@
 (module Foo (
-    (let make (message) (
+    (let make (message) {
         (let x (struct))
         (:= x.inner (struct))
         (:= x.inner.most (struct))
@@ -9,12 +9,12 @@
         (:= x.inner.most.bar message)
 
         x
-    ))
+    })
 ))
 
 (import Foo)
 
-(let main () (
+(let main () {
     (let x (Foo.make "Hello World!"))
     (print x)
-))
+})

@@ -1,9 +1,7 @@
-(let f () (
-    42
-))
+(let f () 42)
 
-(let main () (
+(let main () {
     (let x (f))
     (print x)
     0
-))
+})

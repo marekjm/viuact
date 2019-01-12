@@ -1,4 +1,4 @@
-(let main () (
+(let main () {
     (let x (struct))
     (:= x.inner (struct))
     (:= x.inner.most (struct))
@@ -14,4 +14,4 @@
     (print z)
 
     0
-))
+})

@@ -1,4 +1,4 @@
-(let main () (
+(let main () {
     ; This creates a vector.
     (let v (vector))
     (print v)
@@ -26,4 +26,4 @@
                         ; value inside a vector we also mutated the vector.
 
     0
-))
+})

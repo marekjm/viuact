@@ -1,5 +1,3 @@
 (import External)
 
-(let main () (
-    (External.f "Hello World!")
-))
+(let main () (External.f "Hello World!"))

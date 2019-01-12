@@ -1,4 +1,4 @@
-(let main () (
+(let main () {
     ; Create and display empty struct.
     (let x (struct))
     (print x)
@@ -11,4 +11,4 @@
     ; times.
     (:= x.foo "Hello World!")
     (print x)
-))
+})

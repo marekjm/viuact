@@ -12,7 +12,7 @@
 ;
 ;       "(" "let" name formal_parameters_list expression ")"
 ;
-(let main () (
+(let main () {
     ; A variable definition in Viuact is introduced by the "let" keyword (same
     ; as for a function definition). Then comes the name of the variable and
     ; a single expression that evaluates to the value of the variable.
@@ -43,4 +43,4 @@
     ; expression used inside its body. Thus we return 0 from the main function
     ; simply by stating a literal 0 as the last expression of the main function.
     0
-))
+})

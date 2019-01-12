@@ -1,11 +1,11 @@
-(let make_struct () (
+(let make_struct () {
     (let x (struct))
     (:= x.inner (struct))
     (:= x.inner.value 41)
     x
-))
+})
 
-(let main () (
+(let main () {
     (let x (make_struct))
     (print x)
 
@@ -13,4 +13,4 @@
     (print x)
 
     0
-))
+})

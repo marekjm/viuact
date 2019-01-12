@@ -1,8 +1,8 @@
-(let f (x) (
+(let f (x) {
     (print x)
     (print "(from a function)")
-))
+})
 
-(let main () (
+(let main () {
     (f "Hello World!")
-))
+})
