@@ -248,7 +248,7 @@ def emit_expr(
         state.last_used_slot = slot
         return slot
     elif leader_type is group_types.Function_call:
-        if not toplevel and slot is None:
+        if (not toplevel) and (slot is None):
             slot = state.get_slot(None, anonymous = True)
         return emit_call(
             body = body,
