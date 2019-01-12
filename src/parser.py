@@ -154,15 +154,9 @@ def parse_expression(expr):
     elif leader_type is token_types.Vector:
         return group_types.Vector()
     else:
-        raise Exception('invalid expression in function body', expr)
-
-def parse_function_body(source):
-    body = []
-
-    for each in source:
-        body.append(parse_expression(each))
-
-    return body
+        if leader_type is list:
+            raise Exception('expected a single expression, got a list', expr)
+        raise Exception('invalid expression', expr)
 
 def parse_function(source):
     if not isinstance(source[1], token_types.Name):
@@ -176,9 +170,13 @@ def parse_function(source):
         raise Exception('expected arguments list, got', source[2])
     fn.arguments = source[2]
 
-    if not isinstance(source[3], list):
-        raise Exception('expected expression, got', source[3])
-    fn.body = parse_function_body(source[3])
+    try:
+        fn.body = parse_expression(source[3])
+    except Exception as e:
+        raise Exception('failed to parse function body', {
+            'context': source[1],
+            'reason': e,
+        })
 
     return fn
 
