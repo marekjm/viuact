@@ -19,6 +19,21 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+FUNCTION BODIES ARE NOW SINGLE EXPRESSIONS
+(2019-01-12 12:14)
+
+As the title says: function bodies are now single expressions. This makes it
+possible to write simple functions in a simple way:
+
+    (let zero () 0)
+    (let print_prefixed (prefix message)
+        (print (Std.String.concat prefix message)))
+
+...while still retaining the ability to write arbitrarily complex functions (see
+the fibonacci example).
+
+--------------------------------------------------------------------------------
+
 IMPLEMENT VECTOR CTOR
 (2019-01-10 06:44)
 
