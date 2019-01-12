@@ -10,10 +10,6 @@ class Misconfigured_environment_variable(Exception):
     pass
 
 
-if os.environ.get('VIUA_LIBRARY_PATH') is None:
-    raise Required_environment_variable_not_set('VIUA_LIBRARY_PATH')
-
-
 VIUAC_LIBRARY_PATH = tuple(filter(os.path.isdir, (
     tuple(filter(lambda each: each.strip(),
         os.environ.get('VIUAC_LIBRARY_PATH', '').split(':')
