@@ -19,6 +19,14 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+IMPORTING NATIVE MODULES
+(2019-01-13 12:22)
+
+With a little bit of changes needed on the Viua VM side it is now possible to
+import native (written in C++) modules in Viuact.
+
+--------------------------------------------------------------------------------
+
 FUNCTION BODIES ARE NOW SINGLE EXPRESSIONS
 (2019-01-12 12:14)
 
