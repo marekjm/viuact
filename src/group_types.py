@@ -289,7 +289,7 @@ class Compound_expression(Group_type):
 
     def to_string(self):
         return '({})'.format(' '.join(map(
-            (lambda x: '({})'.format(x.to_string())),
+            (lambda x: '({})'.format(x.to_string() if isinstance(x, Group_type) else str(x))),
             self.expressions
         )))
 
