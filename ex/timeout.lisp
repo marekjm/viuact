@@ -40,7 +40,7 @@
     ;
     (let printer_loop (server) {
         (let message (Std.Actor.receive))
-        (print (Std.String.concat "printer got: " (Std.String.to_string message)))
+        (print (Std.String.concat "printer got: " (Std.String.to_string message.content)))
         (tailcall Print_protocol.printer_loop server)
         0
     })
@@ -65,9 +65,17 @@
     ;
     (let server_loop (printer_pid) {
         (print "server waits for messages...")
+
         (let message (Std.Actor.receive))
-        (print message.type)
-        (Std.Actor.send printer_pid message)
+        (let message_type message.type)
+        (print message_type)
+
+        (if (= message_type 1) {
+            (Std.Actor.send printer_pid message)
+        } {
+            (print "OH NOES")
+        })
+
         (tailcall Print_protocol.server_loop printer_pid)
         0
     })
