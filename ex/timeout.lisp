@@ -67,6 +67,7 @@
         (print "server waits for messages...")
         (let message (Std.Actor.receive))
         (print message.type)
+        (Std.Actor.send printer_pid message)
         (tailcall Print_protocol.server_loop printer_pid)
         0
     })
