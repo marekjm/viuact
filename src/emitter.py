@@ -21,6 +21,7 @@ BUILTIN_FUNCTIONS = (
     'actor',
     'Std::Actor::join',
     'Std::Actor::receive',
+    'Std::Actor::self',
     'Std::Actor::send',
 
     'Std::String::concat',
@@ -549,6 +550,13 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             pid_slot.to_string(),
             message_slot.to_string(),
         )))
+    elif call_expr.to() == 'Std::Actor::self':
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        body.append(Verbatim('self {}'.format(
+            slot.to_string(),
+        )))
+        return slot
     elif call_expr.to() == 'Std::String::to_string':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
