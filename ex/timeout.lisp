@@ -35,6 +35,34 @@
         message
     })
 
+    ;
+    ; PRINTER
+    ;
+    (let printer_loop (server) {
+        (let message (Std.Actor.receive))
+        (print (Std.String.concat "printer got: " (Std.String.to_string message)))
+        (tailcall Print_protocol.printer_loop server)
+        0
+    })
+    (let printer_impl (parent) {
+        (print "Hello World! (from Print_protocol.printer_impl)")
+        (Std.Actor.send parent (Std.Actor.self))
+
+        (tailcall Print_protocol.printer_loop parent)
+
+        0
+    })
+    (let start_printer () {
+        (actor Print_protocol.printer_impl (Std.Actor.self))
+        (let pid (Std.Actor.receive 5s))
+        (print (Std.String.concat "printer's PID is " (Std.String.to_string pid)))
+        (print "printer started")
+        pid
+    })
+
+    ;
+    ; SERVER
+    ;
     (let server_loop (printer_pid) {
         (print "server waits for messages...")
         (let message (Std.Actor.receive))
@@ -43,9 +71,10 @@
         0
     })
     (let server_impl (parent) {
+        (print "Hello World! (from Print_protocol.server_impl)")
         (Std.Actor.send parent (Std.Actor.self))
 
-        (let printer_pid (Std.Actor.self))
+        (let printer_pid (start_printer))
         (tailcall Print_protocol.server_loop printer_pid)
 
         0
@@ -53,6 +82,7 @@
     (let start_server () {
         (actor Print_protocol.server_impl (Std.Actor.self))
         (let pid (Std.Actor.receive 1s))
+        (print "server started")
         pid
     })
     (let stop_server (server) {
