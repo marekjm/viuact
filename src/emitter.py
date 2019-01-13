@@ -20,14 +20,14 @@ BUILTIN_FUNCTIONS = (
 
     'actor',
     'Std::Actor::join',
-    'Std::Actor::send',
     'Std::Actor::receive',
+    'Std::Actor::send',
 
-    'Std::String::to_string',
     'Std::String::concat',
+    'Std::String::to_string',
 
-    'Std::Vector::push',
     'Std::Vector::at',
+    'Std::Vector::push',
 )
 
 IGNORE_VALUE = '_'
