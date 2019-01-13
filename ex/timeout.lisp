@@ -38,7 +38,16 @@
     ;
     ; PRINTER
     ;
+    (let resurrect_printer_loop (printer_life_tag) {
+        (if printer_life_tag.alive (print "printer lives") (print "printer died"))
+        0
+    })
     (let printer_loop (server) {
+        (let printer_life_tag (struct))
+        (:= printer_life_tag.alive 0)
+
+        (defer Print_protocol.resurrect_printer_loop printer_life_tag)
+
         (let message (Std.Actor.receive))
         (print (Std.String.concat "printer got: " (Std.String.to_string message.content)))
         (tailcall Print_protocol.printer_loop server)
