@@ -146,7 +146,11 @@ def compile_text(
                     if v['from_module'] == module_name
                 ]
                 with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
-                    ofstream.write(json.dumps({ 'fns': fns, }, indent = 4))
+                    ofstream.write(json.dumps({
+                        'foreign': False,
+                        'real_name': module_name,
+                        'fns': fns,
+                    }, indent = 4))
         elif compile_as == Compilation_mode.Executable:
             logs.verbose('compiling executable: {} (from {})'.format(module_name, source_file))
 
@@ -230,6 +234,14 @@ def compile_text(
                     ofstream.write(json.dumps({ 'fns': fns, }, indent = 4))
 
             with open(main_module_output_name, 'w') as ofstream:
+                ffi_imports = list(filter(lambda each: each['foreign'], meta.imports))
+                if ffi_imports:
+                    ofstream.write('\n'.join(map(
+                        lambda each: '.import: [[dynamic]] {}'.format(each['real_name']),
+                        ffi_imports,
+                    )))
+                    ofstream.write('\n\n')
+
                 if meta.signatures:
                     ofstream.write('\n'.join(map(
                         lambda each: '.signature: {}'.format(each),
@@ -307,49 +319,71 @@ def assemble_and_link(main_source_file, main_output_file):
 
     if main_imports:
         prefix = 'imports: '
-        logs.verbose('{}{}'.format(prefix, main_imports[0]))
+        logs.verbose('{}{}'.format(prefix, main_imports[0]['module_name']))
 
         prefix = ' ' * len(prefix)
         for each in main_imports[1:]:
-            logs.verbose('{}{}'.format(prefix, each))
+            logs.verbose('{}{}'.format(prefix, each['module_name']))
 
     import_paths = {}
 
     for each in main_imports:
-        module_source_path = os.path.join(*each.split('::')) + '.asm'
-        module_binary_path = os.path.join(*each.split('::')) + '.module'
+        imported_module_name = each['module_name']
+        module_source_path = os.path.join(*imported_module_name.split('::')) + '.asm'
+        module_binary_path = os.path.join(*imported_module_name.split('::')) + '.module'
+        module_ffi_binary_path = os.path.join(*imported_module_name.split('::')) + '.so'
 
-        logs.debug('looking for module {}'.format(each))
+        logs.debug('looking for module {}'.format(imported_module_name))
         for candidate in env.VIUAC_LIBRARY_PATH:
             candidate_module_source_path = os.path.join(candidate, module_source_path)
             candidate_module_binary_path = os.path.join(candidate, module_binary_path)
+            candidate_module_ffi_binary_path = os.path.join(candidate, module_ffi_binary_path)
 
             found_source_form = os.path.isfile(candidate_module_source_path)
             found_binary_form = os.path.isfile(candidate_module_binary_path)
+            found_ffi_binary_form = os.path.isfile(candidate_module_ffi_binary_path)
 
-            logs.debug('    in {}{}'.format(module_source_path, (
-                ' (found)' if found_source_form else ''
-            )))
-            if found_source_form:
-                import_paths[each] = candidate_module_source_path
-                break
+            if not each['foreign']:
+                logs.debug('    in {}{}'.format(module_source_path, (
+                    ' (found)' if found_source_form else ''
+                )))
+                if found_source_form:
+                    import_paths[imported_module_name] = candidate_module_source_path
+                    break
 
-            logs.debug('    in {}{}'.format(module_binary_path, (
-                ' (found)' if found_binary_form else ''
-            )))
-            if found_binary_form:
-                import_paths[each] = candidate_module_binary_path
-                break
+                logs.debug('    in {}{}'.format(module_binary_path, (
+                    ' (found)' if found_binary_form else ''
+                )))
+                if found_binary_form:
+                    import_paths[imported_module_name] = candidate_module_binary_path
+                    break
 
-        if each not in import_paths:
-            sys.stderr.write('error: could not find module {}\n'.format(each))
-            sys.stderr.write('note: put the directory containing module\'s .asm or\n')
-            sys.stderr.write('      .module files in VIUAC_OUTPUT_DIRECTORY env variable\n')
+            if each['foreign']:
+                logs.debug('    in {}{}'.format(candidate_module_ffi_binary_path, (
+                    ' (found)' if found_ffi_binary_form else ''
+                )))
+                if found_ffi_binary_form:
+                    import_paths[imported_module_name] = candidate_module_ffi_binary_path
+                    break
+
+        if imported_module_name not in import_paths:
+            sys.stderr.write('error: could not find module {}\n'.format(imported_module_name))
+            if not each['foreign']:
+                sys.stderr.write('note: put the directory containing module\'s .asm or\n')
+                sys.stderr.write('      .module files in VIUAC_OUTPUT_DIRECTORY env variable\n')
+            if each['foreign']:
+                sys.stderr.write('note: put the directory containing module\'s .so file in\n')
+                sys.stderr.write('      VIUAC_LIBRARY_PATH env variable\n')
             exit(1)
 
     library_files_to_link = []
     for each in main_imports:
-        source_path = import_paths[each]
+        if each['foreign']:
+            # If the module is foreign, let's skip it. It should be compiled manually.
+            continue
+
+        imported_module_name = each['module_name']
+        source_path = import_paths[imported_module_name]
         output_path = '{}.out'.format(os.path.splitext(source_path)[0])
         logs.debug('assembling: {} -> {}'.format(source_path, output_path))
 

@@ -6,6 +6,7 @@ import exceptions
 import token_types
 import group_types
 import lexer
+import logs
 import parser
 import emitter
 import env
@@ -59,17 +60,17 @@ class Visibility_information:
             'from_module': from_module,
         }
 
-    def insert_function(self, name, value):
+    def insert_function(self, name, value, bytecode_name : str = None):
         self.functions[name] = value
 
     def real_name(self, name, token):
         if name not in self.functions:
             raise exceptions.No_such_function('no function named: {}()'.format(name), token)
-        return self.functions[name]['real_name']
+        return (self.functions[name].get('bytecode_name') or self.functions[name]['real_name'])
 
-    def add_signature_for(self, name):
+    def add_signature_for(self, name, fn_bytecode_name : str = None):
         self.signatures.append('{name}/{arity}'.format(
-            name = name,
+            name = (fn_bytecode_name or name),
             arity = self.functions[name]['arity']
         ))
 
@@ -86,8 +87,12 @@ class Visibility_information:
             )
         return v
 
-    def add_import(self, module_name):
-        self.imports.append(module_name)
+    def add_import(self, module_name, real_name : str = None, foreign = False):
+        self.imports.append({
+            'module_name': module_name,
+            'real_name': (module_name if (real_name is None) else real_name),
+            'foreign': foreign,
+        })
 
 
 def make_meta(name):
@@ -114,22 +119,37 @@ def perform_imports(import_expressions, meta):
 
         found = False
         for each in env.VIUAC_LIBRARY_PATH:
-            print('checking {} for module {}'.format(each, mod_name))
+            logs.debug('checking {} for module {}'.format(each, mod_name))
 
-            mod_interface_path = os.path.join(each, *mod_name.split('.')) + '.i'
+            mod_interface_path = os.path.join(each, *mod_name.split('::')) + '.i'
+            logs.debug('    candidate {}'.format(mod_interface_path))
             if os.path.isfile(mod_interface_path):
-                print('    found {}'.format(mod_interface_path))
+                logs.debug('    found {}'.format(mod_interface_path))
                 found = True
                 with open(mod_interface_path, 'r') as ifstream:
                     interface = parse_interface_file(ifstream.read())
                     for each in interface['fns']:
                         if each['from_module'] == mod_name:
+                            # Optional. Name of the function as seen in the bytecode
+                            # module. Useful for foreign modules for which the
+                            # interface is written manually, but must still agree with the
+                            # naming convention used by Viuact.
+                            fn_bytecode_name = each.get('bytecode_name')
+
+                            # Full name of the function; the name base name of the
+                            # function prefixed by the full name of the module in which it
+                            # is contained.
+                            fn_full_name = each['real_name']
                             meta.insert_function(
-                                name = each['real_name'],
+                                name = fn_full_name,
                                 value = each,
                             )
-                            meta.add_signature_for(each['real_name'])
-                meta.add_import(mod_name)
+                            meta.add_signature_for(fn_full_name, fn_bytecode_name)
+                    meta.add_import(
+                        module_name = mod_name,
+                        real_name = interface['real_name'],
+                        foreign = interface['foreign'],
+                    )
                 break
 
         if found:
