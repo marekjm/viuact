@@ -54,11 +54,9 @@
         (tailcall Print_protocol.printer_loop server)
         0
     })
-    (let start_printer (server) {
-        (print "Hello World! (from Print_protocol.start_printer)")
-        (actor Print_protocol.printer_impl server)
+    (let start_printer () {
+        (actor Print_protocol.printer_impl (Std.Actor.self))
         (let printer_pid (Std.Actor.receive 1s))
-        (print "printer started")
         printer_pid
     })
 
@@ -66,15 +64,15 @@
         (print "server waits for messages...")
         (let message (Std.Actor.receive))
         (print message.type)
-        (Std.Actor.send printer_pid message)
+        ; (Std.Actor.send printer_pid message)
         (tailcall Print_protocol.server_loop printer_pid)
         0
     })
     (let server_impl (parent) {
-        (let server_pid (Std.Actor.self))
-        (let printer_pid (start_printer server_pid))
+        (Std.Actor.send parent (Std.Actor.self))
 
-        (Std.Actor.send parent server_pid)
+        ; (let printer_pid (start_printer))
+        (let printer_pid (Std.Actor.self))
         (tailcall Print_protocol.server_loop printer_pid)
 
         0
