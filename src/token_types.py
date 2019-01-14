@@ -71,10 +71,6 @@ class Catch(Token_type):
     type_name = 'keyword_catch'
     pattern = re.compile(r'\bcatch\b')
 
-class Exception_tag_marker(Token_type):
-    type_name = 'Exception_tag_marker'
-    pattern = None
-
 class In(Token_type):
     type_name = 'keyword_in'
     pattern = re.compile(r'\bin\b')
@@ -166,6 +162,10 @@ class Name(Token_type):
 class Module_name(Token_type):
     type_name = 'Module_name'
     pattern = re.compile('[A-Z][a-zA-Z0-9_]*')
+
+class Exception_tag_name(Token_type):
+    type_name = 'Exception_tag_name'
+    pattern = None
 
 class Comment(Token_type):
     type_name = 'Comment'

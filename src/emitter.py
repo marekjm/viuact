@@ -1038,7 +1038,7 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
 
     handler_bodies = []
     for each in handlers:
-        tag_name = str(each.tag.tag.tag.token)
+        tag_name = str(each.tag.tag.token)
 
         handler_block_name = 'catch_{}'.format(hashlib.sha1(
             repr(expression).encode('utf-8')
@@ -1049,11 +1049,14 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
             Verbatim('catch "{}" .block: {}'.format(
                 tag_name,
                 handler_block_name
-            )),
-            Verbatim('draw {}'.format(
-                state.get_slot(str(each.name.token)).to_string(),
-            )),
+            ))
         ]
+
+        exception_variable_name = str(each.name.token)
+        if exception_variable_name != '_':
+            Verbatim('draw {}'.format(
+                state.get_slot(exception_variable_name).to_string(),
+            )),
 
         emit_expr(
             body = handler_body,
