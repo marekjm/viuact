@@ -27,6 +27,7 @@ TESTS = (
     'deferred_call',
     'boolean_values',
     'vector',
+    'exceptions',
 )
 
 
