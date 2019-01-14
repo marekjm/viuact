@@ -19,6 +19,17 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+EXCEPTION CATCHING MECHANISM
+(2019-01-14 15:57)
+
+Exceptions can be caught. The syntax is:
+
+    (try <expression> (
+        (catch <error-tag> <name> <handling-expression>)+
+    ))
+
+--------------------------------------------------------------------------------
+
 IMPORTING NATIVE MODULES
 (2019-01-13 12:22)
 

@@ -1038,7 +1038,7 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
 
     handler_bodies = []
     for each in handlers:
-        tag_name = str(each.tag.tag.tag.token)
+        tag_name = str(each.tag.tag.token)
 
         handler_block_name = 'catch_{}'.format(hashlib.sha1(
             repr(expression).encode('utf-8')

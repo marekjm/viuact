@@ -38,8 +38,8 @@ def group_impl(tokens, break_on = token_types.Right_paren):
             name_types = (token_types.Module_name, token_types.Name,)
             if type(tokens[i+1]) not in (token_types.Module_name, token_types.Name):
                 raise Exception('expected module name or name to follow operator dot, got', tokens[i+1])
+            # grouped.pop()
             grouped.append([
-                token_types.Exception_tag_marker(each),
                 group_types.Exception_tag(tag = tokens[i+1]),
             ])
             i += 1
@@ -177,10 +177,8 @@ def parse_expression(expr):
                 in expr[2]
             ],
         )
-    elif leader_type is token_types.Exception_tag_marker:
-        return group_types.Exception_tag(
-            tag = expr[1],
-        )
+    elif leader_type is group_types.Exception_tag:
+        return expr[0]
     else:
         if leader_type is list:
             raise Exception('expected a single expression, got a list', expr)

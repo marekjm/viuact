@@ -71,10 +71,6 @@ class Catch(Token_type):
     type_name = 'keyword_catch'
     pattern = re.compile(r'\bcatch\b')
 
-class Exception_tag_marker(Token_type):
-    type_name = 'Exception_tag_marker'
-    pattern = None
-
 class In(Token_type):
     type_name = 'keyword_in'
     pattern = re.compile(r'\bin\b')
