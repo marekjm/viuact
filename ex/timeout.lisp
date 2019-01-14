@@ -40,16 +40,15 @@
     ;
     (let printer_loop (server) {
         (try {
-            (let message (Std.Actor.receive 1s))
+            (let message (Std.Actor.receive 10s))
             (print (Std.String.concat "printer got: " (Std.String.to_string message.content)))
         } (
-            (catch Exception _ (print "printer did not receive anything"))
+            (catch Exception _ (print "printer got nothing after 10 seconds"))
         ))
         (tailcall Print_protocol.printer_loop server)
         0
     })
     (let printer_impl (parent) {
-        (print "Hello World! (from Print_protocol.printer_impl)")
         (Std.Actor.send parent (Std.Actor.self))
 
         (tailcall Print_protocol.printer_loop parent)
@@ -59,8 +58,6 @@
     (let start_printer () {
         (actor Print_protocol.printer_impl (Std.Actor.self))
         (let pid (Std.Actor.receive 5s))
-        (print (Std.String.concat "printer's PID is " (Std.String.to_string pid)))
-        (print "printer started")
         pid
     })
 
@@ -68,23 +65,19 @@
     ; SERVER
     ;
     (let server_loop (printer_pid) {
-        (print "server waits for messages...")
-
         (let message (Std.Actor.receive))
         (let message_type message.type)
-        (print message_type)
 
         (if (= message_type 1) {
             (Std.Actor.send printer_pid message)
         } {
-            (print "OH NOES")
+            0
         })
 
         (tailcall Print_protocol.server_loop printer_pid)
         0
     })
     (let server_impl (parent) {
-        (print "Hello World! (from Print_protocol.server_impl)")
         (Std.Actor.send parent (Std.Actor.self))
 
         (let printer_pid (start_printer))
@@ -95,7 +88,6 @@
     (let start_server () {
         (actor Print_protocol.server_impl (Std.Actor.self))
         (let pid (Std.Actor.receive 1s))
-        (print "server started")
         pid
     })
     (let stop_server (server) {
@@ -108,9 +100,9 @@
 (import Std.Io)
 
 (let loop (server) {
-    (print "type something:")
+    (echo "type something: ")
     (let message (Std.String.to_string (Std.Io.stdin_getline)))
-    (print (Std.String.concat "got: " message))
+    ; (print (Std.String.concat "got: " message))
 
     (Print_protocol.post_print server message)
     (tailcall loop server)
@@ -119,14 +111,7 @@
 })
 
 (let main () {
-    (print "running: 0001")
-
     (let server (Print_protocol.start_server))
-
     (loop server)
-
-    (print "Hello World! (after loop, from main)")
-
-    (print "main() exited")
     0
 })
