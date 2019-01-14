@@ -28,6 +28,15 @@ Exceptions can be caught. The syntax is:
         (catch <error-tag> <name> <handling-expression>)+
     ))
 
+This required fixing a bug in Viua VM that was triggered by statically linking a
+module that contained a block. Information about blocks from statically linked
+modules was not included in the resulting executable and caused failures when
+such modules tried to handle an exception.
+
+As they tried to enter a block, the kernel was throwing "no such block"
+exceptions. Now this is fixed and exceptions in Viua VM and Viuact work as
+intended.
+
 --------------------------------------------------------------------------------
 
 IMPORTING NATIVE MODULES
