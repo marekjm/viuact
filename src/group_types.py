@@ -229,6 +229,65 @@ class Deferred_call(Group_type):
         return Function_call.to_content(self)
 
 
+class Try_expression(Group_type):
+    type_name = 'Try_expression'
+
+    def __init__(self, expr, handling_blocks):
+        self.expr = expr
+        self.handling_blocks = handling_blocks
+
+    def to_string(self):
+        return 'try {} with ...'.format(
+            self.expr.to_string(),
+        )
+
+    def to_content(self):
+        return {
+            'expr': self.expr.to_data(),
+            'handling_blocks': list(map(lambda each: each.to_data(), self.handling_blocks)),
+        }
+
+
+class Catch_expression(Group_type):
+    type_name = 'Catch_expression'
+
+    def __init__(self, tag, name, expr):
+        self.tag = tag
+        self.name = name
+        self.expr = expr
+
+    def to_string(self):
+        return '{} {} {}'.format(
+            self.tag.to_string(),
+            str(self.name.token),
+            self.expr.to_string(),
+        )
+
+    def to_content(self):
+        return {
+            'tag': self.tag.to_data(),
+            'name': self.name.to_data(),
+            'expr': self.expr.to_data(),
+        }
+
+
+class Exception_tag(Group_type):
+    type_name = 'Exception_tag'
+
+    def __init__(self, tag):
+        self.tag = tag
+
+    def to_string(self):
+        return '{}'.format(
+            str(self.tag),
+        )
+
+    def to_content(self):
+        return {
+            'tag': str(self.tag),
+        }
+
+
 class Name_ref(Group_type):
     type_name = 'Name_ref'
 

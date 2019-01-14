@@ -34,6 +34,17 @@ def group_impl(tokens, break_on = token_types.Right_paren):
             i += 2
             continue
 
+        if isinstance(each, token_types.Catch):
+            name_types = (token_types.Module_name, token_types.Name,)
+            if type(tokens[i+1]) not in (token_types.Module_name, token_types.Name):
+                raise Exception('expected module name or name to follow operator dot, got', tokens[i+1])
+            grouped.append([
+                token_types.Exception_tag_marker(each),
+                group_types.Exception_tag(tag = tokens[i+1]),
+            ])
+            i += 1
+            continue
+
         if isinstance(each, token_types.Left_curly):
             g, n = group_impl(tokens[i:], break_on = token_types.Right_curly)
             grouped.append([ token_types.Compound_expression_marker(tokens[i]) ] + [ g[1:-1] ])
@@ -153,10 +164,27 @@ def parse_expression(expr):
         return group_types.Struct()
     elif leader_type is token_types.Vector:
         return group_types.Vector()
+    elif leader_type is token_types.Try:
+        return group_types.Try_expression(
+            expr = parse_expression(expr[1]),
+            handling_blocks = [
+                group_types.Catch_expression(
+                    tag = parse_expression(each[0]),
+                    name = each[2],
+                    expr = parse_expression(each[3]),
+                )
+                for each
+                in expr[2]
+            ],
+        )
+    elif leader_type is token_types.Exception_tag_marker:
+        return group_types.Exception_tag(
+            tag = expr[1],
+        )
     else:
         if leader_type is list:
             raise Exception('expected a single expression, got a list', expr)
-        raise Exception('invalid expression', expr)
+        raise Exception('invalid expression', leader_type, expr)
 
 def parse_function(source):
     if not isinstance(source[1], token_types.Name):

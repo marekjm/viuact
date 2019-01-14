@@ -464,6 +464,15 @@ def emit_expr(
             must_emit,
             meta,
         )
+    elif leader_type is group_types.Try_expression:
+        return emit_try_expr(
+            body,
+            expr,
+            state,
+            slot,
+            must_emit,
+            meta,
+        )
     elif leader_type is list:
         raise exceptions.Emitter_exception(
             'expression could not be emitted, try removing parentheses surrounding it', expr)
@@ -1001,6 +1010,72 @@ def emit_compound_expr(body : list, expr, state : State, slot : Slot = None, mus
         meta = meta,
         toplevel = False,
     )
+
+
+def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emit = False, meta = None):
+    expression = expr.expr
+    handlers = expr.handling_blocks
+
+    expr_block_name = 'try_{}'.format(hashlib.sha1(
+        repr(expression).encode('utf-8')
+        + repr(expr).encode('utf-8')
+        + repr(id(expression)).encode('utf-8')
+    ).hexdigest())
+    expr_body = [
+        Verbatim('enter .block: {}'.format(expr_block_name)),
+    ]
+    slot = emit_expr(
+        body = expr_body,
+        expr = expression,
+        state = state,
+        slot = slot,
+        must_emit = must_emit,
+        meta = meta,
+        toplevel = False,
+    )
+    expr_body.append(Verbatim('leave'))
+    expr_body.append(Verbatim('.end'))
+
+    handler_bodies = []
+    for each in handlers:
+        tag_name = str(each.tag.tag.tag.token)
+
+        handler_block_name = 'catch_{}'.format(hashlib.sha1(
+            repr(expression).encode('utf-8')
+            + repr(expr).encode('utf-8')
+            + repr(id(expression)).encode('utf-8')
+        ).hexdigest())
+        handler_body = [
+            Verbatim('catch "{}" .block: {}'.format(
+                tag_name,
+                handler_block_name
+            )),
+            Verbatim('draw {}'.format(
+                state.get_slot(str(each.name.token)).to_string(),
+            )),
+        ]
+
+        emit_expr(
+            body = handler_body,
+            expr = each.expr,
+            state = state,
+            slot = slot,
+            must_emit = must_emit,
+            meta = meta,
+            toplevel = False,
+        )
+
+        handler_body.append(Verbatim('leave'))
+        handler_body.append(Verbatim('.end'))
+
+        handler_bodies.append(handler_body)
+
+    body.append(Verbatim('try'))
+    for each in handler_bodies:
+        body.extend(each)
+    body.extend(expr_body)
+
+    return slot
 
 
 def emit_field_assignment(body : list, expr, state : State, slot : Slot):
