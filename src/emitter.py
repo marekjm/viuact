@@ -28,6 +28,8 @@ BUILTIN_FUNCTIONS = (
     'Std::String::concat',
     'Std::String::to_string',
 
+    'Std::Integer::of_bytes',
+
     'Std::Vector::at',
     'Std::Vector::push',
 )
@@ -613,6 +615,22 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             emit_expr(
                 body = body,
                 expr = args[1],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
+        )))
+        return slot
+    elif call_expr.to() == 'Std::Integer::of_bytes':
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        body.append(Verbatim('stoi {} {}'.format(
+            slot.to_string(),
+            emit_expr(
+                body = body,
+                expr = args[0],
                 state = state,
                 slot = None,
                 must_emit = False,
