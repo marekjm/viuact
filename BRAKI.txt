@@ -39,8 +39,26 @@ Przykład: sklejanie stringów.
 
 Przykłady:
 
-- Hello World!
-- simple_message_exchange ale podrasowany (komentarze i nie XXX)
+    $ bash ./ex/hello_world.sh make
+    $ bash ./ex/simple_message_exchange.sh make
+    $ bash ./ex/timeout.sh make
+    $ bash ./ex/game.sh make
+
+Program "hello_world" po prostu drukuje "Hello World!".
+
+Program "simple_message_exchange" prezentuje prostą wymianę wiadomości.
+
+Program "timeout" koszysta z I/O, mechanizmów FFI, wymiany wiadomości, timeoutów i
+obsługi wyjątków.
+
+Program "game" to gra w zgadywanie liczby. Losuje on liczbę z zakresu od 0 do 100 i
+prosi użytkownika o wprowadzenie liczby do momentu aż ten nie zgadnie. Program daje
+podpowiedzi czy następna podana liczba powinna być większa czy mniejsza.
+
+Przed uruchomieniem przykładów należy przygotować środowisko:
+
+    $ source ./ex/_env.sh
+
 - czytanie inputu od użytkownika, a w tle asynchronicznie wiadomości pisane na konsolę
   - czytanie liczb i "Daj mi X", użytkownik wpisuje X, to potem "Daj mi Y" (albo zgadywanie)
   - wartości do podania są losowane
