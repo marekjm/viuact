@@ -17,6 +17,7 @@ PARAMETERS_REGISTER_SET = 'parameters'
 
 BUILTIN_FUNCTIONS = (
     'print',
+    'echo',
 
     'actor',
     'Std::Actor::join',
@@ -513,6 +514,19 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             toplevel = False,
         )
         body.append(Verbatim('print {}'.format(
+            slot.to_string()
+        )))
+    elif call_expr.to() == 'echo':
+        slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = slot,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        body.append(Verbatim('echo {}'.format(
             slot.to_string()
         )))
     elif call_expr.to() == 'Std::Actor::join':
@@ -1049,11 +1063,14 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
             Verbatim('catch "{}" .block: {}'.format(
                 tag_name,
                 handler_block_name
-            )),
-            Verbatim('draw {}'.format(
-                state.get_slot(str(each.name.token)).to_string(),
-            )),
+            ))
         ]
+
+        exception_variable_name = str(each.name.token)
+        if exception_variable_name != '_':
+            Verbatim('draw {}'.format(
+                state.get_slot(exception_variable_name).to_string(),
+            )),
 
         emit_expr(
             body = handler_body,

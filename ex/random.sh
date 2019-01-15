@@ -9,7 +9,7 @@ if [[ $MODE == '' ]]; then
     exit 0
 fi
 
-FILE_NAME=timeout
+FILE_NAME=random
 
 if [[ $MODE == 'make' ]]; then
     echo "compiling $FILE_NAME..."
@@ -18,7 +18,5 @@ if [[ $MODE == 'make' ]]; then
 fi
 if [[ $MODE == 'run' ]]; then
     echo "running $FILE_NAME..."
-    # VIUA_ENABLE_TRACING=yes gdb --args ../core/viuavm/build/bin/vm/kernel build/_default/$FILE_NAME.bc
-    # gdb --args ../core/viuavm/build/bin/vm/kernel build/_default/$FILE_NAME.bc
     ../core/viuavm/build/bin/vm/kernel build/_default/$FILE_NAME.bc
 fi
