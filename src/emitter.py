@@ -307,7 +307,7 @@ def emit_expr(
         evaluated_slot = state.slot_of(str(expr.name.token))
         if must_emit:
             if slot is None:
-                slot = state.get_slot(None)
+                slot = state.get_slot(None, anonymous = True)
             body.append(Move.make_copy(
                 dest = slot,
                 source = evaluated_slot,
