@@ -5,7 +5,7 @@
     (let sock (Std.Posix.Network.socket))
     (print (Std.String.concat "created a socket: " (Std.String.to_string sock)))
 
-    (let connected (try { (Std.Posix.Network.connect sock 9090 "127.0.0.1") true } (
+    (let connected (try { (Std.Posix.Network.connect sock "127.0.0.1" 9090) true } (
         (catch Exception _ {
             (print "failed to connect")
             false
@@ -18,7 +18,6 @@
 
         (echo "type your message: ")
         (Std.Posix.Network.write sock (Std.Io.stdin_getline))
-        (Std.Posix.Network.write sock "\n")
 
         (Std.Posix.Network.shutdown sock)
         (print "shut down")

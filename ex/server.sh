@@ -9,7 +9,7 @@ if [[ $MODE == '' ]]; then
     exit 0
 fi
 
-FILE_NAME=socket_hello_world
+FILE_NAME=server
 
 if [[ $MODE == 'make' ]]; then
     echo "compiling $FILE_NAME..."

@@ -17,10 +17,38 @@
             "from_module": "Std::Posix::Network"
         },
         {
+            "arity": 3,
+            "name": "bind",
+            "real_name": "Std::Posix::Network::bind",
+            "bytecode_name": "std::posix::network::bind",
+            "from_module": "Std::Posix::Network"
+        },
+        {
+            "arity": 2,
+            "name": "listen",
+            "real_name": "Std::Posix::Network::listen",
+            "bytecode_name": "std::posix::network::listen",
+            "from_module": "Std::Posix::Network"
+        },
+        {
+            "arity": 1,
+            "name": "accept",
+            "real_name": "Std::Posix::Network::accept",
+            "bytecode_name": "std::posix::network::accept",
+            "from_module": "Std::Posix::Network"
+        },
+        {
             "arity": 2,
             "name": "write",
             "real_name": "Std::Posix::Network::write",
             "bytecode_name": "std::posix::network::write",
+            "from_module": "Std::Posix::Network"
+        },
+        {
+            "arity": 1,
+            "name": "read",
+            "real_name": "Std::Posix::Network::read",
+            "bytecode_name": "std::posix::network::read",
             "from_module": "Std::Posix::Network"
         },
         {
