@@ -260,7 +260,7 @@ class Catch_expression(Group_type):
         return '{} {} {}'.format(
             self.tag.to_string(),
             str(self.name.token),
-            self.expr.to_string(),
+            (self.expr.to_string() if isinstance(self.expr, Group_type) else '...'),
         )
 
     def to_content(self):
