@@ -14,11 +14,13 @@
     0
 })
 
-(let main () {
+(let main (args) {
     (let sock (Std.Posix.Network.socket))
     (print (Std.String.concat "created a socket: " (Std.String.to_string sock)))
 
-    (let connected (try { (Std.Posix.Network.connect sock "127.0.0.1" 9090) true } (
+    (let interface (Std.String.to_string (Std.Vector.at args 1)))
+
+    (let connected (try { (Std.Posix.Network.connect sock interface 9090) true } (
         (catch Exception _ {
             (print "failed to connect")
             false
@@ -27,7 +29,7 @@
 
     ; FIXME name reference in if condition trigger an unnecessary copy
     (if connected {
-        (print "connected to 127.0.0.1:9090")
+        (print (Std.String.concat (Std.String.concat "connected to " interface) ":9090"))
 
         (write_loop sock)
 
