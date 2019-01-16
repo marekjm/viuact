@@ -1074,8 +1074,8 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
 
         handler_block_name = 'catch_{}'.format(hashlib.sha1(
             repr(expression).encode('utf-8')
-            + repr(expr).encode('utf-8')
-            + repr(id(expression)).encode('utf-8')
+            + repr(each).encode('utf-8')
+            + repr(id(each)).encode('utf-8')
         ).hexdigest())
         handler_body = [
             Verbatim('catch "{}" .block: {}'.format(
