@@ -11,10 +11,13 @@
     0
 })
 
-(let main () {
+(let main (args) {
     (let server_sock (Std.Posix.Network.socket))
 
-    (Std.Posix.Network.bind server_sock "127.0.0.1" 9090)
+    (let interface (Std.String.to_string (Std.Vector.at args 1)))
+    (print (Std.String.concat "running server on " interface))
+
+    (Std.Posix.Network.bind server_sock interface 9090)
     (Std.Posix.Network.listen server_sock 16)
 
     (let sock (Std.Posix.Network.accept server_sock))
