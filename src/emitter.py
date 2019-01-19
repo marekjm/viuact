@@ -38,6 +38,7 @@ BUILTIN_FUNCTIONS = (
 
     'Std::Vector::at',
     'Std::Vector::push',
+    'Std::Vector::size',
 )
 
 IGNORE_VALUE = '_'
@@ -785,6 +786,22 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
         # We don't create or use a slot provided by the caller because we need
         # to return the slot in which the vector resides.
         return vector_slot
+    elif call_expr.to() == 'Std::Vector::size':
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        body.append(Verbatim('vlen {} {}'.format(
+            slot.to_string(),
+            emit_expr(
+                body = body,
+                expr = args[0],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
+        )))
+        return slot
     elif call_expr.to() == 'Std::Vector::at':
         vector_slot = emit_expr(
             body = body,
