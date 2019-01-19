@@ -62,3 +62,8 @@ Przed uruchomieniem przykładów należy przygotować środowisko:
 - czytanie inputu od użytkownika, a w tle asynchronicznie wiadomości pisane na konsolę
   - czytanie liczb i "Daj mi X", użytkownik wpisuje X, to potem "Daj mi Y" (albo zgadywanie)
   - wartości do podania są losowane
+
+----
+
+- EBNF ze składnią języka
+- zdebugować nieprintowanie wiadomości w chat_server.lisp (bug? błąd schedulera Viua VM?)
