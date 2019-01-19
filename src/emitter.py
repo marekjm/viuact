@@ -25,7 +25,11 @@ BUILTIN_FUNCTIONS = (
     'Std::Actor::self',
     'Std::Actor::send',
 
+    'Std::String::at',
     'Std::String::concat',
+    'Std::String::eq',
+    'Std::String::size',
+    'Std::String::substr',
     'Std::String::to_string',
 
     'Std::Integer::of_bytes',
@@ -615,6 +619,106 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             emit_expr(
                 body = body,
                 expr = args[1],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
+        )))
+        return slot
+    elif call_expr.to() == 'Std::String::at':
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        body.append(Verbatim('textat {} {} {}'.format(
+            slot.to_string(),
+            emit_expr(
+                body = body,
+                expr = args[0],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
+            emit_expr(
+                body = body,
+                expr = args[1],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
+        )))
+        return slot
+    elif call_expr.to() == 'Std::String::substr':
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        body.append(Verbatim('textsub {} {} {} {}'.format(
+            slot.to_string(),
+            emit_expr(
+                body = body,
+                expr = args[0],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
+            emit_expr(
+                body = body,
+                expr = args[1],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
+            emit_expr(
+                body = body,
+                expr = args[2],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
+        )))
+        return slot
+    elif call_expr.to() == 'Std::String::eq':
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        body.append(Verbatim('texteq {} {} {}'.format(
+            slot.to_string(),
+            emit_expr(
+                body = body,
+                expr = args[0],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
+            emit_expr(
+                body = body,
+                expr = args[1],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
+        )))
+        return slot
+    elif call_expr.to() == 'Std::String::size':
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        body.append(Verbatim('textlength {} {}'.format(
+            slot.to_string(),
+            emit_expr(
+                body = body,
+                expr = args[0],
                 state = state,
                 slot = None,
                 must_emit = False,
