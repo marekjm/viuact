@@ -18,5 +18,6 @@ if [[ $MODE == 'make' ]]; then
 fi
 if [[ $MODE == 'run' ]]; then
     echo "running $FILE_NAME..."
+    # gdb --args ../core/viuavm/build/bin/vm/kernel build/_default/$FILE_NAME.bc ${@:2}
     ../core/viuavm/build/bin/vm/kernel build/_default/$FILE_NAME.bc ${@:2}
 fi

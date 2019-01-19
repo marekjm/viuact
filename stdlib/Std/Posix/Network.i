@@ -52,6 +52,13 @@
             "from_module": "Std::Posix::Network"
         },
         {
+            "arity": 2,
+            "name": "recv",
+            "real_name": "Std::Posix::Network::recv",
+            "bytecode_name": "std::posix::network::recv",
+            "from_module": "Std::Posix::Network"
+        },
+        {
             "arity": 1,
             "name": "shutdown",
             "real_name": "Std::Posix::Network::shutdown",
