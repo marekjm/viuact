@@ -25,6 +25,8 @@ BUILTIN_FUNCTIONS = (
     'Std::Actor::self',
     'Std::Actor::send',
 
+    'Std::copy',
+
     'Std::String::at',
     'Std::String::concat',
     'Std::String::eq',
@@ -534,6 +536,19 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
         )
         body.append(Verbatim('echo {}'.format(
             slot.to_string()
+        )))
+    elif call_expr.to() == 'Std::copy':
+        body.append(Verbatim('copy {} {}'.format(
+            slot.to_string(),
+            emit_expr(
+                body = body,
+                expr = args[0],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
         )))
     elif call_expr.to() == 'Std::Actor::join':
         timeout = (args[1] if len(args) > 1 else token_types.Timeout(INFINITE_DURATION))
