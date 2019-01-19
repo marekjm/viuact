@@ -1085,10 +1085,18 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
         ]
 
         exception_variable_name = str(each.name.token)
-        if exception_variable_name != '_':
-            Verbatim('draw {}'.format(
+        if exception_variable_name == '_':
+            exception_variable_slot = state.get_slot(None, anonymous = True)
+            handler_body.append(Verbatim('draw {}'.format(
+                exception_variable_slot.to_string(),
+            )))
+            handler_body.append(Verbatim('delete {}'.format(
+                exception_variable_slot.to_string(),
+            )))
+        else:
+            handler_body.append(Verbatim('draw {}'.format(
                 state.get_slot(exception_variable_name).to_string(),
-            )),
+            )))
 
         emit_expr(
             body = handler_body,
