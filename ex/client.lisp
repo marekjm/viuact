@@ -7,6 +7,7 @@
 
     (if message (try {
             (Std.Posix.Network.write sock message)
+            (Std.Posix.Network.write sock "\n")
             (tailcall write_loop sock)
         } (
             (catch Exception _ 0)
