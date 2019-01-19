@@ -390,6 +390,7 @@ def assemble_and_link(main_source_file, main_output_file):
         asm_process_args = (
             env.VIUA_ASM_PATH,
             '-Wunused-register',
+        ) + env.VIUAC_ASM_FLAGS + (
             '-c',
             '-o',
             output_path,
@@ -410,6 +411,7 @@ def assemble_and_link(main_source_file, main_output_file):
     asm_process_args = (
         env.VIUA_ASM_PATH,
         '-Wunused-register',
+    ) + env.VIUAC_ASM_FLAGS + (
     ) + (
         ('--verbose',)
         if env.VIUAC_DEBUGGING

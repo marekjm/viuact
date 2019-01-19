@@ -50,3 +50,5 @@ VIUAC_DUMP_INTERMEDIATE = list(
     ),
     os.environ.get('VIUAC_DUMP_INTERMEDIATE', '').split(','),
 ))
+
+VIUAC_ASM_FLAGS = tuple(os.environ.get('VIUAC_ASM_FLAGS', '').split())
