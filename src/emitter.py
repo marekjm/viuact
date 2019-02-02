@@ -39,6 +39,9 @@ BUILTIN_FUNCTIONS = (
     'Std::Vector::at',
     'Std::Vector::push',
     'Std::Vector::size',
+
+    'Std::Pointer::take',
+    'Std::Pointer::deref',
 )
 
 IGNORE_VALUE = '_'
@@ -51,6 +54,7 @@ class Slot:
         self.index = index
         self.register_set = register_set
         self.is_pointer = False
+        self.is_pointer_explicit = False
 
     def __str__(self):
         return '{} = %{} {}'.format(
@@ -67,7 +71,7 @@ class Slot:
         return self.index is None
 
     def to_string(self, pointer_dereference = None):
-        as_pointer = self.is_pointer
+        as_pointer = (self.is_pointer and not self.is_pointer_explicit)
         if pointer_dereference is not None:
             as_pointer = pointer_dereference
         return '{}{} {}'.format(
@@ -830,6 +834,44 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
         )))
 
         slot.is_pointer = True
+        return slot
+    elif call_expr.to() == 'Std::Pointer::take':
+        expr_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        body.append(Verbatim('ptr {} {}'.format(
+            slot.to_string(),
+            expr_slot.to_string(),
+        )))
+
+        slot.is_pointer = True
+        slot.is_pointer_explicit = True
+        return slot
+    elif call_expr.to() == 'Std::Pointer::deref':
+        expr_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        body.append(Verbatim('copy {} {}'.format(
+            slot.to_string(),
+            expr_slot.to_string(pointer_dereference = True),
+        )))
+
         return slot
     else:
         raise Exception('unimplemented built-in', call_expr.to())
