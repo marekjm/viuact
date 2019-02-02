@@ -86,6 +86,7 @@ def lex(source):
         token_types.Subtract,
         token_types.Mul,
         token_types.Div,
+        token_types.Pointer_dereference,
         token_types.Dot,
         token_types.Field_assignment,
 

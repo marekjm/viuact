@@ -397,3 +397,18 @@ class Field_assignment(Group_type):
             'field': [each.to_data() for each in self.field],
             'value': self.value.to_data(),
         }
+
+
+class Pointer_dereference(Group_type):
+    type_name = 'Pointer_dereference'
+
+    def __init__(self, value):
+        self.value = value
+
+    def to_string(self):
+        return '^ {}'.format(self.value.to_string())
+
+    def to_content(self):
+        return {
+            'value': self.value.to_data(),
+        }

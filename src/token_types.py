@@ -127,6 +127,10 @@ class Div(Token_type):
     type_name = 'Operator_div'
     pattern = re.compile(r'/')
 
+class Pointer_dereference(Token_type):
+    type_name = 'Operator_pointer_dereference'
+    pattern = re.compile(r'\^')
+
 class Dot(Token_type):
     type_name = 'Operator_dot'
     pattern = re.compile(r'\.')

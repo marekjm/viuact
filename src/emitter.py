@@ -41,7 +41,6 @@ BUILTIN_FUNCTIONS = (
     'Std::Vector::size',
 
     'Std::Pointer::take',
-    'Std::Pointer::deref',
 )
 
 IGNORE_VALUE = '_'
@@ -490,6 +489,23 @@ def emit_expr(
     elif leader_type is list:
         raise exceptions.Emitter_exception(
             'expression could not be emitted, try removing parentheses surrounding it', expr)
+    elif leader_type is group_types.Pointer_dereference:
+        slot = emit_expr(
+            body = body,
+            expr = expr.value,
+            state = state,
+            slot = slot,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        deref_slot = Slot(
+            name = slot.name,
+            index = slot.index,
+            register_set = slot.register_set,
+        )
+        deref_slot.is_pointer = True
+        return deref_slot
     else:
         raise exceptions.Emitter_exception('expression could not be emitted', expr)
 
@@ -854,24 +870,6 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
 
         slot.is_pointer = True
         slot.is_pointer_explicit = True
-        return slot
-    elif call_expr.to() == 'Std::Pointer::deref':
-        expr_slot = emit_expr(
-            body = body,
-            expr = args[0],
-            state = state,
-            slot = None,
-            must_emit = False,
-            meta = None,
-            toplevel = False,
-        )
-        if slot is None:
-            slot = state.get_slot(None, anonymous = True)
-        body.append(Verbatim('copy {} {}'.format(
-            slot.to_string(),
-            expr_slot.to_string(pointer_dereference = True),
-        )))
-
         return slot
     else:
         raise Exception('unimplemented built-in', call_expr.to())
