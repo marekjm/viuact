@@ -1,0 +1,34 @@
+digraph {
+    subgraph cluster_1 {
+        label="Lexical analysis";
+        lexer;
+    }
+
+    subgraph cluster_2 {
+        label="Syntactic analysis";
+        parenthesis_grouping; group_categorisation;
+    }
+
+    subgraph cluster_3 {
+        label="Bytecode emission";
+        lowerer;
+        emitter;
+    }
+
+    subgraph cluster_4 {
+        label="VM";
+        assembler;
+        "VM kernel";
+    }
+
+    "hello_world.lisp" -> lexer;
+    lexer -> parenthesis_grouping;
+    parenthesis_grouping -> group_categorisation;
+    group_categorisation -> lowerer;
+    lowerer -> emitter;
+    emitter -> "hello_world.asm";
+    "hello_world.asm" -> assembler;
+    assembler -> "hello_world.bc";
+    "hello_world.bc" -> "VM kernel";
+    "VM kernel" -> "\"Hello World!\"";
+}
