@@ -15,10 +15,11 @@ $ git clone inz@viuavm.org:/home/inz/git/viuact.git
 $ git clone git@git.sr.ht:~maelkum/viuavm
 ```
 
-Then compile Viua VM:
+Then compile Viua VM on the `devel` branch:
 
 ```
 $ cd ~/viuact-workspace/viuavm
+$ git checkout devel
 $ make -j 4
 ```
 
