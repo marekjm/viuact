@@ -20,5 +20,5 @@ if [[ $MODE == 'run' ]]; then
     echo "running $FILE_NAME..."
     # VIUA_ENABLE_TRACING=yes gdb --args ../core/viuavm/build/bin/vm/kernel build/_default/$FILE_NAME.bc
     # gdb --args ../core/viuavm/build/bin/vm/kernel build/_default/$FILE_NAME.bc
-    ../core/viuavm/build/bin/vm/kernel build/_default/$FILE_NAME.bc
+    $VIUA_VM_KERNEL_PATH build/_default/$FILE_NAME.bc
 fi
