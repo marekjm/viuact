@@ -21,6 +21,19 @@ Valid_compilation_modes = (
 )
 
 
+class Report:
+    @staticmethod
+    def error(source_file, error):
+        token = error.args[0]
+        print('error: {file}:{line}:{offset}: {error_message}: {detail}'.format(
+            file = source_file,
+            line = token.line + 1,
+            offset = token.character + 1,
+            error_message = error.message(),
+            detail = repr(token._text),
+        ))
+
+
 def compile_text(
         executable_name,
         source_file,
@@ -301,13 +314,19 @@ def compile_file(
     with open(source_file, 'r') as ifstream:
         source_code = ifstream.read()
 
-    return compile_text(
-        executable_name = executable_name,
-        source_file = source_file,
-        source_code = source_code,
-        compile_as = compile_as,
-        output_directory = output_directory,
-    )
+    try:
+        return compile_text(
+            executable_name = executable_name,
+            source_file = source_file,
+            source_code = source_code,
+            compile_as = compile_as,
+            output_directory = output_directory,
+        )
+    except exceptions.Unexpected_character as e:
+        Report.error(source_file, e)
+        exit(1)
+    except Exception as e:
+        raise
 
 def assemble_and_link(main_source_file, main_output_file):
     main_dependency_file = '{}.d'.format(os.path.splitext(main_source_file)[0])

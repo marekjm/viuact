@@ -1,7 +1,7 @@
 import re
 
 
-from viuact import token_types
+from viuact import exceptions, token_types
 
 
 class Token:
@@ -143,7 +143,11 @@ def lex(source):
             character_in_line += 1
             continue
 
-        raise Exception('unexpected token', repr(source[i]))
+        raise exceptions.Unexpected_character(make_token(
+            text = source[i],
+            line = line,
+            character = character_in_line,
+        ))
 
     return tokens
 

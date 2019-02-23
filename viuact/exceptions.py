@@ -1,3 +1,15 @@
+class Viuact_exception(Exception):
+    def message(self):
+        return self.MESSAGE
+
+
+class Lexer_exception(Viuact_exception):
+    pass
+
+class Unexpected_character(Lexer_exception):
+    MESSAGE = 'unexpected character'
+
+
 class Emitter_exception(Exception):
     pass
 
