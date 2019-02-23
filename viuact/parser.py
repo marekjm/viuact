@@ -1,4 +1,4 @@
-from viuact import token_types, group_types
+from viuact import exceptions, token_types, group_types
 
 
 def group_impl(tokens, break_on = token_types.Right_paren):
@@ -200,16 +200,17 @@ def parse_function(source):
     fn = group_types.Function(name = source[1])
 
     if not isinstance(source[2], list):
-        raise Exception('expected arguments list, got', source[2])
+        raise exceptions.Unexpected_token('arguments list', source[2])
     fn.arguments = source[2]
 
     try:
         fn.body = parse_expression(source[3])
     except Exception as e:
-        raise Exception('failed to parse function body', {
-            'context': source[1],
-            'reason': e,
-        })
+        raise exceptions.Fallout(
+            token = source[1],
+            message = 'failed to parse function body',
+            cause = e,
+        )
 
     return fn
 

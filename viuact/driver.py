@@ -24,7 +24,10 @@ Valid_compilation_modes = (
 class Report:
     @staticmethod
     def error(source_file, error):
-        token = error.args[0]
+        token = error.main_token
+        if isinstance(token, (token_types.Token_type,)):
+            token = token.token
+
         print('error: {file}:{line}:{offset}: {error_message}: {detail}'.format(
             file = source_file,
             line = token.line + 1,
@@ -32,6 +35,20 @@ class Report:
             error_message = error.message(),
             detail = repr(token._text),
         ))
+
+    @staticmethod
+    def error_fallout(source_file, error):
+        Report.error(source_file, error)
+
+        cause = error.cause
+        if cause is None:
+            return
+
+        print('  ...caused by')
+        if type(cause) is exceptions.Fallout:
+            Report.error_fallout(source_file, cause)
+        else:
+            Report.error(source_file, cause)
 
 
 def compile_text(
@@ -324,6 +341,9 @@ def compile_file(
         )
     except exceptions.Unexpected_character as e:
         Report.error(source_file, e)
+        exit(1)
+    except exceptions.Fallout as e:
+        Report.error_fallout(source_file, e)
         exit(1)
     except Exception as e:
         raise
