@@ -23,7 +23,7 @@ if (not VIUAC_LIBRARY_PATH) and os.environ.get('VIUAC_LIBRARY_PATH') is not None
     raise Misconfigured_environment_variable('VIUAC_LIBRARY_PATH')
 
 
-VIUA_ASM_PATH = os.environ.get('VIUA_ASM_PATH', '../core/viuavm/build/bin/vm/asm')
+VIUA_ASM_PATH = os.environ.get('VIUA_ASM_PATH', '../viuavm/build/bin/vm/asm')
 if (not os.path.isfile(VIUA_ASM_PATH)) and os.environ.get('VIUA_ASM_PATH') is None:
     raise Required_environment_variable_not_set('VIUA_ASM_PATH')
 if (not os.path.isfile(VIUA_ASM_PATH)) and os.environ.get('VIUA_ASM_PATH') is not None:

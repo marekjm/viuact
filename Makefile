@@ -26,4 +26,4 @@ clean:
 test:
 	@mkdir -p $(BUILD_DIR)
 	rm -r $(BUILD_DIR)
-	VIUA_ASM_PATH=$(ASM_BINARY) python3 ./tests.py --all
+	python3 ./tests.py --all
