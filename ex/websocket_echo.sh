@@ -18,6 +18,6 @@ if [[ $MODE == 'make' ]]; then
 fi
 if [[ $MODE == 'run' ]]; then
     echo "running $FILE_NAME..."
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../libs/websocket/build
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../libs/plain-websocket/build
     $VIUA_VM_KERNEL_PATH build/_default/$FILE_NAME.bc ${@:2}
 fi
