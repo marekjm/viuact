@@ -909,9 +909,9 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     body.append(Verbatim('frame %{}'.format(len(args))))
     for i, each in enumerate(applied_args):
         # FIXME if name is None (anonuymous slot) make move not copy
-        body.append(Verbatim('copy %{} arguments %{} local'.format(
+        body.append(Verbatim('copy %{} arguments {}'.format(
             i,
-            each.index,
+            each.to_string(),
         )))
 
     to = '{}/{}'.format(fn_name, len(args))
