@@ -30,7 +30,7 @@
 
     (let register (struct))
     (:= register.event 1)
-    (:= register.value (Std.Actor.self))
+    (:= register.value (^ (Std.Pointer.take client)))
     (Std.Actor.send router register)
 
     (tailcall user_loop client router)
@@ -44,9 +44,17 @@
     0
 })
 
+(let send_to_all_clients_impl (clients i limit message) {
+    (if (< i limit) {
+        (let c (Std.Vector.at clients i))
+        (Websocket.write (^ c) message)
+        (tailcall send_to_all_clients_impl clients (+ i 1) limit message)
+        0
+    } 0)
+})
 (let send_to_all_clients (clients message) {
-    (print clients)
-    (print message)
+    (let limit (Std.Vector.size clients))
+    (tailcall send_to_all_clients_impl clients 0 limit (Std.JSON.to_json message))
     0
 })
 
