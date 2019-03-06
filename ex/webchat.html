@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <h1 id="socket_heading">Websockets test</h1>
+
+        <div id="messages"></div>
+
+        <div id="join-chat">
+            <input type="text" id="join-chat-nick">
+            <button id="join-chat-button">join</button>
+        </div>
+
+        <div>
+            <input type="text" id="message">
+            <button id="send">send</button>
+            <button id="close">close</button>
+        </div>
+
+        <script>
+            document.getElementById('join-chat-button').addEventListener('click', function () {
+                var nick = document.getElementById('join-chat-nick').value;
+                if (nick === '') {
+                    return;
+                }
+
+                // var websocket = new WebSocket('ws://127.0.0.1:9090', 'lws-minimal-server-echo');
+                var websocket = new WebSocket('ws://127.0.0.1:9090');
+                websocket.onopen = function () {
+                    document.getElementById('socket_heading').style.color = 'green';
+                    document.getElementById('join-chat').style.display = 'none';
+                };
+                websocket.onclose = function () {
+                    document.getElementById('socket_heading').style.color = 'blue';
+                    websocket.close();
+                    document.getElementById('join-chat').style.display = 'block';
+                };
+                websocket.addEventListener('error', function (e) {
+                    document.getElementById('socket_heading').style.color = 'red';
+                    console.log(e);
+                });
+                websocket.addEventListener('message', function (message) {
+                    console.log(message.data);
+                    let payload = JSON.parse(message.data);
+                    let text = (payload.user + ": " + payload.message);
+
+                    let p = document.createElement('p');
+                    p.appendChild(document.createTextNode(text));
+                    document.getElementById('messages').appendChild(p);
+                });
+
+                document.getElementById('send').addEventListener('click', function () {
+                    let payload = JSON.stringify({
+                        user: nick,
+                        message: document.getElementById('message').value,
+                    });
+                    websocket.send(payload);
+                });
+                document.getElementById('close').addEventListener('click', function () {
+                    websocket.close();
+                });
+            });
+        </script>
+    </body>
+</html>
