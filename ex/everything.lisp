@@ -30,13 +30,24 @@
 (let f (x) (print x))
 
 (let main () {
-    (let c (actor wrapping_enumerator 0 2))
+    (let c (actor wrapping_enumerator 0 8))
 
-    (Std.Actor.send c "Hello World! (0)")
-    (Std.Actor.send c "Hello World! (1)")
-    (Std.Actor.send c "Hello World! (2)")
-    (Std.Actor.send c "Hello World! (3)")
-    (Std.Actor.send c "Hello World! (4)")
+    (Std.Actor.send c "Hello World! (0x0)")
+    (Std.Actor.send c "Hello World! (0x1)")
+    (Std.Actor.send c "Hello World! (0x2)")
+    (Std.Actor.send c "Hello World! (0x3)")
+    (Std.Actor.send c "Hello World! (0x4)")
+    (Std.Actor.send c "Hello World! (0x5)")
+    (Std.Actor.send c "Hello World! (0x6)")
+    (Std.Actor.send c "Hello World! (0x7)")
+    (Std.Actor.send c "Hello World! (0x8)")
+    (Std.Actor.send c "Hello World! (0x9)")
+    (Std.Actor.send c "Hello World! (0xa)")
+    (Std.Actor.send c "Hello World! (0xb)")
+    (Std.Actor.send c "Hello World! (0xc)")
+    (Std.Actor.send c "Hello World! (0xd)")
+    (Std.Actor.send c "Hello World! (0xe)")
+    (Std.Actor.send c "Hello World! (0xf)")
 
     0
 })
