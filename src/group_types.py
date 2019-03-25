@@ -229,6 +229,26 @@ class Deferred_call(Group_type):
         return Function_call.to_content(self)
 
 
+class Watchdog_call(Group_type):
+    type_name = 'Watchdog_call'
+
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
+
+    def to(self):
+        return (str(self.name.token) if type(self.name) is token_types.Name else self.name.to_string())
+
+    def to_string(self):
+        return 'defer {}({})'.format(
+            self.to(),
+            ', '.join(map(str, self.args)),
+        )
+
+    def to_content(self):
+        return Function_call.to_content(self)
+
+
 class Try_expression(Group_type):
     type_name = 'Try_expression'
 

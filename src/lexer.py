@@ -93,6 +93,7 @@ def lex(source):
         token_types.Actor,          # Call keywords
         token_types.Tailcall,
         token_types.Defer,
+        token_types.Watchdog,
         token_types.Try,
         token_types.Catch,
         token_types.In,

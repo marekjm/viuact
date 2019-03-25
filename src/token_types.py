@@ -63,6 +63,10 @@ class Defer(Token_type):
     type_name = 'keyword_defer'
     pattern = re.compile(r'\bdefer\b')
 
+class Watchdog(Token_type):
+    type_name = 'keyword_watchdog'
+    pattern = re.compile(r'\bwatchdog\b')
+
 class Try(Token_type):
     type_name = 'keyword_try'
     pattern = re.compile(r'\btry\b')

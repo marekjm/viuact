@@ -159,6 +159,11 @@ def parse_expression(expr):
             name = parse_expression(expr[1]),
             args = [parse_expression(each) for each in expr[2:]],
         )
+    elif leader_type is token_types.Watchdog and can_be_considered_name(expr[1]):
+        return group_types.Watchdog_call(
+            name = parse_expression(expr[1]),
+            args = [parse_expression(each) for each in expr[2:]],
+        )
     elif leader_type is token_types.Compound_expression_marker:
         return group_types.Compound_expression(
             expressions = [ parse_expression(each) for each in expr[1] ],

@@ -201,6 +201,7 @@ class Call:
         Actor = 'process'
         Tail = 'tailcall'
         Deferred = 'defer'
+        Watchdog = 'watchdog'
 
     def __init__(self, to : str, slot : Slot, kind = Kind.Synchronous):
         self.to = to
@@ -212,7 +213,7 @@ class Call:
             kind = self.kind,
             dest = (
                 ''
-                if self.kind in (Call.Kind.Tail, Call.Kind.Deferred,)
+                if self.kind in (Call.Kind.Tail, Call.Kind.Deferred, Call.Kind.Watchdog,)
                 else Slot.to_address(self.slot)
             ),
             fn = self.to,
@@ -287,6 +288,13 @@ def emit_expr(
         )
     elif leader_type is group_types.Deferred_call:
         return emit_deferred_call(
+            body,
+            expr,
+            state,
+            slot,
+        )
+    elif leader_type is group_types.Watchdog_call:
+        return emit_watchdog_call(
             body,
             expr,
             state,
@@ -1026,6 +1034,39 @@ def emit_deferred_call(body : list, call_expr, state : State, slot : Slot):
         to = '{}/{}'.format(call_expr.to(), len(args)),
         slot = None,
         kind = Call.Kind.Deferred,
+    ))
+
+    return slot
+
+
+def emit_watchdog_call(body : list, call_expr, state : State, slot : Slot):
+    name = call_expr.name
+    args = call_expr.args
+
+    applied_args = []
+    for i, each in enumerate(args):
+        arg_slot = state.get_slot(None, anonymous = True)
+        applied_args.append(emit_expr(
+            body = body,
+            expr = each,
+            state = state,
+            slot = arg_slot,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        ))
+
+    body.append(Verbatim('frame %{}'.format(len(args) + 1)))
+    for i, each in enumerate(applied_args):
+        body.append(Verbatim('copy %{} arguments %{} local'.format(
+            i + 1,
+            each.index,
+        )))
+
+    body.append(Call(
+        to = '{}/{}'.format(call_expr.to(), len(args) + 1),
+        slot = None,
+        kind = Call.Kind.Watchdog,
     ))
 
     return slot
