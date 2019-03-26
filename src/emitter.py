@@ -25,6 +25,8 @@ BUILTIN_FUNCTIONS = (
     'Std::Actor::self',
     'Std::Actor::send',
 
+    'Std::Pid::eq',
+
     'Std::copy',
 
     'Std::String::at',
@@ -628,6 +630,31 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             slot = state.get_slot(None, anonymous = True)
         body.append(Verbatim('self {}'.format(
             slot.to_string(),
+        )))
+        return slot
+    elif call_expr.to() == 'Std::Pid::eq':
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        body.append(Verbatim('pideq {} {} {}'.format(
+            slot.to_string(),
+            emit_expr(
+                body = body,
+                expr = args[0],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
+            emit_expr(
+                body = body,
+                expr = args[1],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ).to_string(),
         )))
         return slot
     elif call_expr.to() == 'Std::String::to_string':
