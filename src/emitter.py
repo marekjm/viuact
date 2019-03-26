@@ -1238,6 +1238,11 @@ def emit_function(body : list, expr, state : State, slot : Slot):
 
 
 def emit_compound_expr(body : list, expr, state : State, slot : Slot = None, must_emit : bool = False, meta = None):
+    if not len(expr.expressions):
+        raise exceptions.Compound_expression_cannot_be_empty(
+            exceptions.Compound_expression_cannot_be_empty.MESSAGE,
+            expr,
+        )
     for each in expr.expressions[:-1]:
         emit_expr(
             body = body,
