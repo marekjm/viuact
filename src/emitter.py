@@ -137,6 +137,16 @@ class State:
     def has_slot(self, name):
         return (name in self.name_to_slot)
 
+    class Name_kind:
+        Let_binding = 'let_binding'
+        Function = 'function'
+    def what_is_it(self, name):
+        if name in self.name_to_slot:
+            return State.Name_kind.Let_binding
+        elif (name in self.nested_fns) or (name in self.visible_fns.functions):
+            return State.Name_kind.Function
+        return None
+
 
 class Verbatim:
     def __init__(self, text):
@@ -324,6 +334,17 @@ def emit_expr(
             slot,
         )
     elif leader_type is group_types.Name_ref:
+        if state.what_is_it(str(expr.name.token)) == State.Name_kind.Function:
+            if slot is None:
+                slot = state.get_slot(name = None, anonymous = True)
+            fn_name = str(expr.name.token)
+            body.append(Verbatim('function {} {}/{}'.format(
+                slot.to_string(),
+                state.visible_fns.functions[fn_name]['real_name'],
+                state.visible_fns.functions[fn_name]['arity'],
+            )))
+            return slot
+
         evaluated_slot = state.slot_of(str(expr.name.token))
         if must_emit:
             if slot is None:
@@ -337,13 +358,12 @@ def emit_expr(
     elif leader_type is group_types.Id:
         name = expr.name[0]
 
-        if str(name.token).isupper():
+        if str(name.token)[0].isupper():
             return emit_function_ref(
                 body,
                 expr,
                 state,
                 slot,
-                must_emit,
                 meta,
             )
         else:
@@ -958,6 +978,19 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
         slot = slot,
     ))
 
+    return slot
+
+def emit_function_ref(body : list, name_expr, state : State, slot : Slot, meta):
+    fn_name = name_expr.to_string()
+
+    if slot is None:
+        slot = state.get_slot(name = None, anonymous = True)
+
+    body.append(Verbatim('function {} {}/{}'.format(
+        slot.to_string(),
+        state.visible_fns.functions[fn_name]['real_name'],
+        state.visible_fns.functions[fn_name]['arity'],
+    )))
     return slot
 
 

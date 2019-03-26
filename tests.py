@@ -28,6 +28,7 @@ TESTS = (
     'boolean_values',
     'vector',
     'exceptions',
+    'higher_order',
 )
 
 
