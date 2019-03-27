@@ -30,6 +30,7 @@ class Inline_module(Group_type):
         self.modules = {}
         self.module_names = []
         self.imports = []
+        self.enums = []
 
     def to_string(self):
         s = ', '.join(map(lambda each: each.to_string(), self.functions.values()))
@@ -61,6 +62,27 @@ class Module(Group_type):
     def to_content(self):
         return {
             'name': self.name.to_data(),
+        }
+
+
+class Enum_definition(Group_type):
+    type_name = 'Enum_definition'
+
+    def __init__(self, name, values):
+        self.name = name
+        self.values = values
+
+    def to_string(self):
+        s = ', '.join(map(lambda each: each.to_string(), self.functions.values()))
+        return 'enum {} ({})'.format(
+            str(self.name.token),
+            s
+        )
+
+    def to_content(self):
+        return {
+            'name': self.name.to_data(),
+            'values': [each.to_data() for each in self.values],
         }
 
 

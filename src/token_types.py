@@ -51,6 +51,10 @@ class Vector(Token_type):
     type_name = 'Keyword_vector'
     pattern = re.compile(r'\bvector\b')
 
+class Enum(Token_type):
+    type_name = 'Keyword_enum'
+    pattern = re.compile(r'\benum\b')
+
 class Actor(Token_type):
     type_name = 'Keyword_actor'
     pattern = re.compile(r'\bactor\b')

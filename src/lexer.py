@@ -65,6 +65,9 @@ def lex(source):
         token_types.Struct,         # Basic-type ctors
         token_types.Vector,
 
+        token_types.Enum,           # ViuAct types; these are compiled away
+                                    # during the lowering stage.
+
         token_types.Ellipsis,
 
         token_types.String,         # Literals

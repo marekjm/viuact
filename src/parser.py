@@ -233,6 +233,8 @@ def parse_module(source):
             md = parse_module(each)
             mod.module_names.append(str(md.name.token))
             mod.modules[mod.module_names[-1]] = md
+        elif type(each[0]) is token_types.Enum:
+            mod.enums.append(parse_enum(each))
         elif type(each[0]) is token_types.Import:
             mod.imports.append(group_types.Import(name = group_types.Id(
                 (each[1] if type(each[1]) is list else [each[1]]),
