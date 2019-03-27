@@ -67,6 +67,14 @@ class Watchdog(Token_type):
     type_name = 'keyword_watchdog'
     pattern = re.compile(r'\bwatchdog\b')
 
+class Of(Token_type):
+    type_name = 'Keyword_of'
+    pattern = re.compile(r'\bof\b')
+
+class With(Token_type):
+    type_name = 'Keyword_with'
+    pattern = re.compile(r'\bwith\b')
+
 class Try(Token_type):
     type_name = 'keyword_try'
     pattern = re.compile(r'\btry\b')

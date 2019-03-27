@@ -98,6 +98,9 @@ def lex(source):
         token_types.Catch,
         token_types.In,
 
+        token_types.Of,             # Other keywords
+        token_types.With,
+
         token_types.Name,           # Names and ids
         token_types.Module_name,
 
