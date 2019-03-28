@@ -990,7 +990,7 @@ def emit_function_or_enum_ref(body : list, name_expr, state : State, slot : Slot
     if path in state.visible_fns.enums:
         body.append(Verbatim('integer {} {}'.format(
             slot.to_string(),
-            state.visible_fns.enums[path][member_name],
+            state.visible_fns.enums[path]['values'][member_name],
         )))
     else:
         body.append(Verbatim('function {} {}/{}'.format(

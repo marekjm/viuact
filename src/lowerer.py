@@ -96,6 +96,16 @@ class Visibility_information:
             'foreign': foreign,
         })
 
+    def add_enum(self, name, values, real_name = None, from_module = None):
+        self.enums[name] = {
+            'values': values,
+            'real_name': (real_name or name),
+            'from_module': from_module,
+        }
+
+    def insert_enum(self, name, value):
+        self.enums[name] = value
+
 
 def make_meta(name):
     return Visibility_information(name)
@@ -116,6 +126,14 @@ def perform_imports(import_expressions, meta):
                         value = each,
                     )
                     meta.add_signature_for(each['real_name'])
+
+            for enum_name, enum_meta in list(meta.enums.items()):
+                if enum_meta['from_module'] == mod_name:
+                    meta.insert_enum(
+                        name = enum_meta['real_name'],
+                        value = enum_meta,
+                    )
+
             meta.add_import(mod_name)
             continue
 
@@ -147,6 +165,13 @@ def perform_imports(import_expressions, meta):
                                 value = each,
                             )
                             meta.add_signature_for(fn_full_name, fn_bytecode_name)
+
+                    for each in interface['enums']:
+                        meta.insert_enum(
+                            name = each['real_name'],
+                            value = each,
+                        )
+
                     meta.add_import(
                         module_name = mod_name,
                         real_name = interface['real_name'],
@@ -186,6 +211,12 @@ def lower_file(expressions, module_prefix, compilation_filesystem_root):
                 value = fn_value,
             )
 
+        for en_name, en_value in mod_meta.enums.items():
+            meta.insert_enum(
+                name = en_name,
+                value = en_value,
+            )
+
     perform_imports(
         import_expressions = filter(lambda each: type(each) is group_types.Import, expressions),
         meta = meta,
@@ -200,7 +231,11 @@ def lower_file(expressions, module_prefix, compilation_filesystem_root):
             lambda x: (x[1], x[0],),
             enumerate(map(lambda x: str(x.token), each.values))
         ))
-        meta.enums[enum_name] = enum_values
+        meta.add_enum(
+            name = enum_name,
+            values = enum_values,
+            from_module = module_prefix,
+        )
 
     # print('x-file-level: modules:  ', meta.modules)
     # print('x-file-level: functions:', meta.functions)
@@ -253,6 +288,25 @@ def lower_module_impl(module_expr, in_module, compilation_filesystem_root):
         meta = meta,
     )
 
+    for each in module_expr.enums:
+        if type(each) is not group_types.Enum_definition:
+            continue
+
+        enum_name = str(each.name.token)
+        enum_values = dict(map(
+            lambda x: (x[1], x[0],),
+            enumerate(map(lambda x: str(x.token), each.values))
+        ))
+
+        module_prefix = '::'.join(full_mod_name)
+        real_name = '{}::{}'.format(module_prefix, enum_name)
+        meta.add_enum(
+            name = enum_name,
+            values = enum_values,
+            real_name = real_name,
+            from_module = module_prefix,
+        )
+
     for fn_name in module_expr.function_names:
         fn_def = module_expr.functions[fn_name]
 
@@ -286,6 +340,8 @@ def load_as_inline_module(source, base_mod_name):
         elif type(each) is group_types.Module:
             module.module_names.append(str(each.name.token))
             module.modules[module.module_names[-1]] = each
+        elif type(each) is group_types.Enum_definition:
+            module.enums.append(each)
         elif type(each) is group_types.Function:
             module.function_names.append(str(each.name.token))
             module.functions[module.function_names[-1]] = each

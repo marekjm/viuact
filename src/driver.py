@@ -79,6 +79,8 @@ def compile_text(
                 elif type(each) is group_types.Module:
                     module.module_names.append(str(each.name.token))
                     module.modules[module.module_names[-1]] = each
+                elif type(each) is group_types.Enum_definition:
+                    module.enums.append(each)
                 elif type(each) is group_types.Function:
                     module.function_names.append(str(each.name.token))
                     module.functions[module.function_names[-1]] = each
@@ -96,7 +98,7 @@ def compile_text(
             all_modules = set([
                 each['from_module']
                 for each
-                in meta.functions.values()
+                in (list(meta.functions.values()) + list(meta.enums.values()))
             ])
 
             module_function_mapping = {}
@@ -105,6 +107,7 @@ def compile_text(
             for each in all_modules:
                 module_function_mapping[each] = []
                 module_contents[each] = []
+
             for each in meta.functions.values():
                 module_function_mapping[each['from_module']].append(each['real_name'])
             for module_name, contained_functions in module_function_mapping.items():
@@ -145,11 +148,21 @@ def compile_text(
                     in meta.functions.items()
                     if v['from_module'] == module_name
                 ]
+                enums = [
+                    {
+                        'name': k,
+                        **v
+                    }
+                    for k, v
+                    in meta.enums.items()
+                    if v['from_module'] == module_name
+                ]
                 with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
                     ofstream.write(json.dumps({
                         'foreign': False,
                         'real_name': module_name,
                         'fns': fns,
+                        'enums': enums,
                     }, indent = 4))
         elif compile_as == Compilation_mode.Executable:
             logs.verbose('compiling executable: {} (from {})'.format(module_name, source_file))
