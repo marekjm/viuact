@@ -6,14 +6,7 @@ import subprocess
 import sys
 
 
-import token_types
-import group_types
-import exceptions
-import lexer
-import parser
-import lowerer
-import env
-import logs
+from viuact import token_types, group_types, exceptions, lexer, parser, lowerer, env, logs
 
 
 class Compilation_mode:

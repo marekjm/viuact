@@ -1,5 +1,4 @@
-import token_types
-import group_types
+from viuact import token_types, group_types
 
 
 def group_impl(tokens, break_on = token_types.Right_paren):

@@ -13,11 +13,11 @@ FILE_NAME=separate_module
 
 if [[ $MODE == 'make' ]]; then
     echo "compiling dependencies of $FILE_NAME..."
-    ./src/viuact-cc.py --mode module ex/External.lisp
+    ./cc.py --mode module ex/External.lisp
 
     echo "compiling $FILE_NAME..."
-    ./src/viuact-cc.py --mode exec ex/$FILE_NAME.lisp
-    ./src/viuact-opt.py build/_default/$FILE_NAME.asm
+    ./cc.py --mode exec ex/$FILE_NAME.lisp
+    ./opt.py build/_default/$FILE_NAME.asm
 fi
 if [[ $MODE == 'run' ]]; then
     echo "running $FILE_NAME..."
