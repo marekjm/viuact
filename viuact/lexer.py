@@ -1,7 +1,7 @@
 import re
 
 
-import token_types
+from viuact import token_types
 
 
 class Token:

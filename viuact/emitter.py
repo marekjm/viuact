@@ -1,9 +1,7 @@
 import collections
 import hashlib
 
-import exceptions
-import group_types
-import token_types
+from viuact import exceptions, group_types, token_types
 
 
 DEFAULT_REGISTER_SET = 'local'

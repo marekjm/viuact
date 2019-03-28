@@ -13,8 +13,8 @@ FILE_NAME=pid_equality
 
 if [[ $MODE == 'make' ]]; then
     echo "compiling $FILE_NAME..."
-    ./src/viuact-cc.py --mode exec ex/$FILE_NAME.lisp
-    ./src/viuact-opt.py build/_default/$FILE_NAME.asm
+    ./cc.py --mode exec ex/$FILE_NAME.lisp
+    ./opt.py build/_default/$FILE_NAME.asm
 fi
 if [[ $MODE == 'run' ]]; then
     echo "running $FILE_NAME..."

@@ -2,14 +2,7 @@ import json
 import os
 import sys
 
-import exceptions
-import token_types
-import group_types
-import lexer
-import logs
-import parser
-import emitter
-import env
+from viuact import exceptions, token_types, group_types, lexer, logs, parser, emitter, env
 
 
 class Visibility_information:
