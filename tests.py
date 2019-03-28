@@ -29,6 +29,8 @@ TESTS = (
     'vector',
     'exceptions',
     'higher_order',
+    'enum',
+    'enum_in_module',
 )
 
 
