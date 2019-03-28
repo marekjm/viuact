@@ -244,6 +244,15 @@ def parse_module(source):
 
     return mod
 
+def parse_enum(source):
+    if not isinstance(source[1], token_types.Module_name):
+        raise Exception('expected enum name, got', source[1])
+
+    return group_types.Enum_definition(
+        name = source[1],
+        values = source[2],
+    )
+
 
 def parse(groups):
     parsed = []
@@ -254,6 +263,8 @@ def parse(groups):
             parsed.append(parse_module(each))
         elif isinstance(leader, token_types.Let):
             parsed.append(parse_function(each))
+        elif type(each[0]) is token_types.Enum:
+            parsed.append(parse_enum(each))
         elif isinstance(leader, token_types.Import):
             parsed.append(group_types.Import(name = group_types.Id(
                 (each[1] if type(each[1]) is list else [each[1]]),

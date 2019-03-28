@@ -45,6 +45,8 @@ class Visibility_information:
         # List of imported modules.
         self.imports = []
 
+        self.enums = {}
+
     def add_module(self, name):
         if type(name) is Visibility_information:
             self.modules.append(name.prefix)
@@ -188,6 +190,17 @@ def lower_file(expressions, module_prefix, compilation_filesystem_root):
         import_expressions = filter(lambda each: type(each) is group_types.Import, expressions),
         meta = meta,
     )
+
+    for each in expressions:
+        if type(each) is not group_types.Enum_definition:
+            continue
+
+        enum_name = str(each.name.token)
+        enum_values = dict(map(
+            lambda x: (x[1], x[0],),
+            enumerate(map(lambda x: str(x.token), each.values))
+        ))
+        meta.enums[enum_name] = enum_values
 
     # print('x-file-level: modules:  ', meta.modules)
     # print('x-file-level: functions:', meta.functions)

@@ -359,7 +359,7 @@ def emit_expr(
         name = expr.name[0]
 
         if str(name.token)[0].isupper():
-            return emit_function_ref(
+            return emit_function_or_enum_ref(
                 body,
                 expr,
                 state,
@@ -980,17 +980,24 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
 
     return slot
 
-def emit_function_ref(body : list, name_expr, state : State, slot : Slot, meta):
+def emit_function_or_enum_ref(body : list, name_expr, state : State, slot : Slot, meta):
     fn_name = name_expr.to_string()
 
     if slot is None:
         slot = state.get_slot(name = None, anonymous = True)
 
-    body.append(Verbatim('function {} {}/{}'.format(
-        slot.to_string(),
-        state.visible_fns.functions[fn_name]['real_name'],
-        state.visible_fns.functions[fn_name]['arity'],
-    )))
+    path, member_name = fn_name.rsplit('::', 1)
+    if path in state.visible_fns.enums:
+        body.append(Verbatim('integer {} {}'.format(
+            slot.to_string(),
+            state.visible_fns.enums[path][member_name],
+        )))
+    else:
+        body.append(Verbatim('function {} {}/{}'.format(
+            slot.to_string(),
+            state.visible_fns.functions[fn_name]['real_name'],
+            state.visible_fns.functions[fn_name]['arity'],
+        )))
     return slot
 
 

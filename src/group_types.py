@@ -73,7 +73,7 @@ class Enum_definition(Group_type):
         self.values = values
 
     def to_string(self):
-        s = ', '.join(map(lambda each: each.to_string(), self.functions.values()))
+        s = ', '.join(map(lambda each: str(each.token), self.values))
         return 'enum {} ({})'.format(
             str(self.name.token),
             s
