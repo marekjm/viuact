@@ -1,6 +1,8 @@
+import os
 import sys
 
 
+import viuact
 from viuact import driver
 
 
@@ -40,6 +42,16 @@ def print_help(executable_name):
     ).strip())
 
 def cc(executable_name, args):
+    executable_name = os.path.splitext(os.path.basename(executable_name))[0]
+
+    if '--version' in args:
+        print('{} version {} ({})'.format(
+            executable_name,
+            viuact.__version__,
+            viuact.__commit__,
+        ))
+        exit(0)
+
     if '--help' in args:
         print_help(executable_name)
         exit(0)

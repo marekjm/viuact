@@ -1,5 +1,11 @@
 all: compile
 
+PREFIX=~/.local
+BIN_DIR=$(PREFIX)/bin
+PYTHON_LIB_DIR=$(PREFIX)/lib/python$(shell python3 --version | grep -Po '3\.\d')/site-packages
+VIUACT_LIBS_DIR=$(PYTHON_LIB_DIR)/viuact
+VIUACT_HEAD_COMMIT=$(shell git rev-parse HEAD)
+
 BUILD_DIR=./build
 OUTPUT_DIR=$(BUILD_DIR)/_default
 ASM_OUTPUT=a.asm
@@ -27,3 +33,12 @@ test:
 	@mkdir -p $(BUILD_DIR)
 	rm -r $(BUILD_DIR)
 	python3 ./tests.py --all
+
+install:
+	@mkdir -p $(BIN_DIR)
+	@mkdir -p $(VIUACT_LIBS_DIR)
+	cp ./viuact/*.py $(VIUACT_LIBS_DIR)/
+	@sed -i "s/'HEAD'/'$(VIUACT_HEAD_COMMIT)'/" $(VIUACT_LIBS_DIR)/__init__.py
+	cp ./cc.py $(BIN_DIR)/viuact-cc
+	cp ./opt.py $(BIN_DIR)/viuact-opt
+	chmod +x $(BIN_DIR)/viuact-cc $(BIN_DIR)/viuact-opt
