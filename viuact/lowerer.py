@@ -434,5 +434,9 @@ def output_function_body(fn, in_module, meta):
 def lower_function(fn_expr, meta, in_module = ()):
     # Bodies instead of a single body, because a function may contain
     # nested functions and thus compile to multiple bodies.
-    bodies = output_function_body(fn_expr, in_module, meta)
-    return [(name, lower_function_body(each),) for (name, each) in bodies]
+    try:
+        bodies = output_function_body(fn_expr, in_module, meta)
+        return [(name, lower_function_body(each),) for (name, each) in bodies]
+    except Exception:
+        print('while lowering function {}:'.format(fn_expr.to_string()))
+        raise
