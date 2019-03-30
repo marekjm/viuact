@@ -933,17 +933,16 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     name = call_expr.name
     args = call_expr.args
 
+    if call_expr.to() in BUILTIN_FUNCTIONS:
+        return emit_builtin_call(body, call_expr, state, slot)
+
     name_token = None
     if type(name) is group_types.Id:
         name_token = name.name[-1].token
     else:
         name_token = name.token
 
-    if call_expr.to() in BUILTIN_FUNCTIONS:
-        return emit_builtin_call(body, call_expr, state, slot)
-
     fn_name = call_expr.to()
-
     if not state.has_slot(fn_name):
         fn_name = state.visible_fns.real_name(fn_name, token = name_token)
 
@@ -1062,8 +1061,18 @@ def emit_tail_call(body : list, call_expr, state : State, slot : Slot):
             each.index,
         )))
 
+    name_token = None
+    if type(name) is group_types.Id:
+        name_token = name.name[-1].token
+    else:
+        name_token = name.name.token
+
+    fn_name = call_expr.to()
+    if not state.has_slot(fn_name):
+        fn_name = state.visible_fns.real_name(fn_name, token = name_token)
+
     body.append(Call(
-        to = '{}/{}'.format(call_expr.to(), len(args)),
+        to = '{}/{}'.format(fn_name, len(args)),
         slot = None,
         kind = Call.Kind.Tail,
     ))

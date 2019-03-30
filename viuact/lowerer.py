@@ -301,6 +301,15 @@ def lower_module_impl(module_expr, in_module, compilation_filesystem_root):
         )
 
     for fn_name in module_expr.function_names:
+        real_name = '{}::{}'.format('::'.join(full_mod_name), fn_name)
+        meta.add_function(
+            name = fn_name,
+            arity = len(module_expr.functions[fn_name].arguments),
+            real_name = real_name,
+            from_module = '::'.join(full_mod_name),
+        )
+
+    for fn_name in module_expr.function_names:
         fn_def = module_expr.functions[fn_name]
 
         real_name = '{}::{}'.format('::'.join(full_mod_name), fn_name)
