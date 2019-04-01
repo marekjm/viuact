@@ -25,7 +25,7 @@ class Report:
     @staticmethod
     def error(source_file, error):
         token = error.main_token
-        if isinstance(token, (token_types.Token_type,)):
+        while isinstance(token, (token_types.Token_type,)):
             token = token.token
 
         print('error: {file}:{line}:{offset}: {error_message}: {detail}'.format(
