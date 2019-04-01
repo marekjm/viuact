@@ -83,6 +83,12 @@ def parse_expression(expr):
     """Parsing turns "anonymous" groups of tokens into syntactic entities.
     Let bindings, name references, function calls, etc.
     """
+    if type(expr) is list and not len(expr):
+        raise exceptions.Unexpected_group(
+            'a group cannot be empty',
+            None
+        )
+
     leader = (expr[0] if type(expr) is list else expr)
     leader_type = type(leader)
 
