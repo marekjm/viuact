@@ -49,3 +49,12 @@ class No_such_function(Lowerer_exception):
 
 class No_such_module(Exception):
     pass
+
+
+def make_fallout(e_type, message, token):
+    e = e_type(message, token)
+    return Fallout(
+        token = e.main_token,
+        message = message,
+        cause = e,
+    )

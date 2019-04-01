@@ -193,19 +193,32 @@ def parse_expression(expr):
 
 def parse_function(source):
     if not isinstance(source[1], token_types.Name):
-        raise Exception('expected name, got', source[1])
+        raise exceptions.make_fallout(exceptions.Unexpected_token, 'expected name', source[1])
     if len(source) != 4:
-        raise Exception('invalid function definition')
+        raise exceptions.make_fallout(exceptions.Unexpected_token, 'invalid function definition', source[1])
 
     fn = group_types.Function(name = source[1])
 
-    if not isinstance(source[2], list):
-        raise exceptions.Unexpected_token('arguments list', source[2])
-    fn.arguments = source[2]
+    try:
+        formal_parameters = source[2]
+        if not isinstance(formal_parameters, list):
+            raise exceptions.Unexpected_token('formal parameters list', formal_parameters)
+        for each in formal_parameters:
+            if not isinstance(each, token_types.Token_type):
+                raise exceptions.Unexpected_token('a name', source[1])
+            if type(each) is not token_types.Name:
+                raise exceptions.Unexpected_token('a name', each)
+        fn.arguments = formal_parameters
+    except exceptions.Viuact_exception as e:
+        raise exceptions.Fallout(
+            token = e.main_token,
+            message = 'failed to parse formal parameters list',
+            cause = e,
+        )
 
     try:
         fn.body = parse_expression(source[3])
-    except Exception as e:
+    except exceptions.Viuact_exception as e:
         raise exceptions.Fallout(
             token = source[1],
             message = 'failed to parse function body',
