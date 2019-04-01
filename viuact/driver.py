@@ -60,7 +60,15 @@ def compile_text(
         ):
     tokens = lexer.strip_comments(lexer.lex(source_code))
 
-    groups = parser.group(tokens)
+    groups = None
+    try:
+        groups = parser.group(tokens)
+    except exceptions.Viuact_exception as e:
+        raise exceptions.Fallout(
+            token = e.main_token,
+            message = 'failure during grouping',
+            cause = e,
+        )
     if not groups:
         sys.stderr.write('error: source file contains no expressions: {}\n'.format(source_file))
         exit(1)

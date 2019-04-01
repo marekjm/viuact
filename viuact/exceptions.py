@@ -1,3 +1,6 @@
+from viuact import token_types
+
+
 class Viuact_exception(Exception):
     def __init__(self, token):
         self.main_token = token
@@ -30,6 +33,19 @@ class Unexpected_token(Parser_exception):
         super().__init__(got)
         self.expected = expected
 
+    def message(self):
+        return '{}: {}'.format(self.MESSAGE, self.expected)
+
+class Unexpected_group(Parser_exception):
+    MESSAGE = 'unexpected group'
+
+    def __init__(self, expected : str, got):
+        super().__init__(got)
+        self.expected = expected
+
+    def message(self):
+        return '{}: {}'.format(self.MESSAGE, self.expected)
+
 
 class Emitter_exception(Exception):
     pass
@@ -51,10 +67,21 @@ class No_such_module(Exception):
     pass
 
 
-def make_fallout(e_type, message, token):
-    e = e_type(message, token)
+def make_fallout(e):
     return Fallout(
         token = e.main_token,
         message = message,
         cause = e,
     )
+
+def first_usable_token(some_data):
+    if isinstance(some_data, token_types.Token_type):
+        return some_data
+
+    if type(some_data) is list:
+        for each in some_data:
+            x = first_usable_token(each)
+            if x is not None:
+                return x
+
+    return None

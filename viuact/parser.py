@@ -188,7 +188,10 @@ def parse_expression(expr):
         return group_types.Exception_tag(tag = expr[0])
     else:
         if leader_type is list:
-            raise Exception('expected a single expression, got a list', expr)
+            raise exceptions.Unexpected_group(
+                'expected a single expression, got a list',
+                exceptions.first_usable_token(expr),
+            )
         raise Exception('invalid expression', leader_type, expr)
 
 def parse_function(source):
