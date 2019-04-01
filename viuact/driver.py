@@ -28,13 +28,17 @@ class Report:
         while isinstance(token, (token_types.Token_type,)):
             token = token.token
 
-        print('error: {file}:{line}:{offset}: {error_message}: {detail}'.format(
+        error_message = 'error: {file}:{line}:{offset}: {error_message}'.format(
             file = source_file,
-            line = token.line + 1,
-            offset = token.character + 1,
+            line = ((token.line + 1) if token is not None else '?'),
+            offset = ((token.character + 1) if token is not None else '?'),
             error_message = error.message(),
-            detail = repr(token._text),
-        ))
+        )
+        if token is not None:
+            error_message += ': {detail}'.format(
+                detail = repr(token._text),
+            )
+        print(error_message)
 
     @staticmethod
     def error_fallout(source_file, error):
