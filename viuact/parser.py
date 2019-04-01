@@ -59,7 +59,7 @@ def group_impl(tokens, break_on = token_types.Right_paren):
         i += 1
 
         if isinstance(each, break_on):
-            return grouped, i
+            break
 
     return grouped, i
 
