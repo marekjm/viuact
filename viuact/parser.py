@@ -79,16 +79,10 @@ def group(tokens):
     return groups
 
 
-def parse_expression(expr):
+def parse_expression_impl(expr):
     """Parsing turns "anonymous" groups of tokens into syntactic entities.
     Let bindings, name references, function calls, etc.
     """
-    if type(expr) is list and not len(expr):
-        raise exceptions.Unexpected_group(
-            'a group cannot be empty',
-            None
-        )
-
     leader = (expr[0] if type(expr) is list else expr)
     leader_type = type(leader)
 
@@ -205,6 +199,21 @@ def parse_expression(expr):
                 exceptions.first_usable_token(expr),
             )
         raise Exception('invalid expression', leader_type, expr)
+
+def parse_expression(expr):
+    if type(expr) is list and not len(expr):
+        raise exceptions.Unexpected_group(
+            'a group cannot be empty',
+            None
+        )
+    try:
+        return parse_expression_impl(expr)
+    except exceptions.Viuact_exception as e:
+        raise exceptions.Fallout(
+            token = exceptions.first_usable_token(expr),
+            message = 'during parsing expression',
+            cause = e,
+        )
 
 def parse_function(source):
     if not isinstance(source[1], token_types.Name):
