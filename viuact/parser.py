@@ -8,6 +8,12 @@ def group_impl(tokens, break_on = token_types.Right_paren):
     while i < len(tokens):
         each = tokens[i]
 
+        if isinstance(each, token_types.Left_curly) and isinstance(grouped[-1], token_types.Left_paren):
+            raise exceptions.Unexpected_token(
+                'opening curly brace cannot follow opening parenthesis',
+                each,
+            )
+
         if isinstance(each, token_types.Left_paren):
             g, n = group_impl(tokens[i:])
             grouped.append(g[1:-1])
