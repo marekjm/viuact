@@ -140,6 +140,7 @@ def perform_imports(import_expressions, meta):
                 logs.debug('    found {}'.format(mod_interface_path))
                 found = True
                 with open(mod_interface_path, 'r') as ifstream:
+                    each_library_directory = each
                     interface = parse_interface_file(ifstream.read())
                     for each in interface['fns']:
                         if each['from_module'] == mod_name:
@@ -159,7 +160,12 @@ def perform_imports(import_expressions, meta):
                             )
                             meta.add_signature_for(fn_full_name, fn_bytecode_name)
 
-                    for each in interface['enums']:
+                    if 'enums' not in interface:
+                        logs.warn('module {} (found in {}) does not define "enums"'.format(
+                            mod_name,
+                            each_library_directory,
+                        ))
+                    for each in interface.get('enums', []):
                         meta.insert_enum(
                             name = each['real_name'],
                             value = each,
