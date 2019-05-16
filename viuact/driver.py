@@ -147,9 +147,17 @@ def compile_text(
                 module_function_mapping[each['from_module']].append(each['real_name'])
             for module_name, contained_functions in module_function_mapping.items():
                 for fn_name in set(contained_functions):
-                    module_contents[module_name].append(
-                        list(filter(lambda each: each[0] == fn_name, lowered_function_bodies))[0][1]
-                    )
+                    x = list(filter(lambda each: each[0] == fn_name, lowered_function_bodies))
+                    # FIXME fn_name sometimes is not in lowered_function_bodies
+                    # (and we would crash) because contained_functions also
+                    # lists all functions that the module imports. So let's just
+                    # 'continue' here and pretend it did not happen.
+                    #
+                    # Such functions should be filtered much earlier.
+                    if not x:
+                        continue
+                    x = x[0][1]
+                    module_contents[module_name].append(x)
 
             for module_name, contents in module_contents.items():
                 module_path = module_name.split('::')
