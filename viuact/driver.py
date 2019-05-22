@@ -80,6 +80,7 @@ def compile_text(
     expressions = parser.parse(groups)
 
     module_name = os.path.basename(source_file).split('.')[0]
+    source_module_name = os.path.basename(source_file).split('.')[0]
 
     if env.Dump_intermediate.Tokens in env.VIUAC_DUMP_INTERMEDIATE:
         intermediate_tokens_path = os.path.join(output_directory, '{}.tokens'.format(module_name))
@@ -104,6 +105,7 @@ def compile_text(
     try:
         if compile_as == Compilation_mode.Module:
             module_name = module_name[0].upper() + module_name[1:]
+            main_module_name = module_name[0].upper() + module_name[1:]
             logs.verbose('compiling module: {} (from {})'.format(module_name, source_file))
 
             module = group_types.Inline_module(name = token_types.Module_name(module_name))
@@ -160,6 +162,8 @@ def compile_text(
                     module_contents[module_name].append(x)
 
             for module_name, contents in module_contents.items():
+                if module_name != main_module_name:
+                    continue
                 module_path = module_name.split('::')
                 if len(module_path) > 1:
                     os.makedirs(os.path.join(output_directory, *module_path[:-1]), exist_ok = True)
