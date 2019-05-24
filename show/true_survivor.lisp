@@ -97,8 +97,12 @@
     0
 })
 
+(let give_credit () (print "\n(by David Hasselhoff)"))
+
 (let main () {
     (let lyrics (True_survivor.make_lyrics))
+
+    (defer give_credit)
 
     (let printer (x) {
         (print x)
