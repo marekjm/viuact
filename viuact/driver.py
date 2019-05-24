@@ -214,6 +214,8 @@ def compile_as_executable(
         for each
         in meta.functions.values()
     ])
+    if True:
+        print('nested modules: {}'.format(', '.join(map(str, all_modules)) or '<none>'))
 
     module_function_mapping = {}
     module_contents = {}

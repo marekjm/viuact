@@ -58,6 +58,10 @@ class Visibility_information:
     def insert_function(self, name, value, bytecode_name : str = None):
         self.functions[name] = value
 
+    def import_function(self, name, value):
+        value['imported'] = value['from_module']
+        self.insert_function(name, value)
+
     def real_name(self, name, token):
         if name not in self.functions:
             raise exceptions.No_such_function('no function named: {}()'.format(name), token)
@@ -111,10 +115,12 @@ def perform_imports(import_expressions, meta):
     for spec in import_expressions:
         mod_name = spec.to_string()
 
+        # First, look into our nested modules. Maybe we are even importing an
+        # inline module in which case we already have it parsed and ready.
         if mod_name in meta.modules:
             for _, each in list(meta.functions.items()):
                 if each['from_module'] == mod_name:
-                    meta.insert_function(
+                    meta.import_function(
                         name = each['real_name'],
                         value = each,
                     )
@@ -130,17 +136,18 @@ def perform_imports(import_expressions, meta):
             meta.add_import(mod_name)
             continue
 
+        # If the module is not our nested module, we have to look for its
+        # interface file. Search the library path until we find a suitable file.
         found = False
-        for each in env.VIUAC_LIBRARY_PATH:
-            logs.debug('checking {} for module {}'.format(each, mod_name))
+        for library_dir in env.VIUAC_LIBRARY_PATH:
+            logs.debug('checking {} for module {}'.format(library_dir, mod_name))
 
-            mod_interface_path = os.path.join(each, *mod_name.split('::')) + '.i'
+            mod_interface_path = os.path.join(library_dir, *mod_name.split('::')) + '.i'
             logs.debug('    candidate {}'.format(mod_interface_path))
             if os.path.isfile(mod_interface_path):
                 logs.debug('    found {}'.format(mod_interface_path))
                 found = True
                 with open(mod_interface_path, 'r') as ifstream:
-                    each_library_directory = each
                     interface = parse_interface_file(ifstream.read())
                     for each in interface['fns']:
                         if each['from_module'] == mod_name:
@@ -154,7 +161,7 @@ def perform_imports(import_expressions, meta):
                             # function prefixed by the full name of the module in which it
                             # is contained.
                             fn_full_name = each['real_name']
-                            meta.insert_function(
+                            meta.import_function(
                                 name = fn_full_name,
                                 value = each,
                             )
