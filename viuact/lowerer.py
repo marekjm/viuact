@@ -50,7 +50,6 @@ class Visibility_information:
             raise TypeError(name)
 
     def nest_module(self, module):
-        print('nesting: {} {}'.format(module.prefix, module))
         self.nested_modules[module.prefix] = module
         self.add_module(module)
 
@@ -122,11 +121,8 @@ def perform_imports(import_expressions, meta):
         return
 
     import_expressions = list(import_expressions)
-    print('importing modules: {}'.format(', '.join(map(str, import_expressions)) or '<none>'))
-    print('available nested:  {}'.format(', '.join(meta.modules)))
     for spec in import_expressions:
         mod_name = spec.to_string()
-        print('  importing: {}'.format(mod_name))
 
         # First, look into our nested modules. Maybe we are even importing an
         # inline module in which case we already have it parsed and ready.
@@ -224,14 +220,10 @@ def lower_file(expressions, module_prefix, compilation_filesystem_root):
             meta.nest_module(each)
         meta.nest_module(mod_meta)
 
-    print(meta.modules)
-
     perform_imports(
         import_expressions = filter(lambda each: type(each) is group_types.Import, expressions),
         meta = meta,
     )
-    print('imports:  ', ', '.join([each['module_name'] for each in meta.imports]))
-    print('functions:', ', '.join([each for each in meta.functions]))
 
     for each in expressions:
         if type(each) is not group_types.Enum_definition:
@@ -248,9 +240,6 @@ def lower_file(expressions, module_prefix, compilation_filesystem_root):
             from_module = module_prefix,
         )
 
-    # print('x-file-level: modules:  ', meta.modules)
-    # print('x-file-level: functions:', meta.functions)
-
     for each in expressions:
         if type(each) is not group_types.Function:
             continue
@@ -264,9 +253,6 @@ def lower_file(expressions, module_prefix, compilation_filesystem_root):
         if type(each) is not group_types.Function:
             continue
         lowered_function_bodies.extend(lower_function(each, meta = meta))
-
-    # print('file-level: modules:  ', meta.modules)
-    # print('file-level: functions:', meta.functions)
 
     return lowered_function_bodies, meta
 
@@ -340,9 +326,6 @@ def lower_module_impl(module_expr, in_module, compilation_filesystem_root):
             real_name = real_name,
             from_module = '::'.join(full_mod_name),
         )
-
-    # print('module-level: {}: modules:  '.format(meta.prefix), meta.modules)
-    # print('module-level: {}: functions:'.format(meta.prefix), meta.functions)
 
     return lowered_function_bodies, meta
 

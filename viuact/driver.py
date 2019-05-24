@@ -206,16 +206,12 @@ def compile_as_executable(
         module_prefix = None,
         compilation_filesystem_root = compilation_filesystem_root,
     )
-    if True:
-        print('lowered functions: {}'.format(', '.join(map(lambda p: p[0], lowered_function_bodies))))
 
     all_modules = set([
         each['from_module']
         for each
         in meta.functions.values()
     ])
-    if True:
-        print('nested modules: {}'.format(', '.join(map(str, all_modules)) or '<none>'))
 
     module_function_mapping = {}
     module_contents = {}
