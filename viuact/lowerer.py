@@ -182,7 +182,7 @@ def perform_imports(import_expressions, meta):
                     if 'enums' not in interface:
                         logs.warn('module {} (found in {}) does not define "enums"'.format(
                             mod_name,
-                            each_library_directory,
+                            library_dir,
                         ))
                     for each in interface.get('enums', []):
                         meta.insert_enum(

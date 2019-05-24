@@ -207,7 +207,7 @@ def compile_as_executable(
         compilation_filesystem_root = compilation_filesystem_root,
     )
     if True:
-        print('functions: {}'.format(', '.join(map(lambda p: p[0], lowered_function_bodies))))
+        print('lowered functions: {}'.format(', '.join(map(lambda p: p[0], lowered_function_bodies))))
 
     all_modules = set([
         each['from_module']
