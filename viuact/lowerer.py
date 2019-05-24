@@ -17,6 +17,7 @@ class Visibility_information:
 
         # A list of visible module names (strings).
         self.modules = []
+        self.nested_modules = {}
 
         # A dictionary of visible functions. Keys are names, values are
         # arities.
@@ -47,6 +48,11 @@ class Visibility_information:
             self.modules.append(name)
         else:
             raise TypeError(name)
+
+    def nest_module(self, module):
+        print('nesting: {} {}'.format(module.prefix, module))
+        self.nested_modules[module.prefix] = module
+        self.add_module(module)
 
     def add_function(self, name, arity, real_name = None, from_module = None):
         self.functions[name] = {
@@ -112,29 +118,48 @@ def parse_interface_file(source):
     return json.loads(source)
 
 def perform_imports(import_expressions, meta):
+    if not import_expressions:
+        return
+
+    import_expressions = list(import_expressions)
+    print('importing modules: {}'.format(', '.join(map(str, import_expressions)) or '<none>'))
+    print('available nested:  {}'.format(', '.join(meta.modules)))
     for spec in import_expressions:
         mod_name = spec.to_string()
+        print('  importing: {}'.format(mod_name))
 
         # First, look into our nested modules. Maybe we are even importing an
         # inline module in which case we already have it parsed and ready.
-        if mod_name in meta.modules:
-            for _, each in list(meta.functions.items()):
-                if each['from_module'] == mod_name:
-                    meta.import_function(
-                        name = each['real_name'],
-                        value = each,
-                    )
-                    meta.add_signature_for(each['real_name'])
+        if mod_name in meta.nested_modules:
+            print('    is nested')
 
-            for enum_name, enum_meta in list(meta.enums.items()):
-                if enum_meta['from_module'] == mod_name:
-                    meta.insert_enum(
-                        name = enum_meta['real_name'],
-                        value = enum_meta,
-                    )
+            for each in meta.nested_modules[mod_name].functions.values():
+                print('    importing {} from module {}'.format(each, mod_name))
+                meta.import_function(
+                    name = each['real_name'],
+                    value = each,
+                )
+                meta.add_signature_for(each['real_name'])
 
-            meta.add_import(mod_name)
             continue
+            # for _, each in list(meta.functions.items()):
+            #     if each['from_module'] == mod_name:
+            #         print('    importing: {} from module {}'.format(each, mod_name))
+            #         meta.import_function(
+            #             name = each['real_name'],
+            #             value = each,
+            #         )
+            #         meta.add_signature_for(each['real_name'])
+
+            # for enum_name, enum_meta in list(meta.enums.items()):
+            #     if enum_meta['from_module'] == mod_name:
+            #         meta.insert_enum(
+            #             name = enum_meta['real_name'],
+            #             value = enum_meta,
+            #         )
+
+            # meta.add_import(mod_name)
+            # continue
 
         # If the module is not our nested module, we have to look for its
         # interface file. Search the library path until we find a suitable file.
@@ -208,25 +233,18 @@ def lower_file(expressions, module_prefix, compilation_filesystem_root):
         )
         lowered_function_bodies.extend(bodies)
 
-        for each in mod_meta.modules:
-            meta.add_module(each)
-        meta.add_module(mod_meta)
-        for fn_name, fn_value in mod_meta.functions.items():
-            meta.insert_function(
-                name = fn_name,
-                value = fn_value,
-            )
+        for each in mod_meta.nested_modules.values():
+            meta.nest_module(each)
+        meta.nest_module(mod_meta)
 
-        for en_name, en_value in mod_meta.enums.items():
-            meta.insert_enum(
-                name = en_name,
-                value = en_value,
-            )
+    print(meta.modules)
 
     perform_imports(
         import_expressions = filter(lambda each: type(each) is group_types.Import, expressions),
         meta = meta,
     )
+    print('imports:  ', ', '.join([each['module_name'] for each in meta.imports]))
+    print('functions:', ', '.join([each for each in meta.functions]))
 
     for each in expressions:
         if type(each) is not group_types.Enum_definition:
@@ -283,14 +301,9 @@ def lower_module_impl(module_expr, in_module, compilation_filesystem_root):
         )
         lowered_function_bodies.extend(mod_bodies)
 
-        for each in mod_meta.modules:
-            meta.add_module(each)
-        meta.add_module(mod_meta)
-        for fn_name, fn_value in mod_meta.functions.items():
-            meta.insert_function(
-                name = fn_name,
-                value = fn_value,
-            )
+        for each in mod_meta.nested_modules.values():
+            meta.nest_module(each)
+        meta.nest_module(mod_meta)
 
     perform_imports(
         import_expressions = module_expr.imports,

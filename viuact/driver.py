@@ -275,7 +275,7 @@ def compile_as_executable(
             }
             for k, v
             in meta.functions.items()
-            if v['from_module'] == module_name
+            if v['from_module'] == source_module_name
         ]
         with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
             ofstream.write(json.dumps({ 'fns': fns, }, indent = 4))
