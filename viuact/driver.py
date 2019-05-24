@@ -55,6 +55,23 @@ class Report:
             Report.error(source_file, cause)
 
 
+def dump_intermediates(source_file, module_name, tokens, expressions):
+    if env.Dump_intermediate.Tokens in env.VIUAC_DUMP_INTERMEDIATE:
+        intermediate_tokens_path = os.path.join(output_directory, '{}.tokens'.format(module_name))
+        with open(intermediate_tokens_path, 'w') as ofstream:
+            ofstream.write(json.dumps({
+                'source_file': source_file,
+                'tokens': list(map(lexer.to_data, tokens)),
+            }, indent = 4))
+
+    if env.Dump_intermediate.Expressions in env.VIUAC_DUMP_INTERMEDIATE:
+        intermediate_exprs_path = os.path.join(output_directory, '{}.expressions'.format(module_name))
+        with open(intermediate_exprs_path, 'w') as ofstream:
+            ofstream.write(json.dumps({
+                'source_file': source_file,
+                'expressions': list(map(lambda each: each.to_data(), expressions)),
+            }, indent = 2))
+
 def compile_text(
         executable_name,
         source_file,
@@ -82,21 +99,10 @@ def compile_text(
     module_name = os.path.basename(source_file).split('.')[0]
     source_module_name = os.path.basename(source_file).split('.')[0]
 
-    if env.Dump_intermediate.Tokens in env.VIUAC_DUMP_INTERMEDIATE:
-        intermediate_tokens_path = os.path.join(output_directory, '{}.tokens'.format(module_name))
-        with open(intermediate_tokens_path, 'w') as ofstream:
-            ofstream.write(json.dumps({
-                'source_file': source_file,
-                'tokens': list(map(lexer.to_data, tokens)),
-            }, indent = 4))
+    logs.debug('module name:        {}'.format(module_name))
+    logs.debug('source module name: {}'.format(source_module_name))
 
-    if env.Dump_intermediate.Expressions in env.VIUAC_DUMP_INTERMEDIATE:
-        intermediate_exprs_path = os.path.join(output_directory, '{}.expressions'.format(module_name))
-        with open(intermediate_exprs_path, 'w') as ofstream:
-            ofstream.write(json.dumps({
-                'source_file': source_file,
-                'expressions': list(map(lambda each: each.to_data(), expressions)),
-            }, indent = 2))
+    dump_intermediates(source_file, source_module_name, tokens, expressions)
 
     compilation_filesystem_root = os.path.dirname(source_file)
     lowered_function_bodies = []
