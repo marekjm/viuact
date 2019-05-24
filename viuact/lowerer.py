@@ -131,35 +131,22 @@ def perform_imports(import_expressions, meta):
         # First, look into our nested modules. Maybe we are even importing an
         # inline module in which case we already have it parsed and ready.
         if mod_name in meta.nested_modules:
-            print('    is nested')
-
             for each in meta.nested_modules[mod_name].functions.values():
-                print('    importing {} from module {}'.format(each, mod_name))
                 meta.import_function(
                     name = each['real_name'],
                     value = each,
                 )
                 meta.add_signature_for(each['real_name'])
 
+            for enum_name, enum_meta in meta.nested_modules[mod_name].enums.items():
+                if enum_meta['from_module'] == mod_name:
+                    meta.insert_enum(
+                        name = enum_meta['real_name'],
+                        value = enum_meta,
+                    )
+
+            meta.add_import(mod_name)
             continue
-            # for _, each in list(meta.functions.items()):
-            #     if each['from_module'] == mod_name:
-            #         print('    importing: {} from module {}'.format(each, mod_name))
-            #         meta.import_function(
-            #             name = each['real_name'],
-            #             value = each,
-            #         )
-            #         meta.add_signature_for(each['real_name'])
-
-            # for enum_name, enum_meta in list(meta.enums.items()):
-            #     if enum_meta['from_module'] == mod_name:
-            #         meta.insert_enum(
-            #             name = enum_meta['real_name'],
-            #             value = enum_meta,
-            #         )
-
-            # meta.add_import(mod_name)
-            # continue
 
         # If the module is not our nested module, we have to look for its
         # interface file. Search the library path until we find a suitable file.
