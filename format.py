@@ -2,8 +2,32 @@
 
 import sys
 
+import viuact
 from viuact import token_types, group_types, lexer, parser
 
+HELP = '''NAME
+    viuact-format  -- format ViuAct source code
+
+SYNOPSIS
+    viuact-format [ -i ] <file>
+                  --version
+                  --help
+
+DESCRIPTION
+    Format ViuAct source code according to a predefined coding style. This helps
+    enforcing a uniform look for all source code.
+
+OPTIONS
+    -i
+        Edit the file in-place instead of printing formatted source code on
+        standard output.
+
+    --version
+        Display version information.
+
+    --help
+        Display this help screen.
+'''
 
 def nicely_format_token_stream(tokens):
     nicely_formatted_source_code = str(tokens[0].token)
@@ -96,6 +120,13 @@ def nicely_format_token_stream(tokens):
     return nicely_formatted_source_code.lstrip()
 
 def main(args):
+    if '--version' in args:
+        print(viuact.__version__)
+        exit(0)
+    if '--help' in args:
+        print(HELP)
+        exit(0)
+
     source_file_name = args[-1]
     source_code = None
     with open(source_file_name, 'r') as ifstream:
@@ -103,6 +134,11 @@ def main(args):
 
     tokens = lexer.lex(source_code)
 
-    print(nicely_format_token_stream(tokens))
+    nice_source_code = nicely_format_token_stream(tokens)
+    if '-i' in args:
+        with open(source_file_name, 'w') as ofstream:
+            ofstream.write(nice_source_code)
+    else:
+        print(nice_source_code)
 
 main(sys.argv[1:])
