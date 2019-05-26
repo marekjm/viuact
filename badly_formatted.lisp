@@ -1,11 +1,14 @@
 (module A_module (
+                  ; Hello, this is a module comment. Nice to meet you.
     (
      let f (ziom) {
+                            ; Greetings! I am a function comment. A pleasure to
+                            ; meet you.
         (  let msg (struct))
         (         :=   msg
               .
        response
-                                        "no elo"
+                                        "no elo\n"
                                      )
         (:= msg.sender (Std
                          .Actor.self))
@@ -60,6 +63,7 @@
                                  )
          }
             (
+  ; I wonder how this will be indented.
                (
 catch
 Exception_tag

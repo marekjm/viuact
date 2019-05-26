@@ -81,6 +81,13 @@ def nicely_format_token_stream(tokens):
         elif pat == (tt.Left_paren, tt.Module):
             indent_level += 1
             nicely_formatted_source_code = nicely_formatted_source_code[:-1] + '\n(' + str(each.token)
+        elif pat == (_, tt.Comment):
+            if nicely_formatted_source_code.rstrip()[-1] == '{':
+                nicely_formatted_source_code += str(each.token)
+            else:
+                nicely_formatted_source_code += '\n' + (indent_string * indent_level) + str(each.token)
+        elif pat == (tt.Comment, _):
+            nicely_formatted_source_code += '\n' + (indent_string * indent_level) + str(each.token)
         elif pat == (tt.Left_paren, _) or pat == (_, tt.Right_paren):
             nicely_formatted_source_code += str(each.token)
         elif pat == (tt.Left_curly, _) or pat == (_, tt.Right_curly):
