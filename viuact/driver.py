@@ -1,4 +1,5 @@
 import collections
+import hashlib
 import json
 import os
 import re
@@ -325,13 +326,15 @@ def compile_text(
         sys.stderr.write('error: source file contains no expressions: {}\n'.format(source_file))
         exit(1)
 
-    expressions = parser.parse(groups)
-
     module_name = os.path.basename(source_file).split('.')[0]
     source_module_name = os.path.basename(source_file).split('.')[0]
+    source_module_hash = hashlib.sha1(repr(groups).encode('utf-8')).hexdigest()
 
     logs.debug('module name:        {}'.format(module_name))
     logs.debug('source module name: {}'.format(source_module_name))
+    logs.debug('source module hash: {}'.format(source_module_hash))
+
+    expressions = parser.parse(groups)
 
     dump_intermediates(source_file, source_module_name, tokens, expressions)
 
