@@ -50,24 +50,16 @@ def nicely_format_token_stream(tokens):
             nicely_formatted_source_code += '\n' + (indent_string * indent_level)
 
         pat = (lt, et,)
-        if pat == (tt.Left_paren, tt.Let):
+        if pat == (tt.Left_paren, tt.Let) or pat == (tt.Left_paren, tt.Right_paren):
             nicely_formatted_source_code += str(each.token)
-        elif pat == (tt.Left_paren, tt.Right_paren):
-            nicely_formatted_source_code += str(each.token)
-        elif pat == (tt.Right_paren, tt.Left_paren):
-            nicely_formatted_source_code += '\n' + (indent_string * indent_level) + str(each.token)
-        elif pat == (tt.Left_paren, tt.Left_paren):
+        elif pat == (tt.Right_paren, tt.Left_paren) or pat == (tt.Left_paren, tt.Left_paren):
             nicely_formatted_source_code += '\n' + (indent_string * indent_level) + str(each.token)
         elif pat == (tt.Left_paren, tt.Module):
             indent_level += 1
             nicely_formatted_source_code = nicely_formatted_source_code[:-1] + '\n(' + str(each.token)
-        elif pat == (tt.Left_paren, _):
+        elif pat == (tt.Left_paren, _) or pat == (_, tt.Right_paren):
             nicely_formatted_source_code += str(each.token)
-        elif pat == (_, tt.Right_paren):
-            nicely_formatted_source_code += str(each.token)
-        elif pat == (tt.Left_curly, _):
-            nicely_formatted_source_code += str(each.token)
-        elif pat == (_, tt.Right_curly):
+        elif pat == (tt.Left_curly, _) or pat == (_, tt.Right_curly):
             nicely_formatted_source_code += str(each.token)
         elif pat == (_, tt.Dot) or pat == (tt.Dot, _):
             nicely_formatted_source_code += str(each.token)
