@@ -41,4 +41,5 @@ install:
 	@sed -i "s/'HEAD'/'$(VIUACT_HEAD_COMMIT)'/" $(VIUACT_LIBS_DIR)/__init__.py
 	cp ./cc.py $(BIN_DIR)/viuact-cc
 	cp ./opt.py $(BIN_DIR)/viuact-opt
-	chmod +x $(BIN_DIR)/viuact-cc $(BIN_DIR)/viuact-opt
+	cp ./format.py $(BIN_DIR)/viuact-format
+	chmod +x $(BIN_DIR)/viuact-cc $(BIN_DIR)/viuact-opt $(BIN_DIR)/viuact-format
