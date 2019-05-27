@@ -50,6 +50,8 @@ def nicely_format_token_stream(tokens):
     EVENT_DEDENT = 2
     TRIGGER_PAREN_LEVEL = 0
 
+    import_section = False
+
     for each in tokens[1:]:
         lt = type(last_token)
         et = type(each)
@@ -74,6 +76,13 @@ def nicely_format_token_stream(tokens):
             nicely_formatted_source_code += '\n' + (indent_string * indent_level)
 
         pat = (lt, et,)
+        if pat == (tt.Left_paren, tt.Import):
+            import_section = True
+        elif pat == (tt.Left_paren, _) and import_section:
+            import_section = False
+            nicely_formatted_source_code = nicely_formatted_source_code[:-1] + '\n' + (indent_string *
+                    indent_level) + '('
+
         if pat == (tt.Left_paren, tt.Let) or pat == (tt.Left_paren, tt.Right_paren):
             nicely_formatted_source_code += str(each.token)
         elif pat == (tt.Right_paren, tt.Left_paren) or pat == (tt.Left_paren, tt.Left_paren):
