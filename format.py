@@ -124,7 +124,7 @@ def nicely_format_token_stream(tokens):
             indent_level += 1
             nicely_formatted_source_code += '\n' + (indent_string * indent_level)
 
-    return nicely_formatted_source_code.lstrip()
+    return nicely_formatted_source_code.strip()
 
 def main(args):
     if '--version' in args:
@@ -144,7 +144,7 @@ def main(args):
     nice_source_code = nicely_format_token_stream(tokens)
     if '-i' in args:
         with open(source_file_name, 'w') as ofstream:
-            ofstream.write(nice_source_code)
+            ofstream.write(nice_source_code + '\n')
     else:
         print(nice_source_code)
 
