@@ -22,6 +22,13 @@
             "real_name": "Websocket::write",
             "bytecode_name": "websocket::write",
             "from_module": "Websocket"
+        },
+        {
+            "arity": 1,
+            "name": "close",
+            "real_name": "Websocket::close",
+            "bytecode_name": "websocket::close",
+            "from_module": "Websocket"
         }
     ]
 }
