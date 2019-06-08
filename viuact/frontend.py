@@ -61,15 +61,15 @@ def cc(executable_name, args):
         print_error('note: syntax: {} <file>'.format(executable_name))
         print_error('              {} --mode {} <file>'.format(
             executable_name,
-            Compilation_mode.Automatic,
+            driver.Compilation_mode.Automatic,
         ))
         print_error('              {} --mode {} <file>'.format(
             executable_name,
-            Compilation_mode.Executable,
+            driver.Compilation_mode.Executable,
         ))
         print_error('              {} --mode {} <file>'.format(
             executable_name,
-            Compilation_mode.Module,
+            driver.Compilation_mode.Module,
         ))
         exit(1)
 
