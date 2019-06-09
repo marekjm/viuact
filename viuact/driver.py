@@ -499,6 +499,8 @@ def assemble_and_link(main_source_file, main_output_file):
         output_path = '{}.out'.format(os.path.splitext(source_path)[0])
         logs.debug('assembling: {} -> {}'.format(source_path, output_path))
 
+        library_files_to_link.append(output_path)
+
         module_hash_path = '{}.hash'.format(os.path.splitext(source_path)[0])
         module_hash_previous = '0'
         if os.path.isfile(module_hash_path):
@@ -538,8 +540,6 @@ def assemble_and_link(main_source_file, main_output_file):
         if asm_exit_code:
             sys.stderr.write('error: failed to assemble module {}\n'.format(each))
             exit(asm_exit_code)
-
-        library_files_to_link.append(output_path)
 
     module_hash_path = '{}.hash'.format(os.path.splitext(source_path)[0])
     module_hash_previous = '0'
