@@ -541,7 +541,7 @@ def assemble_and_link(main_source_file, main_output_file):
             sys.stderr.write('error: failed to assemble module {}\n'.format(each))
             exit(asm_exit_code)
 
-    module_hash_path = '{}.hash'.format(os.path.splitext(source_path)[0])
+    module_hash_path = '{}.hash'.format(os.path.splitext(main_source_file)[0])
     module_hash_previous = '0'
     if os.path.isfile(module_hash_path):
         with open(module_hash_path, 'r') as ifstream:
@@ -553,12 +553,12 @@ def assemble_and_link(main_source_file, main_output_file):
 
     if module_hash_current == module_hash_previous:
         print('skipping asm: {} -> {} (module has not changed)'.format(
-            source_path,
-            output_path,
+            main_source_file,
+            main_output_file,
         ))
         return
 
-    print('running asm:  {} -> {}'.format(source_path, output_path))
+    print('running asm:  {} -> {}'.format(main_source_file, main_output_file))
     with open(module_hash_path, 'w') as ofstream:
         ofstream.write('{}\n'.format(module_hash_current))
 
