@@ -252,7 +252,7 @@ def compile_as_executable(
                 ofstream.write('\n'.join([
                     '.signature: {}'.format(each)
                     for each
-                    in meta.signatures
+                    in sorted(meta.signatures)
                     if each.split('/')[0] not in module_function_mapping[mod_name]
                 ]))
                 ofstream.write('\n\n')
@@ -265,13 +265,13 @@ def compile_as_executable(
         logs.debug('generating interface for:  {} (in {})'.format(mod_name, module_interface_path))
         fns = [
             {
-                'arity': v['arity'],
+                'arity': meta.functions[k]['arity'],
                 'name': k,
-                'real_name': v['real_name'],
-                'from_module': v['from_module'],
+                'real_name': meta.functions[k]['real_name'],
+                'from_module': meta.functions[k]['from_module'],
             }
-            for k, v
-            in meta.functions.items()
+            for k
+            in sorted(meta.functions.keys())
             if v['from_module'] == source_module_name
         ]
         with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
@@ -289,7 +289,7 @@ def compile_as_executable(
         if meta.signatures:
             ofstream.write('\n'.join(map(
                 lambda each: '.signature: {}'.format(each),
-                meta.signatures,
+                sorted(meta.signatures),
             )))
             ofstream.write('\n\n')
         ofstream.write('\n\n'.join([
@@ -540,6 +540,27 @@ def assemble_and_link(main_source_file, main_output_file):
             exit(asm_exit_code)
 
         library_files_to_link.append(output_path)
+
+    module_hash_path = '{}.hash'.format(os.path.splitext(source_path)[0])
+    module_hash_previous = '0'
+    if os.path.isfile(module_hash_path):
+        with open(module_hash_path, 'r') as ifstream:
+            module_hash_previous = ifstream.read().strip()
+
+    module_hash_current = None
+    with open(source_path, 'rb') as ifstream:
+        module_hash_current = hashlib.sha1(ifstream.read()).hexdigest()
+
+    if module_hash_current == module_hash_previous:
+        print('skipping asm: {} -> {} (module has not changed)'.format(
+            source_path,
+            output_path,
+        ))
+        return
+
+    print('running asm:  {} -> {}'.format(source_path, output_path))
+    with open(module_hash_path, 'w') as ofstream:
+        ofstream.write('{}\n'.format(module_hash_current))
 
     asm_process_args = (
         env.VIUA_ASM_PATH,
