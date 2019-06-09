@@ -499,6 +499,27 @@ def assemble_and_link(main_source_file, main_output_file):
         output_path = '{}.out'.format(os.path.splitext(source_path)[0])
         logs.debug('assembling: {} -> {}'.format(source_path, output_path))
 
+        module_hash_path = '{}.hash'.format(os.path.splitext(source_path)[0])
+        module_hash_previous = '0'
+        if os.path.isfile(module_hash_path):
+            with open(module_hash_path, 'r') as ifstream:
+                module_hash_previous = ifstream.read().strip()
+
+        module_hash_current = None
+        with open(source_path, 'rb') as ifstream:
+            module_hash_current = hashlib.sha1(ifstream.read()).hexdigest()
+
+        if module_hash_current == module_hash_previous:
+            print('skipping asm: {} -> {} (module has not changed)'.format(
+                source_path,
+                output_path,
+            ))
+            continue
+
+        print('running asm:  {} -> {}'.format(source_path, output_path))
+        with open(module_hash_path, 'w') as ofstream:
+            ofstream.write('{}\n'.format(module_hash_current))
+
         asm_process_args = (
             env.VIUA_ASM_PATH,
             '-Wunused-register',
