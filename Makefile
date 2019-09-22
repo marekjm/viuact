@@ -43,3 +43,6 @@ install:
 	cp ./opt.py $(BIN_DIR)/viuact-opt
 	cp ./format.py $(BIN_DIR)/viuact-format
 	chmod +x $(BIN_DIR)/viuact-cc $(BIN_DIR)/viuact-opt $(BIN_DIR)/viuact-format
+
+pipeline.png: pipeline.dot
+	dot -Tpng pipeline.dot > pipeline.png
