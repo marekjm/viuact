@@ -272,7 +272,7 @@ def compile_as_executable(
             }
             for k
             in sorted(meta.functions.keys())
-            if v['from_module'] == source_module_name
+            if meta.functions[k]['from_module'] == source_module_name
         ]
         with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
             ofstream.write(json.dumps({ 'fns': fns, }, indent = 4))
@@ -548,7 +548,7 @@ def assemble_and_link(main_source_file, main_output_file):
             module_hash_previous = ifstream.read().strip()
 
     module_hash_current = None
-    with open(source_path, 'rb') as ifstream:
+    with open(main_source_file, 'rb') as ifstream:
         module_hash_current = hashlib.sha1(ifstream.read()).hexdigest()
 
     if module_hash_current == module_hash_previous:
