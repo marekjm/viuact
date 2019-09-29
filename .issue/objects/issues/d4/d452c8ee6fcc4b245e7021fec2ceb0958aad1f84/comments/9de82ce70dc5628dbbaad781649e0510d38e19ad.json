@@ -1,1 +1,0 @@
-{"author.name": "Marek Marecki", "author.email": "marekjm@ozro.pw", "message": "This is already somewhat completed.\n\nCompound expressions just cannot be used in function bodies, but that is\na limitation we can live with for now.", "timestamp": 1545209368.378424}

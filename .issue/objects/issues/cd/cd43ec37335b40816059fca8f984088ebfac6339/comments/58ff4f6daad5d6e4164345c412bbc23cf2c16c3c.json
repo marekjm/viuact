@@ -1,1 +1,0 @@
-{"author.name": "Marek Marecki", "author.email": "marekjm@ozro.pw", "message": "This was resolved by commit df004c5e2a28cbe013f54ea21659afcad20ab7a7 (in\nViua VM repository).\n\nViua VM now allows suppressing unused register errors.", "timestamp": 1545215165.626216}
