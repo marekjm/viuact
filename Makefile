@@ -10,8 +10,8 @@ BUILD_DIR=./build
 OUTPUT_DIR=$(BUILD_DIR)/_default
 ASM_OUTPUT=a.asm
 
-ASM_BINARY=../viuavm/build/bin/vm/asm
-KERNEL_BINARY=../viuavm/build/bin/vm/kernel
+ASM_BINARY=viua-asm
+KERNEL_BINARY=viua-vm
 
 .PHONY: test
 
