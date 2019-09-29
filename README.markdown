@@ -1,15 +1,13 @@
-# Viuact compiler
-
-A compiler from a high level language to Viua VM assembly.
+# Viuact
 
 ```
-(let main () (
-    (print "Hello World!")
-))
+(let main () (print "Hello, World!"))
 ```
 
-The language has Lisp-like syntax, described in full in
-[SYNTAX](SYNTAX.txt) file. Some of its features include:
+This repository contains source code of a compiler from a high level language
+with Lisp-like syntax to Viua VM assembly.
+
+Some of the language features include:
 
 - nested functions
 - externally immutable closures
@@ -17,7 +15,7 @@ The language has Lisp-like syntax, described in full in
 - let-bindings as means of remembering values
 - tail calls
 - actor calls (spawning parallel processes)
-- message passing (via direct send and receive between actors)
+- message passing as means of communications between actors
 
 ----
 
@@ -32,9 +30,9 @@ test.
 Anyway. We talked the talk, now we should walk the walk:
 
 ```
-$ ./src/viuact-cc.py --mode exec sample/example.lisp
-$ ./src/viuact-opt.py build/_default/example.asm
-$ ../core/viuavm/build/bin/vm/kernel a.out
+$ ./cc.py --mode exec sample/example.lisp
+$ ./opt.py build/_default/example.asm
+$ viua-vm a.out
 ```
 
 There are three commands needed to run the code.
@@ -44,7 +42,7 @@ For step-by-step explanation, read on.
 ## Compilation
 
 ```
-$ ./src/viuact-cc.py --mode exec sample/example.lisp
+$ ./cc.py --mode exec sample/example.lisp
 ```
 
 This command will analyse the input file (`sample/example.lisp`) and
@@ -60,7 +58,7 @@ This command will not perform assembly or linkage.
 ## Assembly and linkage
 
 ```
-$ ./src/viuact-opt.py build/_default/example.asm
+$ ./opt.py build/_default/example.asm
 ```
 
 This command will assemble the input file, turning it into an executable
@@ -72,7 +70,7 @@ imported by the input file and link them to the main executable.
 ## Executing
 
 ```
-$ ../core/viuavm/build/bin/vm/kernel a.out
+$ viua-vm a.out
 ```
 
 This will execute the compiled file.
@@ -80,9 +78,9 @@ This will execute the compiled file.
 ## Abstracted away
 
 ```
-$ ./src/viuact-cc.py --mode exec {dir}/{name}.lisp
-$ ./src/viuact-opt.py build/_default/{name}.asm
-$ ../core/viuavm/build/bin/vm/kernel a.out
+$ ./cc.py --mode exec {dir}/{name}.lisp
+$ ./opt.py build/_default/{name}.asm
+$ viua-vm a.out
 ```
 
 ----
