@@ -17,6 +17,21 @@ Some of the language features include:
 - actor calls (spawning parallel processes)
 - message passing as means of communications between actors
 
+The language's typing discipline is "strong dynamic", but the compiler leverages
+Viua VM assembler's static checking abilities to provide some guarantees at
+compile time.
+
+> **DISCLAIMER #1**: The compiler is half-baked and not as reliable as I would like
+> it to be - use at your own risk. There are some serious (but hilarious at the
+> same time) bugs and the error messages are... pretty bad, so if you do
+> something that the compiler does not like it will just yell at you but most
+> probably won't provide useful info. Unless you know the internals, but I would
+> not encourage getting used to them as I will be performing major refactoring
+> and rewrites.
+
+> **DISCLAIMER #2**: At this stage the code is mostly a curiosity. Keep in mind
+> that it was developed almost as a by-product of another project.
+
 ----
 
 # Usage example
