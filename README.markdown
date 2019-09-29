@@ -84,3 +84,9 @@ $ ./src/viuact-cc.py --mode exec {dir}/{name}.lisp
 $ ./src/viuact-opt.py build/_default/{name}.asm
 $ ../core/viuavm/build/bin/vm/kernel a.out
 ```
+
+----
+
+# License
+
+The code is licensed under GNU GPL v3.
