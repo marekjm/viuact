@@ -10,37 +10,6 @@ def print_error(s):
     text = '{}\n'.format(s)
     return sys.stderr.write(text)
 
-HELP = '''{man_executable}(1)
-
-NAME
-
-    {executable} - Viuact compiler
-
-SYNOPSIS
-
-    {executable} <file>
-    {exec_blank} --mode (module | exec | auto) <file>
-    {exec_blank} --help
-
-DESCRIPTION
-
-    Compiler from Viuact to Viua VM assembly language. Viuact is a
-    high-level programming language with a Lisp-like syntax.
-
-OPTIONS
-
-    --help      - display this message
-    --mode module | exec | auto
-                - set compilation mode; 'auto' is the default one
-'''
-
-def print_help(executable_name):
-    print(HELP.format(
-        man_executable = executable_name.upper(),
-        executable = executable_name,
-        exec_blank = (' ' * len(executable_name)),
-    ).strip())
-
 def cc(executable_name, args):
     executable_name = os.path.splitext(os.path.basename(executable_name))[0]
 
@@ -98,6 +67,18 @@ def cc(executable_name, args):
     }
 
 def opt(args):
+    if '--version' in args:
+        print('{} version {} ({})'.format(
+            executable_name,
+            viuact.__version__,
+            viuact.__commit__,
+        ))
+        exit(0)
+
+    if '--help' in args:
+        print_help(executable_name)
+        exit(0)
+
     return {
         'main_source_file': args[0],
         'main_output_file': (args[1] if len(args) >= 2 else None),

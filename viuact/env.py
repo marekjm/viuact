@@ -18,16 +18,16 @@ VIUAC_LIBRARY_PATH = tuple(filter(os.path.isdir, (
     + (STDLIB_HEADERS_DIRECTORY,)
 )))
 if (not VIUAC_LIBRARY_PATH) and os.environ.get('VIUAC_LIBRARY_PATH') is None:
-    raise Required_environment_variable_not_set('VIUAC_LIBRARY_PATH')
+    pass
 if (not VIUAC_LIBRARY_PATH) and os.environ.get('VIUAC_LIBRARY_PATH') is not None:
-    raise Misconfigured_environment_variable('VIUAC_LIBRARY_PATH')
+    pass
 
 
-VIUA_ASM_PATH = os.environ.get('VIUA_ASM_PATH', '../viuavm/build/bin/vm/asm')
+VIUA_ASM_PATH = os.environ.get('VIUA_ASM_PATH', 'viua-asm')
 if (not os.path.isfile(VIUA_ASM_PATH)) and os.environ.get('VIUA_ASM_PATH') is None:
-    raise Required_environment_variable_not_set('VIUA_ASM_PATH')
+    pass
 if (not os.path.isfile(VIUA_ASM_PATH)) and os.environ.get('VIUA_ASM_PATH') is not None:
-    raise Misconfigured_environment_variable('VIUA_ASM_PATH')
+    pass
 
 
 def bool_of_string(s):

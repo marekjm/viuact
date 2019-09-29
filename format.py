@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 
 import viuact
 from viuact import token_types, group_types, lexer, parser
 
-HELP = '''NAME
-    viuact-format  -- format ViuAct source code
+HELP = '''{man_executable}(1)
+
+NAME
+    {executable} - format Viuact source code
 
 SYNOPSIS
-    viuact-format [ -i ] <file>
-                  --version
-                  --help
+    {executable} [ -i ] <file>
+    {exec_blank} --version
+    {exec_blank} --help
 
 DESCRIPTION
     Format ViuAct source code according to a predefined coding style. This helps
@@ -27,6 +30,17 @@ OPTIONS
 
     --help
         Display this help screen.
+
+SEE ALSO
+    viuact-cc(1), viuact-opt(1)
+
+COPYRIGHT
+    Copyright (c) 2019 Marek Marecki
+
+    Some parts of the code were developed at Polish-Japanse Academy Of
+    Information Technology in Gdańsk, Poland.
+
+    This is Free Software published under GNU GPL v3 license.
 '''
 
 def nicely_format_token_stream(tokens):
@@ -135,12 +149,22 @@ def nicely_format_token_stream(tokens):
 
     return nicely_formatted_source_code.strip()
 
-def main(args):
+def main(executable_name, args):
     if '--version' in args:
-        print(viuact.__version__)
+        print('{} version {} ({})'.format(
+            os.path.split(executable_name)[1],
+            viuact.__version__,
+            viuact.__commit__,
+        ))
         exit(0)
+
     if '--help' in args:
-        print(HELP)
+        executable = os.path.split(executable_name)[1]
+        print(HELP.format(
+            man_executable = executable.upper(),
+            executable = executable,
+            exec_blank = (' ' * len(executable)),
+        ).strip())
         exit(0)
 
     source_file_name = args[-1]
@@ -157,4 +181,4 @@ def main(args):
     else:
         print(nice_source_code)
 
-main(sys.argv[1:])
+main(sys.argv[0], sys.argv[1:])
