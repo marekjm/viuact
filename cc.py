@@ -6,6 +6,7 @@ import sys
 import viuact
 import viuact.frontend
 import viuact.driver
+import viuact.env
 
 
 HELP = '''{man_executable}(1)
@@ -31,6 +32,9 @@ OPTIONS
 
     --mode module | exec | auto
         Set compilation mode; 'auto' is the default one.
+
+    --env
+        Display information about the environment that the compiler will use.
 
 EXAMPLES
     The canonical program
@@ -71,6 +75,51 @@ def main(executable_name, args):
             executable = executable,
             exec_blank = (' ' * len(executable)),
         ).strip())
+        exit(0)
+
+    if '--env' in args:
+        print('DEFAULT_OUTPUT_DIRECTORY: {}'.format(
+            viuact.env.DEFAULT_OUTPUT_DIRECTORY,
+        ))
+        print('STDLIB_HEADERS_DIRECTORY: {}'.format(
+            viuact.env.STDLIB_HEADERS_DIRECTORY,
+        ))
+        if viuact.env.VIUAC_LIBRARY_PATH:
+            prefix = 'VIUAC_LIBRARY_PATH:'
+            print('{} {}'.format(
+                prefix,
+                viuact.env.VIUAC_LIBRARY_PATH[0],
+            ))
+            for each in viuact.env.VIUAC_LIBRARY_PATH[1:]:
+                print('{} {}'.format(
+                    (len(prefix) * ' '),
+                    each,
+                ))
+        print('VIUA_ASM_PATH: {}'.format(
+            viuact.env.VIUA_ASM_PATH,
+        ))
+        if viuact.env.VIUAC_ASM_FLAGS:
+            prefix = 'VIUAC_ASM_FLAGS:'
+            print('{} {}'.format(
+                prefix,
+                viuact.env.VIUAC_ASM_FLAGS[0],
+            ))
+            for each in viuact.env.VIUAC_ASM_FLAGS[1:]:
+                print('{} {}'.format(
+                    (len(prefix) * ' '),
+                    each,
+                ))
+        if viuact.env.VIUAC_DUMP_INTERMEDIATE:
+            prefix = 'VIUAC_DUMP_INTERMEDIATE:'
+            print('{} {}'.format(
+                prefix,
+                viuact.env.VIUAC_DUMP_INTERMEDIATE[0],
+            ))
+            for each in viuact.env.VIUAC_DUMP_INTERMEDIATE[1:]:
+                print('{} {}'.format(
+                    (len(prefix) * ' '),
+                    each,
+                ))
         exit(0)
 
     viuact.driver.compile_file(**viuact.frontend.cc(executable_name, args))
