@@ -141,7 +141,7 @@ class Function(Group_type):
         return {
             'name': self.name.to_data(),
             'arguments': [each.to_data() for each in self.arguments],
-            'body': [each.to_data() for each in self.body],
+            'body': self.body.to_data(),
         }
 
 
