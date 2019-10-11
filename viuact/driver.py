@@ -56,7 +56,7 @@ class Report:
             Report.error(source_file, cause)
 
 
-def dump_intermediates(source_file, module_name, tokens, expressions):
+def dump_intermediates(output_directory, source_file, module_name, tokens, expressions):
     if env.Dump_intermediate.Tokens in env.VIUAC_DUMP_INTERMEDIATE:
         intermediate_tokens_path = os.path.join(output_directory, '{}.tokens'.format(module_name))
         with open(intermediate_tokens_path, 'w') as ofstream:
@@ -336,7 +336,7 @@ def compile_text(
 
     expressions = parser.parse(groups)
 
-    dump_intermediates(source_file, source_module_name, tokens, expressions)
+    dump_intermediates(output_directory, source_file, source_module_name, tokens, expressions)
 
     compilation_filesystem_root = os.path.dirname(source_file)
     lowered_function_bodies = []
