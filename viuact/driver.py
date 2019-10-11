@@ -551,7 +551,7 @@ def assemble_and_link(main_source_file, main_output_file):
     with open(main_source_file, 'rb') as ifstream:
         module_hash_current = hashlib.sha1(ifstream.read()).hexdigest()
 
-    if module_hash_current == module_hash_previous:
+    if (module_hash_current == module_hash_previous) and os.path.isfile(main_output_file):
         print('skipping asm: {} -> {} (module has not changed)'.format(
             main_source_file,
             main_output_file,
