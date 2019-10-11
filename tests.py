@@ -48,6 +48,7 @@ def run_test(test_name):
         args = ('bash', './ex/{}.sh'.format(test_name), 'make'),
         stdout = subprocess.PIPE,
         env = {
+            **os.environ,
             'VIUAVM_ASM_COLOUR': 'always',
         },)
     make_stage_stdout, make_stage_stderr = make_stage.communicate()
