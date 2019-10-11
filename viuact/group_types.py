@@ -65,6 +65,37 @@ class Module(Group_type):
         }
 
 
+class Enum_element(Group_type):
+    type_name = 'Enum_element'
+
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def to_string(self):
+        if self.value is None:
+            return self.name.token
+        else:
+            return '({} {})'.format(
+                self.name.token,
+                self.value.token,
+            )
+
+    def to_content(self):
+        return {
+            'name': self.name.to_data(),
+            'value': (self.value.to_data() if self.value else None),
+        }
+
+    def elem_index(self, to_use_if_value_is_none):
+        if self.value is None:
+            return to_use_if_value_is_none
+        else:
+            return int(str(self.value.token))
+
+    def elem_spec(self, to_use_if_value_is_none):
+        return (str(self.name.token), self.elem_index(to_use_if_value_is_none))
+
 class Enum_definition(Group_type):
     type_name = 'Enum_definition'
 
@@ -84,6 +115,12 @@ class Enum_definition(Group_type):
             'name': self.name.to_data(),
             'values': [each.to_data() for each in self.values],
         }
+
+    def elements_spec(self):
+        return dict(map(
+            lambda x: x[1].elem_spec(x[0]),
+            enumerate(self.values),
+        ))
 
 
 class Function(Group_type):

@@ -230,10 +230,7 @@ def lower_file(expressions, module_prefix, compilation_filesystem_root):
             continue
 
         enum_name = str(each.name.token)
-        enum_values = dict(map(
-            lambda x: (x[1], x[0],),
-            enumerate(map(lambda x: str(x.token), each.values))
-        ))
+        enum_values = each.elements_spec()
         meta.add_enum(
             name = enum_name,
             values = enum_values,
@@ -288,10 +285,7 @@ def lower_module_impl(module_expr, in_module, compilation_filesystem_root):
             continue
 
         enum_name = str(each.name.token)
-        enum_values = dict(map(
-            lambda x: (x[1], x[0],),
-            enumerate(map(lambda x: str(x.token), each.values))
-        ))
+        enum_values = each.elements_spec()
 
         module_prefix = '::'.join(full_mod_name)
         real_name = '{}::{}'.format(module_prefix, enum_name)

@@ -281,13 +281,28 @@ def parse_module(source):
 
     return mod
 
+def parse_enum_elements(source):
+    elements = []
+    for each in source:
+        if type(each) is token_types.Module_name:
+            elements.append(group_types.Enum_element(
+                name = each,
+                value = None,
+            ))
+        elif type(each) is list:
+            elements.append(group_types.Enum_element(
+                name = each[0],
+                value = each[1],
+            ))
+    return elements
+
 def parse_enum(source):
     if not isinstance(source[1], token_types.Module_name):
         raise Exception('expected enum name, got', source[1])
 
     return group_types.Enum_definition(
         name = source[1],
-        values = source[2],
+        values = parse_enum_elements(source[2]),
     )
 
 
