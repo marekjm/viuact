@@ -44,5 +44,8 @@ install:
 	cp ./format.py $(BIN_DIR)/viuact-format
 	chmod +x $(BIN_DIR)/viuact-cc $(BIN_DIR)/viuact-opt $(BIN_DIR)/viuact-format
 
+watch:
+	find . -name '*.py' | entr -c make install
+
 pipeline.png: pipeline.dot
 	dot -Tpng pipeline.dot > pipeline.png
