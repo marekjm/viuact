@@ -38,8 +38,9 @@ class Failed(Exception):
     pass
 
 
-def run_test(test_name):
-    HEADER_TEST = '[ test ]: {}...'.format(test_name)
+def run_test(test_name, test_index):
+    current, total = test_index
+    HEADER_TEST = '[ test ]: {}... ({}/{})'.format(test_name, (current + 1), total)
     HEADER_OK   = '[  ok  ]: {}'.format(test_name)
 
     print(HEADER_TEST)
@@ -107,7 +108,7 @@ def main(args):
     while current_test_index < no_of_tests_to_run:
         each = tests_to_run[current_test_index]
         try:
-            run_test(each)
+            run_test(each, (current_test_index, no_of_tests_to_run,))
             current_test_index += 1
         except Failed as e:
             print('[ fail ]: {}'.format(each))
