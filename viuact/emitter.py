@@ -354,9 +354,7 @@ def emit_expr(
             return slot
         return evaluated_slot
     elif leader_type is group_types.Id:
-        name = expr.name[0]
-
-        if str(name.token)[0].isupper():
+        if expr.to_string()[0].isupper():
             return emit_function_or_enum_ref(
                 body,
                 expr,
