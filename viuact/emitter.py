@@ -1415,6 +1415,18 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
     return slot
 
 
+def resolve_field_access(expr):
+    base_expr, fields = None, []
+
+    if type(expr[1]) is list and type(expr[1][0]) is token_types.Dot:
+        base_expr, fields = resolve_field_access(expr[1])
+        fields.append(expr[2])
+    else:
+        base_expr = expr[1]
+        fields = [expr[2]]
+
+    return (base_expr, fields)
+
 def emit_field_assignment(body : list, expr, state : State, slot : Slot):
     slot = emit_expr(
         body = body,
@@ -1424,10 +1436,22 @@ def emit_field_assignment(body : list, expr, state : State, slot : Slot):
     )
 
     field = expr.field
-    base_target_slot = state.slot_of(str(field[0].token))
+
+    base_expr, fields = resolve_field_access(field)
+
+    base_target_slot = None
+    if type(base_expr) is token_types.Name:
+        base_target_slot = state.slot_of(str(base_expr.token))
+    else:
+        base_target_slot = emit_expr(
+            body = body,
+            expr = base_expr,
+            state = state,
+            slot = None,
+        )
 
     field_name_slot = state.get_slot(None, anonymous = True)
-    field_names = list(filter(lambda each: str(each.token) != '.', field[1:]))
+    field_names = list(filter(lambda each: str(each.token) != '.', fields))
 
     inner_struct_slot = None
     if len(field_names) > 1:
@@ -1469,13 +1493,24 @@ def emit_field_assignment(body : list, expr, state : State, slot : Slot):
 
     return slot
 
-
 def emit_struct_field_access(body : list, expr, state : State, slot : Slot, must_emit = False, meta = None):
     field = expr.name
-    base_source_slot = state.slot_of(str(field[0].token))
+
+    base_expr, fields = resolve_field_access(field)
+
+    base_source_slot = None
+    if type(base_expr) in (token_types.Module_name, token_types.Name,):
+        base_source_slot = state.slot_of(str(base_expr.token))
+    else:
+        base_source_slot = emit_expr(
+            body = body,
+            expr = base_expr,
+            state = state,
+            slot = None,
+        )
 
     field_name_slot = state.get_slot(None, anonymous = True)
-    field_names = list(filter(lambda each: str(each.token) != '.', field[1:]))
+    field_names = list(filter(lambda each: str(each.token) != '.', fields))
 
     if slot is None:
         slot = state.get_slot(None, anonymous = True)
@@ -1487,7 +1522,7 @@ def emit_struct_field_access(body : list, expr, state : State, slot : Slot, must
         )))
         body.append(Verbatim('structat {} {} {}'.format(
             slot.to_string(),
-            base_source_slot.to_string(i > 0),
+            base_source_slot.to_string(),
             field_name_slot.to_string(),
         )))
         base_source_slot = slot

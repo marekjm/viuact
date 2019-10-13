@@ -390,14 +390,47 @@ class Id(Group_type):
     def __init__(self, name):
         self.name = name
 
+    @staticmethod
+    def resolve(id_expr):
+        if type(id_expr) is not list:
+            return [id_expr]
+
+        # Why is canonical length 3? Because this is the length of the truly
+        # well-formed operator dot list: [ operator, base, field ]
+        CANONICAL_LENGTH = 3
+        if len(id_expr) != CANONICAL_LENGTH:
+            return id_expr
+
+        path = []
+
+        if type(id_expr[1]) in (token_types.Module_name, token_types.Name,):
+            path.append(id_expr[1])
+        else:
+            path = Id.resolve(id_expr[1])
+
+        path.append(id_expr[2])
+
+        return path
+
     def to_string(self):
-        return ''.join(
-            map(lambda each: ('::' if each == '.' else each),
-            map(lambda each: str(each.token), self.name)))
+        return '::'.join(map(
+            lambda each: (
+                str(each.token)
+                if type(each) in (token_types.Module_name, token_types.Name,)
+                else each.to_string()),
+            Id.resolve(self.name)))
+            # lambda each: str(each.token), Id.resolve(self.name)))
 
     def to_content(self):
         return {
-            'id': [each.to_data() for each in self.name],
+            'id': [
+                (
+                    [x.to_data() for x in each]
+                    if type(each) is list
+                    else each.to_data()
+                )
+                for each
+                in self.name],
         }
 
 
@@ -467,13 +500,21 @@ class Field_assignment(Group_type):
 
     def to_string(self):
         return '{} := ...'.format(
-            ''.join(map(lambda each: str(each.token), self.field)),
+            ''.join(map(lambda each: each.to_string(), self.field)),
+            # ''.join(map(lambda each: str(each.token), self.field)),
         )
 
     def to_content(self):
         return {
             'operator': self.operator.to_data(),
-            'field': [each.to_data() for each in self.field],
+            'field': [
+                (
+                    [x.to_data() for x in each]
+                    if type(each) is list
+                    else each.to_data()
+                )
+                for each
+                in self.field],
             'value': self.value.to_data(),
         }
 

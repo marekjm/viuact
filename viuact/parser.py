@@ -22,22 +22,20 @@ def group_impl(tokens, break_on = token_types.Right_paren):
 
         if isinstance(each, token_types.Dot):
             name_types = (token_types.Module_name, token_types.Name,)
-            if not ((type(grouped[-1]) in name_types) or
-                (type(grouped[-1]) is list and type(grouped[-1][-1]) in name_types)):
-                raise Exception(
-                    'operator dot must follow module name or name, got',
-                    grouped[-1],
-                    grouped[-1][-1],
-                )
-            if type(tokens[i+1]) not in (token_types.Module_name, token_types.Name):
+            if type(tokens[i+1]) not in name_types:
                 raise Exception('expected module name or name to follow operator dot, got', tokens[i+1])
 
+            if type(grouped[-1]) in name_types and type(tokens[i+1]) in name_types:
+                grouped[-1] = [each, grouped[-1], tokens[i+1]]
+                i += 2
+                continue
+
             if type(grouped[-1]) is list:
-                grouped[-1].extend([each, tokens[i+1],])
-            else:
-                grouped[-1] = [grouped[-1], each, tokens[i+1],]
-            i += 2
-            continue
+                grouped[-1] = [each, grouped[-1], tokens[i+1],]
+                i += 2
+                continue
+
+            raise Exception('operator dot should not appear here')
 
         if isinstance(each, token_types.Catch):
             name_types = (token_types.Module_name, token_types.Name,)
@@ -109,16 +107,18 @@ def parse_expression_impl(expr):
         )
     elif leader_type is token_types.Let and len(expr) == 4:
         return parse_function(expr)
-    elif leader_type in name_types and type(expr) is list and len(expr) >= 2 and type(expr[1]) is token_types.Dot:
+    elif leader_type is token_types.Dot:
         return group_types.Id(
-            name = expr,
+            # FIXME Maybe also parse the third element of the expression, that
+            # is - the field name?
+            name = [expr[0], parse_expression(expr[1]), expr[2],],
         )
     elif leader_type is token_types.Name and type(expr) is list:
         return group_types.Function_call(
             name = expr[0],
             args = [parse_expression(each) for each in expr[1:]],
         )
-    elif leader_type is list and type(leader[0]) in name_types:
+    elif leader_type is list and (type(leader[0]) in name_types or type(leader[0]) is token_types.Dot):
         return group_types.Function_call(
             name = parse_expression(expr[0]),
             args = [parse_expression(each) for each in expr[1:]],
@@ -192,6 +192,8 @@ def parse_expression_impl(expr):
         )
     elif leader_type is token_types.Exception_tag_name:
         return group_types.Exception_tag(tag = expr[0])
+    elif leader_type is token_types.Module_name:
+        return expr
     else:
         if leader_type is list:
             raise exceptions.Unexpected_group(
