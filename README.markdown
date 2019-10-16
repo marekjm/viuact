@@ -1,105 +1,65 @@
 # Viuact
 
-```
-(let main () (print "Hello, World!"))
-```
+High-level programming language for [Viua](https://viuavm.org) virtual machine.
 
-This repository contains source code of a compiler from a high level language
-with Lisp-like syntax to Viua VM assembly.
+Viuact has a Lisp-inspired syntax and strong, dynamic typing. Some features of
+the language include:
 
-Some of the language features include:
-
-- nested functions
-- externally immutable closures
-- module system
-- let-bindings as means of remembering values
+- nested functions and closures
 - tail calls
-- actor calls (spawning parallel processes)
-- message passing as means of communications between actors
-
-The language's typing discipline is "strong dynamic", but the compiler leverages
-Viua VM assembler's static checking abilities to provide some guarantees at
-compile time.
-
-> **DISCLAIMER #1**: The compiler is half-baked and not as reliable as I would like
-> it to be - use at your own risk. There are some serious (but hilarious at the
-> same time) bugs and the error messages are... pretty bad, so if you do
-> something that the compiler does not like it will just yell at you but most
-> probably won't provide useful info. Unless you know the internals, but I would
-> not encourage getting used to them as I will be performing major refactoring
-> and rewrites.
-
-> **DISCLAIMER #2**: At this stage the code is mostly a curiosity. Keep in mind
-> that it was developed almost as a by-product of another project.
+- actor-based concurrency (inherited from Viua VM)
+- message passing as means of communication between actors 
+- module system
 
 ----
 
-# Usage example
+## Hello, World!
 
-This example will compile the `./sample/example.lisp` file.
-The file is neither particularly instructive, nor a paragon of good code
-design, but it serves as a "kitchen sink" file and contains code that
-uses almost all functionality the compiler supports, so is a good stress
-test.
+This is how you write the canonical program:
 
-Anyway. We talked the talk, now we should walk the walk:
+    (let main () (print "Hello, World!"))
 
-```
-$ ./cc.py --mode exec sample/example.lisp
-$ ./opt.py build/_default/example.asm
-$ viua-vm a.out
-```
+Save this code to a file (`vim`), compile (`viuact-cc`), assemble and
+link (`viuact-opt`), and execute (`viua-vm`):
 
-There are three commands needed to run the code.
-Only the first two are part of the compiler.
-For step-by-step explanation, read on.
-
-## Compilation
-
-```
-$ ./cc.py --mode exec sample/example.lisp
-```
-
-This command will analyse the input file (`sample/example.lisp`) and
-emit:
-
-- `.asm` files that contain compiled code
-- `.i` files that contain module interfaces (i.e. exported functions)
-- `.d` files that contain dependency information (only for executables;
-  but this will change to allow imports in modules)
-
-This command will not perform assembly or linkage.
-
-## Assembly and linkage
-
-```
-$ ./opt.py build/_default/example.asm
-```
-
-This command will assemble the input file, turning it into an executable
-binary.
-It will also read dependency information from the `.d` file associated
-with the input file. Dependency information is needed to compile modules
-imported by the input file and link them to the main executable.
-
-## Executing
-
-```
-$ viua-vm a.out
-```
-
-This will execute the compiled file.
-
-## Abstracted away
-
-```
-$ ./cc.py --mode exec {dir}/{name}.lisp
-$ ./opt.py build/_default/{name}.asm
-$ viua-vm a.out
-```
+    $ vim hello.lisp
+    $ viuact-cc --mode exec hello.lisp
+    $ viuatc-opt build/_default/hello.asm
+    $ viua-vm build/_default/hello.bc
+    Hello, World!
+    $
 
 ----
 
-# License
+## Brief introduction
 
-The code is licensed under GNU GPL v3.
+Let-bindings are used to define functions and variables:
+
+    (let main () {
+        (let x "Hello, World!")
+        (print x)
+        0
+    })
+
+Functions and variables are pretty much the same: let-bindings bind values to
+names. Functions are just parametrised expressions whose evaluation is delayed
+until they are called, but they too ultimately produce a value.
+
+Let-bindings always bind a name to a single expression. An expression can be a
+simple one (e.g. `42` or `(print "Hello, World!")`) or a compound one. Compound
+expressions are enclosed in braces (`{ ... }`) which may contain one or more
+expressions (which can be simple or compound, there is no restriction on nesting
+them).
+
+Functions are called by enclosing their name and arguments in parentheses, like
+this: `(print x)`.
+
+The "return value" of the compound expression is the value of the last
+expression in the body of the compound expression. It is 0 in the example above.
+
+----
+
+## License
+
+Viuact compiler is Free Software.
+It is published under GNU GPL v3.
