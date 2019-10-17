@@ -57,6 +57,26 @@ this: `(print x)`.
 The "return value" of the compound expression is the value of the last
 expression in the body of the compound expression. It is 0 in the example above.
 
+Conditional expressions are used to make decisions:
+
+    (let main () {
+        (let x (get_answer_to "What is the meaning of life?"))
+        (let correct_answer 42)
+        (let exit_code (if (= x correct_answer)
+            {
+                (print "Wow, how did you know?")
+                0
+            }
+            {
+                (print "Nope, that's not it.")
+                1
+            }))
+        exit_code
+    })
+
+Results of conditional expressions are values so "ifs" can be used everywhere an
+expression can be used, e.g. in let-bindings.
+
 ----
 
 ## License
