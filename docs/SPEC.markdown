@@ -2,6 +2,31 @@
 
 This document presents Viua VM language specification.
 
+- modules
+  - inline modules
+  - modules in separate files
+  - imports
+  - interface files
+- enumerations (and custom field values)
+- let-binding (variable)
+  - allowed variable names (`a` and `a'`)
+- let-binding (function definition)
+  - allowed parameter names (`a`, `a'`, and `~a`)
+  - positional and labeled parameters (with label punning)
+  - nested functions
+  - closures
+  - return values
+- *if* expression
+- function call
+- actor call
+- tail call
+- operator call
+- struct field access
+- literals (int, float, text, struct, vector)
+- simple and compound expressions (and their return values)
+- exception handling
+- comments
+
 ----
 
 ## Defining a function
