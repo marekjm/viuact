@@ -1,8 +1,6 @@
-all: compile
-
 PREFIX=~/.local
 BIN_DIR=$(PREFIX)/bin
-PYTHON_LIB_DIR=$(PREFIX)/lib/python$(shell python3 --version | grep -Po '3\.\d')/site-packages
+PYTHON_LIB_DIR=$(PREFIX)/lib/python$(shell python3 --version | grep -Po '3\.\d+')/site-packages
 VIUACT_LIBS_DIR=$(PYTHON_LIB_DIR)/viuact
 VIUACT_HEAD_COMMIT=$(shell git rev-parse HEAD)
 
@@ -15,16 +13,7 @@ KERNEL_BINARY=viua-vm
 
 .PHONY: test
 
-compile: $(OUTPUT_DIR)/$(ASM_OUTPUT)
-
-$(OUTPUT_DIR)/$(ASM_OUTPUT): hello_world.lisp
-	./scripts/cc hello_world.lisp
-	$(ASM_BINARY) \
-		-o $(OUTPUT_DIR)/a.out \
-		$(OUTPUT_DIR)/$(ASM_OUTPUT)
-
-run: $(OUTPUT_DIR)/$(ASM_OUTPUT)
-	$(KERNEL_BINARY) $(OUTPUT_DIR)/a.out
+all: test
 
 clean:
 	@rm -rf $(OUTPUT_DIR)/
@@ -44,7 +33,10 @@ install:
 	cp ./format.py $(BIN_DIR)/viuact-format
 	chmod +x $(BIN_DIR)/viuact-cc $(BIN_DIR)/viuact-opt $(BIN_DIR)/viuact-format
 
-watch:
+watch-test:
+	find . -name '*.py' | entr -c make test
+
+watch-install:
 	find . -name '*.py' | entr -c make install
 
 pipeline.png: pipeline.dot
