@@ -6,9 +6,9 @@ set -e
 CACT=./cc.py
 LACT=./opt.py
 
-# export VIUAC_INFO=yes
-# export VIUAC_VERBOSE=yes
-# export VIUAC_DEBUGGING=yes
+# export VIUACT_INFO=yes
+# export VIUACT_VERBOSE=yes
+# export VIUACT_DEBUGGING=yes
 
 rm -rf ./build
 

@@ -57,7 +57,7 @@ class Report:
 
 
 def dump_intermediates(output_directory, source_file, module_name, tokens, expressions):
-    if env.Dump_intermediate.Tokens in env.VIUAC_DUMP_INTERMEDIATE:
+    if env.Dump_intermediate.Tokens in env.VIUACT_DUMP_INTERMEDIATE:
         intermediate_tokens_path = os.path.join(output_directory, '{}.tokens'.format(module_name))
         with open(intermediate_tokens_path, 'w') as ofstream:
             ofstream.write(json.dumps({
@@ -65,7 +65,7 @@ def dump_intermediates(output_directory, source_file, module_name, tokens, expre
                 'tokens': list(map(lexer.to_data, tokens)),
             }, indent = 4))
 
-    if env.Dump_intermediate.Expressions in env.VIUAC_DUMP_INTERMEDIATE:
+    if env.Dump_intermediate.Expressions in env.VIUACT_DUMP_INTERMEDIATE:
         intermediate_exprs_path = os.path.join(output_directory, '{}.expressions'.format(module_name))
         with open(intermediate_exprs_path, 'w') as ofstream:
             ofstream.write(json.dumps({
@@ -392,7 +392,7 @@ def compile_file(
     os.makedirs(output_directory, exist_ok = True)
 
     logs.info('output directory:    {}'.format(env.DEFAULT_OUTPUT_DIRECTORY))
-    logs.info('library search path: {}'.format(' '.join(map(repr, env.VIUAC_LIBRARY_PATH))))
+    logs.info('library search path: {}'.format(' '.join(map(repr, env.VIUACT_LIBRARY_PATH))))
 
     source_code = None
     with open(source_file, 'r') as ifstream:
@@ -446,7 +446,7 @@ def assemble_and_link(main_source_file, main_output_file):
         module_ffi_binary_path = os.path.join(*imported_module_name.split('::')) + '.so'
 
         logs.debug('looking for module {}'.format(imported_module_name))
-        for candidate in env.VIUAC_LIBRARY_PATH:
+        for candidate in env.VIUACT_LIBRARY_PATH:
             candidate_module_source_path = os.path.join(candidate, module_source_path)
             candidate_module_binary_path = os.path.join(candidate, module_binary_path)
             candidate_module_ffi_binary_path = os.path.join(candidate, module_ffi_binary_path)
@@ -482,10 +482,10 @@ def assemble_and_link(main_source_file, main_output_file):
             sys.stderr.write('error: could not find module {}\n'.format(imported_module_name))
             if not each['foreign']:
                 sys.stderr.write('note: put the directory containing module\'s .asm or\n')
-                sys.stderr.write('      .module files in VIUAC_OUTPUT_DIRECTORY env variable\n')
+                sys.stderr.write('      .module files in VIUACT_OUTPUT_DIRECTORY env variable\n')
             if each['foreign']:
                 sys.stderr.write('note: put the directory containing module\'s .so file in\n')
-                sys.stderr.write('      VIUAC_LIBRARY_PATH env variable\n')
+                sys.stderr.write('      VIUACT_LIBRARY_PATH env variable\n')
             exit(1)
 
     library_files_to_link = []
@@ -525,7 +525,7 @@ def assemble_and_link(main_source_file, main_output_file):
         asm_process_args = (
             env.VIUA_ASM_PATH,
             '-Wunused-register',
-        ) + env.VIUAC_ASM_FLAGS + (
+        ) + env.VIUACT_ASM_FLAGS + (
             '-c',
             '-o',
             output_path,
@@ -565,10 +565,10 @@ def assemble_and_link(main_source_file, main_output_file):
     asm_process_args = (
         env.VIUA_ASM_PATH,
         '-Wunused-register',
-    ) + env.VIUAC_ASM_FLAGS + (
+    ) + env.VIUACT_ASM_FLAGS + (
     ) + (
         ('--verbose',)
-        if env.VIUAC_DEBUGGING
+        if env.VIUACT_DEBUGGING
         else ()
     ) + (
         '-o',

@@ -84,13 +84,13 @@ def main(executable_name, args):
         print('STDLIB_HEADERS_DIRECTORY: {}'.format(
             viuact.env.STDLIB_HEADERS_DIRECTORY,
         ))
-        if viuact.env.VIUAC_LIBRARY_PATH:
-            prefix = 'VIUAC_LIBRARY_PATH:'
+        if viuact.env.VIUACT_LIBRARY_PATH:
+            prefix = 'VIUACT_LIBRARY_PATH:'
             print('{} {}'.format(
                 prefix,
-                viuact.env.VIUAC_LIBRARY_PATH[0],
+                viuact.env.VIUACT_LIBRARY_PATH[0],
             ))
-            for each in viuact.env.VIUAC_LIBRARY_PATH[1:]:
+            for each in viuact.env.VIUACT_LIBRARY_PATH[1:]:
                 print('{} {}'.format(
                     (len(prefix) * ' '),
                     each,
@@ -98,24 +98,24 @@ def main(executable_name, args):
         print('VIUA_ASM_PATH: {}'.format(
             viuact.env.VIUA_ASM_PATH,
         ))
-        if viuact.env.VIUAC_ASM_FLAGS:
-            prefix = 'VIUAC_ASM_FLAGS:'
+        if viuact.env.VIUACT_ASM_FLAGS:
+            prefix = 'VIUACT_ASM_FLAGS:'
             print('{} {}'.format(
                 prefix,
-                viuact.env.VIUAC_ASM_FLAGS[0],
+                viuact.env.VIUACT_ASM_FLAGS[0],
             ))
-            for each in viuact.env.VIUAC_ASM_FLAGS[1:]:
+            for each in viuact.env.VIUACT_ASM_FLAGS[1:]:
                 print('{} {}'.format(
                     (len(prefix) * ' '),
                     each,
                 ))
-        if viuact.env.VIUAC_DUMP_INTERMEDIATE:
-            prefix = 'VIUAC_DUMP_INTERMEDIATE:'
+        if viuact.env.VIUACT_DUMP_INTERMEDIATE:
+            prefix = 'VIUACT_DUMP_INTERMEDIATE:'
             print('{} {}'.format(
                 prefix,
-                viuact.env.VIUAC_DUMP_INTERMEDIATE[0],
+                viuact.env.VIUACT_DUMP_INTERMEDIATE[0],
             ))
-            for each in viuact.env.VIUAC_DUMP_INTERMEDIATE[1:]:
+            for each in viuact.env.VIUACT_DUMP_INTERMEDIATE[1:]:
                 print('{} {}'.format(
                     (len(prefix) * ' '),
                     each,

@@ -147,7 +147,7 @@ def perform_imports(import_expressions, meta):
         # If the module is not our nested module, we have to look for its
         # interface file. Search the library path until we find a suitable file.
         found = False
-        for library_dir in env.VIUAC_LIBRARY_PATH:
+        for library_dir in env.VIUACT_LIBRARY_PATH:
             logs.debug('checking {} for module {}'.format(library_dir, mod_name))
 
             mod_interface_path = os.path.join(library_dir, *mod_name.split('::')) + '.i'

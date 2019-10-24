@@ -41,7 +41,7 @@ DEFAULT_OUTPUT_DIRECTORY
 
 Specifies the output directory.
 
-VIUAC_LIBRARY_PATH
+VIUACT_LIBRARY_PATH
 
 Specifies where the compiler and assembler-linker driver should look for
 bytecode modules and module interface files. Paths are separated using the ":"
@@ -51,19 +51,19 @@ VIUA_ASM_PATH
 
 Specifies the path to the Viua VM assembler executable.
 
-VIUAC_VERBOSE
+VIUACT_VERBOSE
 
 Enables verbose output if passed as "true" or "yes".
 
-VIUAC_DEBUGGING
+VIUACT_DEBUGGING
 
 Enables debugging output if passed as "true" or "yes".
 
-VIUAC_INFO
+VIUACT_INFO
 
 Enables informative output if passed as "true" or "yes".
 
-VIUAC_DUMP_INTERMEDIATE
+VIUACT_DUMP_INTERMEDIATE
 
 Instructs the compiler to dump intermediate representation images to the output
 directory. This produces at most two files:
@@ -78,11 +78,11 @@ may only be output, not consumed by it and are only intended as a debugging aid.
 
 This will produce the ".tokens" file:
 
-    $ VIUAC_DUMP_INTERMEDIATE=tokens viuact-cc hello_world.lisp
+    $ VIUACT_DUMP_INTERMEDIATE=tokens viuact-cc hello_world.lisp
 
 This will produce both the ".tokens" and the ".expressions" file:
 
-    $ VIUAC_DUMP_INTERMEDIATE=tokens,exprs viuact-cc hello_world.lisp
+    $ VIUACT_DUMP_INTERMEDIATE=tokens,exprs viuact-cc hello_world.lisp
 
 --------------------------------------------------------------------------------
 COMPILATION PROCESS EXPLAINED

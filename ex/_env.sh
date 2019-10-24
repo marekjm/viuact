@@ -4,7 +4,7 @@
 # for correct operation of the Viuact compiler.
 
 export VIUA_LIBRARY_PATH=../viuavm/build/stdlib:./lib:../libs/plain-websocket/build:../libs/viua-stdjson/build
-export VIUAC_LIBRARY_PATH=$VIUA_LIBRARY_PATH
+export VIUACT_LIBRARY_PATH=$VIUA_LIBRARY_PATH
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$VIUA_LIBRARY_PATH
 
 export VIUA_ASM_PATH=../viuavm/build/bin/vm/asm

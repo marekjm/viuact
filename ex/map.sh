@@ -17,7 +17,7 @@ if [[ $MODE == 'make' ]]; then
 
     echo "compiling $FILE_NAME..."
     ./cc.py --mode exec ex/$FILE_NAME.lisp
-    VIUAC_ASM_FLAGS='-Wunused-value' ./opt.py build/_default/$FILE_NAME.asm
+    VIUACT_ASM_FLAGS='-Wunused-value' ./opt.py build/_default/$FILE_NAME.asm
 fi
 if [[ $MODE == 'run' ]]; then
     echo "running $FILE_NAME..."

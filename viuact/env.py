@@ -1,54 +1,41 @@
 import os
 
-DEFAULT_OUTPUT_DIRECTORY = os.environ.get('VIUAC_OUTPUT_DIRECTORY', './build/_default')
-STDLIB_HEADERS_DIRECTORY = os.environ.get('VIUAC_STDLIB_HEADERS', './stdlib')
+
+DEFAULT_OUTPUT_DIRECTORY = os.environ.get('VIUACT_OUTPUT_DIRECTORY', './build/_default')
+STDLIB_HEADERS_DIRECTORY = os.environ.get('VIUACT_STDLIB_HEADERS', './stdlib')
 
 
-class Required_environment_variable_not_set(Exception):
-    pass
-class Misconfigured_environment_variable(Exception):
-    pass
-
-
-VIUAC_LIBRARY_PATH = tuple(filter(os.path.isdir, (
+VIUACT_LIBRARY_PATH = tuple(filter(os.path.isdir, (
     tuple(filter(lambda each: each.strip(),
-        os.environ.get('VIUAC_LIBRARY_PATH', '').split(':')
+        os.environ.get('VIUACT_LIBRARY_PATH', '').split(':')
     ))
     + (DEFAULT_OUTPUT_DIRECTORY,)
     + (STDLIB_HEADERS_DIRECTORY,)
 )))
-if (not VIUAC_LIBRARY_PATH) and os.environ.get('VIUAC_LIBRARY_PATH') is None:
-    pass
-if (not VIUAC_LIBRARY_PATH) and os.environ.get('VIUAC_LIBRARY_PATH') is not None:
-    pass
-
-
-VIUA_ASM_PATH = os.environ.get('VIUA_ASM_PATH', 'viua-asm')
-if (not os.path.isfile(VIUA_ASM_PATH)) and os.environ.get('VIUA_ASM_PATH') is None:
-    pass
-if (not os.path.isfile(VIUA_ASM_PATH)) and os.environ.get('VIUA_ASM_PATH') is not None:
-    pass
 
 
 def bool_of_string(s):
     return (s.lower() in ('1', 'true', 'yes',))
 
-VIUAC_VERBOSE = bool_of_string(os.environ.get('VIUAC_VERBOSE', ''))
-VIUAC_DEBUGGING = bool_of_string(os.environ.get('VIUAC_DEBUGGING', ''))
-VIUAC_INFO = bool_of_string(os.environ.get('VIUAC_INFO', ''))
+VIUACT_VERBOSE = bool_of_string(os.environ.get('VIUACT_VERBOSE', ''))
+VIUACT_DEBUGGING = bool_of_string(os.environ.get('VIUACT_DEBUGGING', ''))
+VIUACT_INFO = bool_of_string(os.environ.get('VIUACT_INFO', ''))
+
 
 class Dump_intermediate:
     Tokens = 'tokens'
     Groups = 'groups'
     Expressions = 'exprs'
 
-VIUAC_DUMP_INTERMEDIATE = list(
+VIUACT_DUMP_INTERMEDIATE = list(
     filter(lambda each: each in (
         Dump_intermediate.Tokens,
         Dump_intermediate.Groups,
         Dump_intermediate.Expressions,
     ),
-    os.environ.get('VIUAC_DUMP_INTERMEDIATE', '').split(','),
+    os.environ.get('VIUACT_DUMP_INTERMEDIATE', '').split(','),
 ))
 
-VIUAC_ASM_FLAGS = tuple(os.environ.get('VIUAC_ASM_FLAGS', '').split())
+
+VIUA_ASM_PATH = os.environ.get('VIUA_ASM_PATH', 'viua-asm')
+VIUACT_ASM_FLAGS = tuple(os.environ.get('VIUACT_ASM_FLAGS', '').split())

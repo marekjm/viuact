@@ -31,7 +31,7 @@ $ cd ~/viuact-workspace/viuact
 $ export VIUA_ASM_PATH=../viuavm/build/bin/vm/asm
 $ export VIUA_VM_KERNEL_PATH=../viuavm/build/bin/vm/kernel
 $ export VIUA_LIBRARY_PATH=../viuavm/build/stdlib
-$ export VIUAC_LIBRARY_PATH=../viuavm/build/stdlib
+$ export VIUACT_LIBRARY_PATH=../viuavm/build/stdlib
 ```
 
 ----
