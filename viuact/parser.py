@@ -127,6 +127,11 @@ def parse_expression_impl(expr):
         return group_types.Name_ref(
             name = expr,
         )
+    elif leader_type is token_types.Labeled_parameter_name:
+        return group_types.Argument_bind(
+            name = leader,
+            expr = parse_expression(expr[1]),
+        )
     elif leader_type in token_types.OPERATOR_TYPES and type(expr) is list:
         return group_types.Operator_call(
             operator = expr[0],

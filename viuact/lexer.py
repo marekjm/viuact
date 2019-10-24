@@ -104,7 +104,8 @@ def lex(source):
         token_types.Of,             # Other keywords
         token_types.With,
 
-        token_types.Name,           # Names and ids
+        token_types.Labeled_parameter_name,  # Names and ids
+        token_types.Name,
         token_types.Module_name,
 
         token_types.Comment,

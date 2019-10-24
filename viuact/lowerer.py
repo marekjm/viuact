@@ -53,11 +53,12 @@ class Visibility_information:
         self.nested_modules[module.prefix] = module
         self.add_module(module)
 
-    def add_function(self, name, arity, real_name = None, from_module = None):
+    def add_function(self, name, arity, real_name = None, from_module = None, params = None):
         self.functions[name] = {
             'arity': arity,
             'real_name': (real_name or name),
             'from_module': from_module,
+            'params': params,
         }
 
     def insert_function(self, name, value, bytecode_name : str = None):
@@ -71,6 +72,9 @@ class Visibility_information:
         if name not in self.functions:
             raise exceptions.No_such_function('no function named: {}()'.format(name), token)
         return (self.functions[name].get('bytecode_name') or self.functions[name]['real_name'])
+
+    def fn_spec(self, name):
+        return self.functions[name]
 
     def add_signature_for(self, name, fn_bytecode_name : str = None):
         self.signatures.append('{name}/{arity}'.format(
@@ -244,6 +248,7 @@ def lower_file(expressions, module_prefix, compilation_filesystem_root):
             name = str(each.name.token),
             arity = len(each.arguments),
             from_module = module_prefix,
+            params = each.arguments,
         )
 
     for each in expressions:
@@ -303,6 +308,7 @@ def lower_module_impl(module_expr, in_module, compilation_filesystem_root):
             arity = len(module_expr.functions[fn_name].arguments),
             real_name = real_name,
             from_module = '::'.join(full_mod_name),
+            params = module_expr.functions[fn_name].arguments,
         )
 
     for fn_name in module_expr.function_names:
@@ -319,6 +325,7 @@ def lower_module_impl(module_expr, in_module, compilation_filesystem_root):
             arity = len(fn_def.arguments),
             real_name = real_name,
             from_module = '::'.join(full_mod_name),
+            params = fn_def.arguments,
         )
 
     return lowered_function_bodies, meta

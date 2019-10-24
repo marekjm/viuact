@@ -384,6 +384,26 @@ class Name_ref(Group_type):
         }
 
 
+class Argument_bind(Group_type):
+    type_name = 'Argument_bind'
+
+    def __init__(self, name, expr):
+        self.name = name
+        self.expr = expr
+
+    def to_string(self):
+        return '({} {})'.format(
+            str(self.name.token),
+            (self.expr.to_string() if isinstance(self.expr, Group_type) else str(self.expr.token)),
+        )
+
+    def to_content(self):
+        return {
+            'name': self.name.to_data(),
+            'expr': self.expr.to_content(),
+        }
+
+
 class Id(Group_type):
     type_name = 'Id'
 

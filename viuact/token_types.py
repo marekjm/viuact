@@ -177,7 +177,11 @@ class Right_curly(Token_type):
 
 class Name(Token_type):
     type_name = 'Name'
-    pattern = re.compile('([a-z][a-zA-Z0-9_]*|_)')
+    pattern = re.compile('([a-z][a-zA-Z0-9_]*\'*|_)')
+
+class Labeled_parameter_name(Token_type):
+    type_name = 'Labeled_parameter_name'
+    pattern = re.compile('~[a-z][a-zA-Z0-9_]*')
 
 class Module_name(Token_type):
     type_name = 'Module_name'
