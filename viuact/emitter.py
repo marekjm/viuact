@@ -70,6 +70,9 @@ class Slot:
     def is_void(self):
         return self.index is None
 
+    def is_anonymous(self):
+        return self.name is None
+
     def to_string(self, pointer_dereference = None):
         as_pointer = (self.is_pointer and not self.is_pointer_explicit)
         if pointer_dereference is not None:
@@ -969,7 +972,8 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     body.append(Verbatim('frame %{}'.format(len(args))))
     for i, each in enumerate(applied_args):
         # FIXME if name is None (anonuymous slot) make move not copy
-        body.append(Move.make_copy(
+        passer = (Move.make_move if each.is_anonymous() else Move.make_copy)
+        body.append(passer(
             dest = Slot(None, i, ARGUMENTS_REGISTER_SET),
             source = each,
         ))
