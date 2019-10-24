@@ -12,6 +12,7 @@ LOCAL_REGISTER_SET = 'local'
 # CLOSURE_LOCAL_REGISTER_SET = 'closure_local'
 CLOSURE_LOCAL_REGISTER_SET = ''
 PARAMETERS_REGISTER_SET = 'parameters'
+ARGUMENTS_REGISTER_SET = 'arguments'
 
 BUILTIN_FUNCTIONS = (
     'print',
@@ -968,10 +969,10 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     body.append(Verbatim('frame %{}'.format(len(args))))
     for i, each in enumerate(applied_args):
         # FIXME if name is None (anonuymous slot) make move not copy
-        body.append(Verbatim('copy %{} arguments {}'.format(
-            i,
-            each.to_string(),
-        )))
+        body.append(Move.make_copy(
+            dest = Slot(None, i, ARGUMENTS_REGISTER_SET),
+            source = each,
+        ))
 
     to = '{}/{}'.format(fn_name, len(args))
     if state.has_slot(fn_name):
