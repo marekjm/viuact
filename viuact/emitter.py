@@ -452,6 +452,15 @@ def emit_expr(
             str(expr.token),
         ))
         return slot
+    elif leader_type is token_types.Float:
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        body.append(Ctor(
+            'float',
+            slot,
+            str(expr.token),
+        ))
+        return slot
     elif leader_type is token_types.Timeout:
         if slot is not None:
             raise Exception('timeouts are not first class values')
