@@ -128,10 +128,31 @@ def parse_expression_impl(expr):
             name = expr,
         )
     elif leader_type is token_types.Labeled_parameter_name:
-        return group_types.Argument_bind(
-            name = leader,
-            expr = parse_expression(expr[1]),
-        )
+        if type(expr) is list:
+            return group_types.Argument_bind(
+                name = leader,
+                expr = parse_expression(expr[1]),
+            )
+        else:
+            # This is for label punning, so we can write code like this:
+            #
+            #   (let fn (~a ~b) ...)
+            #
+            #   (let a 1)
+            #   (let b 2)
+            #   (fn ~b ~a)
+            #
+            # instead of:
+            #
+            #   (let (~b b) (~a a))
+            #
+            # which would be silly. Instead, we let the compiler automatically
+            # infer the label to which the argument should be bound. Make the
+            # machine work for us.
+            return group_types.Argument_bind(
+                name = leader,
+                expr = parse_expression(token_types.Name(str(leader.token)[1:])),
+            )
     elif leader_type in token_types.OPERATOR_TYPES and type(expr) is list:
         return group_types.Operator_call(
             operator = expr[0],
