@@ -19,6 +19,26 @@ Contents of each entry may be short (e.g. "A new issue was added."), or long
 
 --------------------------------------------------------------------------------
 
+LABELED PARAMETERS AND LABEL PUNNING
+(2019-10-24 21:51)
+
+Function parameters may be positional or labeled. Positional arguments are bound
+to their parameters by order in which they are passed, while labeled arguments
+are bound by their label. Consider the example:
+
+    (let fn (a ~b ~c) ...)
+
+The fn function has three parameters: one positional (a) and two labeled (~b and
+~c). It can be called like this:
+
+    (fn 0 (~b 1) (~c 2))
+    (fn 0 (~c 2) (~b 1))
+
+Both calls are exactly the same as labeled arguments may be passed in any order
+and the compiler will arrange them to match the order of their parameters.
+
+--------------------------------------------------------------------------------
+
 EXCEPTION CATCHING MECHANISM
 (2019-01-14 15:57)
 
