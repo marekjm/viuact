@@ -237,7 +237,7 @@ def parse_function(source):
         for each in formal_parameters:
             if not isinstance(each, token_types.Token_type):
                 raise exceptions.Unexpected_token('a name', source[1])
-            if type(each) is not token_types.Name:
+            if type(each) not in (token_types.Labeled_parameter_name, token_types.Name,):
                 raise exceptions.Unexpected_token('a name', each)
         fn.arguments = formal_parameters
     except exceptions.Viuact_exception as e:

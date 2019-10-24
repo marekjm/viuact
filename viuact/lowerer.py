@@ -403,9 +403,11 @@ def output_function_body(fn, in_module, meta):
             i,
             emitter.PARAMETERS_REGISTER_SET,
         )
-        dest = state.get_slot(
-            str(each.token),
-        )
+        parameter_label = (
+            str(each.token)[1:]
+            if type(each) is token_types.Labeled_parameter_name
+            else str(each.token))
+        dest = state.get_slot(parameter_label)
         inner_body.append(emitter.Move.make_move(
             source,
             dest,

@@ -954,8 +954,11 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
         name_token = name.token
 
     fn_name = call_expr.to()
+    fn_spec = None
     if not state.has_slot(fn_name):
+        fn_spec = state.visible_fns.fn_spec(fn_name)
         fn_name = state.visible_fns.real_name(fn_name, token = name_token)
+    print(fn_spec)
 
     applied_args = []
     for i, each in enumerate(args):
