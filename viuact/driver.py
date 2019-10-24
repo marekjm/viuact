@@ -362,6 +362,24 @@ def compile_text(
                 main_module_output_name,
                 output_directory,
             )
+    except exceptions.Invalid_number_of_arguments as e:
+        msg = e.message()
+        cause = e.cause()
+        line, character = 0, 0
+
+        cause_type = type(cause)
+        if cause_type is group_types.Function:
+            token = cause.name.token
+            line, character = token.location()
+
+        print('{}:{}:{}: {}: {}'.format(
+            source_file,
+            line + 1,
+            character + 1,
+            msg,
+            cause,
+        ))
+        raise
     except (exceptions.Emitter_exception, exceptions.Lowerer_exception,) as e:
         msg, cause = e.args
         line, character = 0, 0

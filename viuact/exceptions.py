@@ -5,6 +5,9 @@ class Viuact_exception(Exception):
     def __init__(self, token):
         self.main_token = token
 
+    def cause(self):
+        return self.main_token
+
     def message(self):
         return self.MESSAGE
 
@@ -65,6 +68,29 @@ class No_such_function(Lowerer_exception):
 
 class No_such_module(Exception):
     pass
+
+class Invalid_number_of_arguments(Viuact_exception):
+    MESSAGE = 'invalid number of arguments: '
+
+    def __init__(self, base, expected : int, got : int):
+        super().__init__(base)
+        self.expected = expected
+        self.got = got
+
+    def message(self):
+        return '{}: expected {}, got {}'.format(self.MESSAGE, self.expected, self.got)
+
+class Invalid_number_of_positional_arguments(Invalid_number_of_arguments):
+    MESSAGE = 'invalid number of positional arguments: '
+
+    def message(self):
+        return '{}: expected {}, got {}'.format(self.MESSAGE, self.expected, self.got)
+
+class Invalid_number_of_labeled_arguments(Invalid_number_of_arguments):
+    MESSAGE = 'invalid number of labeled arguments: '
+
+    def message(self):
+        return '{}: expected {}, got {}'.format(self.MESSAGE, self.expected, self.got)
 
 
 def make_fallout(e):

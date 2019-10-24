@@ -955,13 +955,54 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
 
     fn_name = call_expr.to()
     fn_spec = None
+    statically_known = False
     if not state.has_slot(fn_name):
         fn_spec = state.visible_fns.fn_spec(fn_name)
         fn_name = state.visible_fns.real_name(fn_name, token = name_token)
-    print(fn_spec)
+        statically_known = True
+
+    if statically_known:
+        if len(args) != fn_spec['arity']:
+            raise exceptions.Invalid_number_of_arguments(
+                base = name,
+                expected = fn_spec['arity'],
+                got = len(args),
+            )
+
+        # FIXME It should *never* be none.
+        if fn_spec.get('params') is not None:
+            params = fn_spec.get('params')
+
+            need_labeled = len(list(filter(
+                lambda each: type(each) is token_types.Labeled_parameter_name, params)))
+            need_positional = len(list(filter(
+                lambda each: type(each) is token_types.Name, params)))
+
+            got_labeled = len(list(filter(
+                lambda each: type(each) is group_types.Argument_bind, args)))
+            got_positional = len(list(filter(
+                lambda each: type(each) is not group_types.Argument_bind, args)))
+
+            if need_positional != got_positional:
+                raise exceptions.Invalid_number_of_positional_arguments(
+                    base = name,
+                    expected = need_positional,
+                    got = got_positional,
+                )
+            if need_labeled != got_labeled:
+                raise exceptions.Invalid_number_of_labeled_arguments(
+                    base = name,
+                    expected = need_labeled,
+                    got = got_labeled,
+                )
+
+    positional_args = list(filter(
+        lambda each: type(each) is not group_types.Argument_bind, args))
+    labeled_args = list(filter(
+        lambda each: type(each) is group_types.Argument_bind, args))
 
     applied_args = []
-    for i, each in enumerate(args):
+    for each in positional_args:
         applied_args.append(emit_expr(
             body = body,
             expr = each,
@@ -971,6 +1012,24 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
             meta = None,
             toplevel = False,
         ))
+
+    if (not statically_known) and labeled_args:
+        raise Exception('OH NOES: labeled arguments cannot be used if '
+            + 'the function called is not known at compile time')
+    if labeled_args:
+        label_order = list(map(lambda each: str(each.token), filter(
+            lambda each: type(each) is token_types.Labeled_parameter_name, params)))
+        labeled_args = dict(map(lambda each: (str(each.name.token), each.expr), labeled_args))
+        for each in label_order:
+            applied_args.append(emit_expr(
+                body = body,
+                expr = labeled_args[each],
+                state = state,
+                slot = None,
+                must_emit = False,
+                meta = None,
+                toplevel = False,
+            ))
 
     body.append(Verbatim('frame %{}'.format(len(args))))
     for i, each in enumerate(applied_args):
