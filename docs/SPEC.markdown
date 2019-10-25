@@ -440,6 +440,101 @@ operator:
     (print answer_pointer)      ; prints pointer representation
     (print (^ answer_pointer))  ; prints 42
 
+----------------------------------------
+
+## Compound data types
+
+Compound data types are created using the constructor syntax. Their literals
+have no special syntax sugar.
+
+Compound data types are *mutable*. There are functions and operators that change
+them in-place.
+
+--------------------
+
+### Vector
+
+Vectors are sequences of values, indexed from 0. Here's how to create a vector:
+
+    (let a_vector (vector))
+
+The following built-in functions are available to operate on vectors:
+
+- `Std.Vector.push`: takes a vector and a value. Returns a vector with the
+  value pushed as the last element (the mutated vector taken as input).
+- `Std.Vector.at`: takes a vector and an integer. Returns a pointer to the
+  element at the specified index.
+- `Std.Vector.size`: takes a vector. Returns an integer specifying the size
+  of the vector.
+
+An example:
+
+    (let v (vector))
+    (print v)                   ; prints []
+    (Std.Vector.push v 42)
+    (Std.Vector.push v 32)
+    (Std.Vector.push v 666)
+    (print v)                   ; prints [42, 32, 666]
+    (let element (Std.Vector.at v 1))
+    (print element)             ; prints 32 (due to automatic dereference)
+    (print (^ element))         ; prints 32
+    (print (Std.Vector.size v)) ; prints 3
+
+--------------------
+
+### Struct
+
+Structs are key-value stores, where keys are legal, regular variable names and
+values are any legal value. They have no other structure or limits. Fields are
+added to structs dynamically.
+
+Here's how to create a struct:
+
+    (let a_struct (struct))
+
+Here's how to assign a value to a struct's field:
+
+    (:= a_struct.a_field 42)
+
+Fields can be assigned to many times, thus mutating the struct.
+
+#### Struct field access
+
+Here's how to access a value in a struct's field:
+
+    (print a_struct.a_field)
+    (let x (+ a_struct.a_field 1))
+
+The first expression in the struct field access may be any legal expression. All
+following must be only regular field names. Consider the example below:
+
+    (let s (struct))
+    (:= s.field (struct))       ; Create a nested struct.
+    (:= s.field.question "")    ; Assign a first value to a field.
+    (:= s.field.question        ; Overwrite the value.
+        "What's the meaning of Life, the Universe, and everything?")
+    (:= s.field.answer 42)
+
+    (let field s.field)         ; Bind the field pointer to a name.
+    (print field)               ; Prints value of field due to automatic
+                                ; dereference.
+    (print (^ field))           ; Prints value of field because accessing a
+                                ; struct returns a pointer.
+
+    (print field.answer)        ; Direct access also works.
+    (print (^ field).answer)    ; The same with explicit dereference.
+
+More convoluted examples are also possible:
+
+    (print (^ (Std.Pointer.take s)).field.answer)
+
+    (print {
+        (let s (struct))
+        (:= s.also (struct))
+        (:= s.also.works "Yeah, why not?")
+        s
+    }.also.works)
+
 --------------------------------------------------------------------------------
 
                         Copyright (c) 2019 Marek Marecki
