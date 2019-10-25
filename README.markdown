@@ -79,7 +79,14 @@ expression can be used, e.g. in let-bindings.
 
 ----
 
-## License
+## Full introduction
+
+A not-so-brief introduction to teh language is available in docs directory, see
+[the specification](./docs/SPEC.markdown).
+
+----
+
+# License
 
 Viuact compiler is Free Software.
 It is published under GNU GPL v3.
