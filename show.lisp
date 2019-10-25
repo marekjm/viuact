@@ -51,6 +51,16 @@
                     "Some."
                     "Many.")))))
 
+(let for_each_impl (v i fn) {
+    (if (< i (Std.Vector.size v)) {
+        (let each (Std.Vector.at v i))
+        (fn each)
+        (tailcall for_each_impl v (+ i 1) fn)
+    } 0)
+})
+(let for_each (v fn)
+    (tailcall for_each_impl v 0 fn))
+
 (let main () {
     (let message "Hello, World!")
     (print message)
@@ -128,6 +138,9 @@
     (print (orcish_integer_to_string 5))
     (print (orcish_integer_to_string 6))
     (print (orcish_integer_to_string 666))
+
+    (let printer (x) (print x))
+    (for_each v printer)
 
     0
 })

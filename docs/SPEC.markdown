@@ -623,9 +623,41 @@ If-expressions may be nested to make more complex decisions:
 
 # Tail calls
 
+A typical function call is a function name and the arguments enclosed in
+parentheses. Such a call creates a new call frame on the stack, waits until the
+called function (the *callee*) returns, and then resumes execution of the
+calling function (the *caller*).
+
+A tail call is differnt, as it does not increase the size of the stack, but
+replaces the frame of the *caller* with the frame of the *callee*.
+
+To execute a tail call add the `tailcall` keyword before the function name in
+a function call expression. Consider the example below:
+
+    (fn 1 2 3)                  ; Normal call.
+    (tailcall 1 2 3)            ; Tail call.
+
 ----------------------------------------
 
 ## Simulating loops
+
+Since there is no loop structure in Viuact iteration has to be implemented in
+terms of recursion - using tail calls and if-expressions. Consider the example
+implementation of a `for_each` function (executing a function for every element
+of a vector) presented below:
+
+    (let for_each_impl (v i fn) {
+        (if (< i (Std.Vector.size v)) {
+            (let each (Std.Vector.at v i))
+            (fn each)
+            (tailcall for_each_impl v (+ i 1) fn)
+        } 0)
+    })
+    (let for_each (v fn)
+        (tailcall for_each_impl v 0 fn))
+
+Using this "tailcall to implementation" technique and employing a more
+functional approach to iteration will come naturaly after some time.
 
 --------------------------------------------------------------------------------
 
