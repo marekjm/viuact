@@ -2,12 +2,8 @@
 
 This document presents Viua VM language specification.
 
-- modules
-  - inline modules
-  - modules in separate files
-  - imports
-  - interface files
-- enumerations (and custom field values)
+- basic syntax
+- basic and compound expressions
 - let-binding (variable)
   - allowed variable names (`a` and `a'`)
 - let-binding (function definition)
@@ -16,129 +12,419 @@ This document presents Viua VM language specification.
   - nested functions
   - closures
   - return values
+- comments
+- literals (int, float, text, struct, vector)
+- simple and compound expressions (and their return values)
 - *if* expression
 - function call
 - actor call
 - tail call
 - operator call
 - struct field access
-- literals (int, float, text, struct, vector)
-- simple and compound expressions (and their return values)
+- enumerations (and custom field values)
+- modules
+  - inline modules
+  - modules in separate files
+  - imports
+  - interface files
 - exception handling
-- comments
 
-----
+--------------------------------------------------------------------------------
 
-## Defining a function
+# Basic syntax
 
-A function definition is introduced by the `let` keyword. It looks like this:
+The basic syntax of Viuact language is simple and inspired by the syntax (or
+lack thereof) of the Lisp family of languages. It follows simple rules, and is
+mostly consistent:
 
-```
-(let <function-name> ( <parameters>... ) ( <expr> <expr>... ))
-```
+- every language structure is enclosed in parentheses
+- everything if prefix notation
 
-Some valid function definitions include:
+The first rule means that there will be many parentheses in your code, but is
+there to make sure everything is clearly demarcated. The second rule is there to
+make the recognition of language structure easier, and the flow of the language
+more consistent:
 
-```
-; Print whatever is passed to the function.
-(let f (x) (
-    (print x)
-))
+    (leader_token other tokens following it)
 
-; Add one to the integer that is passed to the function.
-(let add_1 (n) (
-    (+ n 1)
-))
-```
+The leader token is usually enough to identify the language structure you are
+dealing with. For example:
 
-The whole function definition is wrapped by parentheses, the list of parameters
-is wrapped in parentheses, and the list of expressions that makes up the
-function's body is also wrapped in parentheses.
+    (let a 42)      ; let tells you this is a let-binding (variable definition)
 
-### Return values
+    (if some_value  ; if tells you this is a conditional expression
+        "If true."
+        "If false.")
 
-A function always returns the value of the last expression in its body.
-Explicit returns are usually unnecessary in Viuact.
+    (sqrt 2)        ; normal name as leader of the group tells you this is a
+                    ; function call
 
-### Nested functions
+It leads to one particularly surprising conclusion, though: the standard
+mathematical operators also use prefix notation. There is also no operator
+precedence table - everything is executed in the order of expressions in source
+code.
 
-Functions may be defined inside other functions, like this:
+    (* 2 2)         ; instead of 2 * 2, but still gives 4
+    (* 2 (+ 1 3))   ; instead of 2 * (1 + 3), but still gives 8
 
-```
-(let fn (x) (
-    (let foo (z) (
-        (print z)
-    ))
-    (foo z)
-))
-```
+One exception to the "everything infix" rule is struct, module, and enumeration
+field access using "operator dot". It would be cumbersome (and too weird, and
+more than a little bit unreadable) to write field accesses like this:
 
-### Closures
+    (. (. some_struct foo) bar)
 
-Closures may be easily created the same way as nested functions:
-
-```
-(let fn (x) (
-    (let foo () (
-        (print x)
-    ))
-    (foo)
-))
-```
-
-If a nested function uses a variable that is defined in the immediate lexical
-scope it is defined in the function is automatically converted to a closure.
-
-You have to note that closures do not *share* the variable they capture, but
-*copy* it from their outer scope and hold on to an their own, independent copy.
-
-> Note: The behaviour is defined this way because it is easier to implement.
-> We have a very tight time budget for this project, so we need to cut some
-> corners to be able to deliever something that works.
-
-----
-
-## Creating variables
-
-Variables are introduced by the `let` keyword. A variable binding looks like
+Instead, we stray from the infix path to let field accesses be written like
 this:
 
-```
-(let <name> <expr>)
-```
+    some_struct.foo.bar
 
-The `<expr>` part may be any expression that can be bound by a let-binding:
+This is much more readable so it's a good tradeoff.
 
-- a literal (e.g. `42`, `"Hello World!"`, or `-3.14`)
-- a function call result (e.g. `(frobnicate 42)` or `(Std.Posix.Io.open "./foo.txt")`)
-- an operator call result (e.g. `(+ x 1)`)
-- a result of a compound expression (e.g. `{ ... }`)
-- a result of an if expression (`if <expr> <true-arm> <false-arm>`)
+## Comments
 
-A few examples of valid variable bindings are:
+Comments are start with a semicolons (the `;` character), and end with the end
+of the line on which they were started. There are no block comments. Consider
+the example below:
 
-```
-(let answer 42)
-(let x (frobnicate answer))
-(let y (+ x 1))
-```
+    (let main () {
+        ; (print "Hello, World!")
+        0
+    })
 
-Names can be rebound to new values:
+"Hello, World!" is not displayed because the call to the `print` function is
+commented.
 
-```
-; config_file now represents a path to the config file.
-(let config_file "~/.config/foo/foo.conf")
+--------------------------------------------------------------------------------
 
-; Here, the previous value is consumed and the name is rebound to represent a
-; file descriptor.
-(let config_file (Std.Posix.Io.open config_file)
+# Basic expression types
 
-; Here, the name is rebound once more to represent a parsed configuration file.
-(let config_file (Config.parse_fd config_file))
-```
+Expressions can be simple or compound. A simple expression is...
 
-There is no assignment operator in Viuact. Whenever you want to modify a value,
-you must rebind its name to a modified version of it.
+- a literal (for a simple data type like an integer or a string)
+- a constructor (for a complex data type like a struct or a vector)
+- a function call (or an actor call)
+- an operator call (e.g. division, addition, or pointer dereference)
+- a conditional expression
+- an exception catch expression
+
+A compound expression is one or more expressions (simple or compound) enclosed
+in braces, for example:
+
+    (let a {            ; Bind the result of the compound expression to name a.
+        (let x (fn 42)) ; Call a function and bind the result to name x,
+        (print x)       ; then print it (e.g. for logging purposes).
+        x               ; Return the value of x from the compound expression.
+    })
+
+The last value that is used in the compound expression is used as its return
+value. Compound expressions can be nested to arbitrary levels.
+
+These types of expressions (simple and compound) can appear on the left-hand
+side of let-bindings. Using compound expressions allows building arbitrarily
+complex expressions.
+
+--------------------------------------------------------------------------------
+
+# Let-bindings
+
+Let-bindings are the means of tying values to names in Viuact. A let-binding may
+be used to create a variable or a function. Since values are products of
+evaluating expressions these two cases are not too different from each other - a
+function is simply a parametrised expression whose evaluation is deferred until
+the point of a function call, and which may be evaluated several times.
+
+----------------------------------------
+
+## Variables
+
+    (let name expression)
+
+A variable definition begins with the `let` keyword. A name follows it, and then
+an expression which is immediately evaluated to produce a value that is bound to
+the name.
+
+Any legal expression may be used in the *expression* part of a
+variable-defining let-binding: a literal, a constructor, a function call, a
+conditional expression, etc. Some examples are provided below:
+
+    (let the_answer 42)
+    (let square_root_of_two (sqrt 2))
+    (let what_do_you_say "Hello, World!")
+    (let complexity_grows {
+        (let evil 666)
+        (print evil)
+        evil
+    })
+
+Legal names for let-bindings follow this regular expression:
+
+    ^([a-z][a-zA-Z0-9_]*'*|_)$
+
+This means that regular names:
+
+- must begin with a lowercase letter
+- which can then be followed by a string of lower- and uppercase letters,
+  digits, and underscore characters
+- and may end with zero or more apostrophe characters
+
+Alternatively, they may be a singular underscore character. This means *drop the
+value*. If the compiler complains that a value is unused you may use the
+following trick to silence it:
+
+    (let _ unused_value)
+
+The apostrophe characters at the end of a name are useful if you want to
+create a slightly modified value but want to retain the untouched, previous
+version of it:
+
+    (let x (some_fn))
+    (let x' (frobnicate x))
+
+----------------------------------------
+
+## Functions
+
+    (let name (parameters) expression)
+
+A function definition begins with the `let` keyword. A name follows it, then a
+list of parameters (which may be empty), then the expression that represents the
+body of the function. The expression is not immediately evaluated.
+
+A function, in essence, is a parametrised expression whose evaluation is
+suspended until a call point, and which may be evaluated zero or more times. In
+case of non-referentially transparent functions the result of the evaluation may
+differ each time (e.g. for functions returning time, random numbers, or bytes
+read from a socket or file descriptor).
+
+A function's return value is the value to which the expression representing its
+body evaluates.
+
+Any legal expression may be used as the function body. A few examples are
+presented below:
+
+    (let add_one (x) (+ x 1))
+
+    (let print_and_return (x) {
+        (print x)
+        x
+    })
+
+    (let validate_answer (x) {
+        (if (= x 42) x {
+            (print "Your answer was not correct. Here, take a better one.")
+            42
+        })
+    })
+
+--------------------
+
+### Function parameters
+
+A function is a parametrised expression. The expression is parametrised by a set
+of parameters. These are the names enclosed in parentheses that come before the
+expression representing a function body.
+
+Values to which these names are bound are supplied by the *caller* at the *call
+point*. These values are called *arguments*.
+
+In academic-speak, parameters are called *formal parameters* and arguments are
+called *actual parameters*. To make it easier to remember: you state parameters,
+but make arguments. In this documentation the informal nomenclature is used the
+most.
+
+In the example below, the function `fn` states two parameters: `a` and `b`.
+
+    (let fn (a b) (+ a b))
+
+To call it the caller has to make two arguments:
+
+    (fn 23 19)
+
+--------------------
+
+#### Labeled parameters
+
+By default the parameters are *positional*. This means that the arguments'
+values are bound to them based on the order in which they are made. First
+argument's value is bound to the first parameter, and so on.
+
+Apart from positional parameters Viuact also supports labeled parameters. They
+are useful in situations where the order of parameters is not intuitive, or when
+a function is rarely used (so the users don't usually remember the order of
+parameters) or when the function has many parameters (and it would be
+impractical to rely on order alone).
+
+Labeled parameters are marked by prending a *tilde* (the `~` character) to their
+name in a function's parameter list. Inside the function body they are available
+without the tilde, in the same way as positional parameters or let-bindings.
+Consider the example below:
+
+    (let ratio (~num ~denom) (/ num denom))
+
+The numerator and denominator are labeled parameters. Viuact forces arguments to
+be explicitly bound to labeled parameters. An explicit parameter bind means
+enclosing a labeled name and its corresponding argument in parentheses. Consider
+the example below:
+
+    (ratio (~num 3.0) (~denom 4.0))
+
+It is illegal to explicitly bind a positional parameter, or to implicitly pass a
+labeled parameter.
+
+Labeled arguments may be passed in any order and the compiler will ensure that
+they are still bound to correct parameters. The calls in the example below will
+produce the same results:
+
+    (ratio (~num 3.0) (~denom 4.0))
+    (ratio (~denom 4.0) (~num 3.0))
+
+Viuact supports *label punning*, which lets the compiler automatically infer the
+labeled parameter to which an argument should be bound if the argument is a name
+that matches a labeled parameter name.
+
+This feature is especially useful in situations where the arguments for the
+function call are not made on the spot, but are stored in variables before
+assembling in the finall call. Continuing with the `ratio` example:
+
+    (let num (a_fn_to_get_the_numerator 1.41 3.14159 -1))
+    (let denom {
+        ; some complex calculations
+    })
+    (let result (ratio ~num ~denom))
+
+To summarise, all calls in the next example produce are exactly the same:
+
+    (let num 3.0)
+    (let denom 4.0)
+
+    (ratio (~num 3.0) (~denom 4.0))
+    (ratio (~denom 4.0) (~num 3.0))     ; using a different order or arguments
+
+    (ratio (~num num) (~denom denom))   ; using repetitive argument binds
+    (ratio (~num denom) (~denom num))   ; explicit argument binds are possible
+
+    (ratio ~num ~denom)                 ; using label punning
+    (ratio ~denom ~num)
+
+----------------------------------------
+
+### Nested functions and closures
+
+Viuact supports *nested functions*. They can be used to overcomplicate the
+`ratio` example from the earlier section:
+
+    (let ratio (~num ~denom) {
+        (let divide (a b) (/ a b))
+        (divide num denom)
+    })
+
+The `divide` function is defined and visible only inside the `ratio` function.
+Nested functions are completely isolated from their surroundings (exactly like
+non-nested functions) and communicate with their enclosing functions using the
+normal caller-callee mechanisms (parameters, arguments, and return values).
+
+Viuact also supports *closures*. The `ratio` example using closures would look
+like this:
+
+    (let ratio (~num ~denom) {
+        (let divide () (/ num denom))
+        (divide)
+    })
+
+Here, the `divide` function "inherits" both `num` and `denom` names and can
+freely use them. However, closures only capture a *copy* of the names at the
+closure's point of definition. If the variable is then mutated inside a closure
+the outer function won't see the result, and vice versa.
+
+--------------------------------------------------------------------------------
+
+# Data types
+
+Viuact supplies the programmer with a set of predefined data types that are
+sufficient for the basic tasks. The data types are separated into two groups:
+
+- simple data types (e.g. integer or float)
+- compound data types (i.e. vector and struct)
+
+Programmers can create their own data types using structs and vectors to add
+structre to the data, and enumerations to add tags.
+
+Viuact is dynamically (types are checked at runtime) and strongly (incompatible
+types are not coerced) typed.
+
+However, the strength of the type system stops at the predefined type boundary.
+All user-defined types are just structs and vectors to the language. Another
+weakness of the type system is that enumerations are not demarcated - if a
+field of an enumeration has the same value as a field from another enumeration
+they are considered the same.
+
+Furthermore, all types, without exception, are implicitly convertible to a
+boolean value.
+
+A more accurate description of the typing discipline may then be dynamic and
+semi-strongly typed.
+
+----------------------------------------
+
+## Simple data types
+
+Simple data type has their own literal form (with some exceptions). Consider the
+examples below:
+
+- integer: `0`, `-1`, `42`
+- float: `0.0`, `-1.0`, `4.2`
+- string: `"Hello, World!"`
+- boolean: `true` and `false`
+- bytes: *no literal*
+
+A brief description of each simple data type is provided.
+
+--------------------
+
+### Numeric data types (integer and float)
+
+Integers are 64 bit wide, two's complement signed values. They are stored in
+byte order of the underlying platform.
+
+Floats are double-precision IEEE 754 standard floating-point numbers.
+
+Numeric types may be freely mixed in expressions, but the result of the
+expression has the type of the left hand side element. This means that
+multiplying a float by an integer will return a float, but dividing an integer
+by a float will return an integer. Or, more formally:
+
+    Mathematical_op : (Tlhs, Trhs) -> Tlhs
+
+--------------------
+
+### String
+
+String data type is used to represent text in UTF-8 encoding. Strings are
+sequences of Unicode codepoints, are indexed from 0, and are limited (in theory)
+to 2^64 characters of length.
+
+String literals are enclosed in double quotes (the `"` character). The usual
+escape sequences are available to enter characters such as newline, tab, etc.
+
+--------------------
+
+### Boolean
+
+Boolean data type is used to represent truth and false constants. Comparison
+operators produce boolean values. Conditional expression consume boolean values
+in their decision expression.
+
+--------------------
+
+### Bytes
+
+Bytes are used to represent raw sequences of bytes. Bytes are unsigned, 8-bit
+wide integers. Sequences of bytes are returned from sockets, and are passed in
+parameters of the main function.
+
+--------------------------------------------------------------------------------
+
+                        Copyright (c) 2019 Marek Marecki
 
 ----
 
