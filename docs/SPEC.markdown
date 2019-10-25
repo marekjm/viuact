@@ -539,6 +539,49 @@ More convoluted examples are also possible:
 
 ## Enumerations
 
+Viuact supports enumerations as a means of assigning a symbolic meaning to some
+opaque value. Values for enumeration fields are automatically selected.
+Enumerations are created like this:
+
+    (enum Animals (
+        Reptiles
+        Mammals
+        Birds
+        Fish
+    ))
+    (enum Food (
+        Diary
+        Meat
+        Vegetables
+        Fruit
+        Fish
+    ))
+
+In theory, you should only rely on enumeration field's name and do not care
+about its assigned value. In practice, you often do care about the assigned
+value of an enumeration's field. In Viuact you can force a field to take on a
+specific value:
+
+    (enum Standard_streams (
+        (Input 0)
+        (Output 1)
+        (Error 2)
+    ))
+    (enum Permission (
+        (Read 4)
+        (Write 2)
+        (Execute 1)
+    ))
+
+Enumeration names must start with an uppercase letter. Enumeration field names
+must start with an uppercase letter. Otherwise, they follow the rules for
+regular variable names, except they cannot end in an apostrophe.
+
+Enumeration fields are accessed using operator dot:
+
+    (let r Permission.Read)
+    (print r)                   ; prints 4
+
 --------------------------------------------------------------------------------
 
 # Conditional expressions

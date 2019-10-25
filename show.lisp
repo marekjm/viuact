@@ -23,6 +23,17 @@
     0
 })
 
+(enum Example (
+    Foo
+    Bar
+    Baz
+))
+(enum Field_assignment (
+    (Answer 42)
+    (Bar 32)
+    (Evil 666)
+))
+
 (let main () {
     (let message "Hello, World!")
     (print message)
@@ -82,6 +93,14 @@
         (:= s.also.works "Yeah, why not?")
         s
     }.also.works)
+
+    (print Example.Foo)
+    (print Example.Bar)
+    (print Example.Baz)
+
+    (print Field_assignment.Answer)
+    (print Field_assignment.Bar)
+    (print Field_assignment.Evil)
 
     0
 })
