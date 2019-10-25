@@ -663,9 +663,51 @@ functional approach to iteration will come naturaly after some time.
 
 # Operators
 
+Viuact offers programmers several kinds of operators:
+
+- arithmetic
+- comparison (less-than, equal, etc.)
+- boolean (for logic operations)
+- pointer dereference operator
+- struct field assignment operator
+- dot oprator (the only infix one): for accessing fields in structs, modules,
+  and enumerations
+
+Operator calls are enclosed in parentheses. They begin with the token
+representing the operator, which is then followed by a suitable number of
+operands. The generic syntax is presented below:
+
+    (operator operand0 operand1 ... operandN)
+
+There is no operator precedence table, and the evaluation follows the order of
+expressions.
+
+Some examples:
+
+    (print (+ 2 2))             ; prints 4
+    (print (- 2 2))             ; prints 0
+
+    (print (< 2 2))             ; prints false
+    (print (<= 2 2))            ; prints true
+    (print (= 2 2))             ; prints true
+
 ----------------------------------------
 
 ## Carry-on operators
+
+Most operators have a fixed number of operands, but some operators can work on
+an variable number of operands. The "carry on" operators require at least two
+operands to work correctly. This group includes:
+
+- all arithmetic operations (addition, subtraction, multiplication, division)
+- basic boolean operations (and, or)
+
+Consider the example below:
+
+    (let addition (+ 1 2 3 4 5))
+    (print addition)                ; prints 15
+    (let multiplication (* 1 2 3 4 5))
+    (print multiplication)          ; prints 120
 
 --------------------------------------------------------------------------------
 
