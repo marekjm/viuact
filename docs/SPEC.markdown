@@ -292,7 +292,8 @@ assembling in the finall call. Continuing with the `ratio` example:
     })
     (let result (ratio ~num ~denom))
 
-To summarise, all calls in the next example produce are exactly the same:
+To summarise, all calls in the next example are valid and, except the fourth
+one, the same:
 
     (let num 3.0)
     (let denom 4.0)
