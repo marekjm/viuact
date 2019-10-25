@@ -434,11 +434,15 @@ def output_function_body(fn, in_module, meta):
     )))
     body.append(emitter.Verbatim(''))
     body.extend(inner_body)
-    body.append(emitter.Move.make_move(
-        return_slot,
-        emitter.Slot(None, 0,)
-    ))
-    body.append(emitter.Verbatim('return'))
+    if type(inner_body[-1]) is emitter.Call and inner_body[-1].kind == emitter.Call.Kind.Tail:
+        pass    # We don't have to return anything for tail calls as they will
+                # replace our call frame anyway.
+    else:
+        body.append(emitter.Move.make_move(
+            return_slot,
+            emitter.Slot(None, 0,)
+        ))
+        body.append(emitter.Verbatim('return'))
     body.append(emitter.Verbatim('.end'))
     return state.nested_fns + [('::'.join(full_fn_name), body,)]
 
