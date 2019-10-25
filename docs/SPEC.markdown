@@ -254,10 +254,10 @@ a function is rarely used (so the users don't usually remember the order of
 parameters) or when the function has many parameters (and it would be
 impractical to rely on order alone).
 
-Labeled parameters are marked by prending a *tilde* (the `~` character) to their
-name in a function's parameter list. Inside the function body they are available
-without the tilde, in the same way as positional parameters or let-bindings.
-Consider the example below:
+Labeled parameters are marked by prepending a *tilde* (the `~` character) to
+their name in a function's parameter list. Inside the function body they are
+available without the tilde, in the same way as positional parameters or
+let-bindings. Consider the example below:
 
     (let ratio (~num ~denom) (/ num denom))
 
