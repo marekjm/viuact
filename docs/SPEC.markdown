@@ -586,6 +586,39 @@ Enumeration fields are accessed using operator dot:
 
 # Conditional expressions
 
+Viuact supports an *if-expression* as its only conditional expression. An if
+expression is enclosed in parentheses and begins with the `if` keyword. The
+keyword is the followed by *guard expression* and two *arms*: the first is
+evaluated if the guard expression evaluates to truth, otherwise the second one
+is evaluated. All three expressions (guard and arms) may be arbitrarily complex.
+
+Consider the simple example below:
+
+    (let answer (get_answer))
+    (let is_correct (if (= answer 42) "Yep." "Nope."))
+
+Or:
+
+    (enum Part_of_day (Day Night))
+
+    (let print_part_of_day (part) (if
+        (= part Part_of_day.Day)        ; Guard expression.
+        (print "What a sunny day!")     ; True arm.
+        (print "What a cold night!")))  ; False arm.
+
+If-expressions may be nested to make more complex decisions:
+
+    (let orcish_integer_to_string (n)
+        (if (= n 0)
+            "None."
+            (if (= n 1)
+                "One."
+                (if (= n 2)
+                    "Two."
+                    (if (<= n 5)
+                        "Some."
+                        "Many.")))))
+
 --------------------------------------------------------------------------------
 
 # Tail calls

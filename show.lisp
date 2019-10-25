@@ -33,6 +33,23 @@
     (Bar 32)
     (Evil 666)
 ))
+(enum Part_of_day (Day Night))
+
+(let print_part_of_day (part) (if
+    (= part Part_of_day.Day)
+    (print "What a sunny day!")
+    (print "What a cold night!")))
+
+(let orcish_integer_to_string (n)
+    (if (= n 0)
+        "None."
+        (if (= n 1)
+            "One."
+            (if (= n 2)
+                "Two."
+                (if (<= n 5)
+                    "Some."
+                    "Many.")))))
 
 (let main () {
     (let message "Hello, World!")
@@ -101,6 +118,16 @@
     (print Field_assignment.Answer)
     (print Field_assignment.Bar)
     (print Field_assignment.Evil)
+
+    (print_part_of_day Part_of_day.Night)
+
+    (print (orcish_integer_to_string 0))
+    (print (orcish_integer_to_string 1))
+    (print (orcish_integer_to_string 2))
+    (print (orcish_integer_to_string 3))
+    (print (orcish_integer_to_string 5))
+    (print (orcish_integer_to_string 6))
+    (print (orcish_integer_to_string 666))
 
     0
 })
