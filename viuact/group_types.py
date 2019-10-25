@@ -519,9 +519,16 @@ class Field_assignment(Group_type):
         self.value = value
 
     def to_string(self):
+        def safe_or_else(fn, default):
+            try:
+                return fn()
+            except Exception:
+                return default()
         return '{} := ...'.format(
-            ''.join(map(lambda each: each.to_string(), self.field)),
-            # ''.join(map(lambda each: str(each.token), self.field)),
+            ''.join(map(lambda each: safe_or_else(
+                lambda: each.to_string(),
+                lambda: '<problematic>',
+                ), self.field)),
         )
 
     def to_content(self):
