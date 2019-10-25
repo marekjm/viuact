@@ -376,6 +376,7 @@ examples below:
 - string: `"Hello, World!"`
 - boolean: `true` and `false`
 - bytes: *no literal*
+- pointers: *no literal*
 
 A brief description of each simple data type is provided.
 
@@ -421,6 +422,23 @@ in their decision expression.
 Bytes are used to represent raw sequences of bytes. Bytes are unsigned, 8-bit
 wide integers. Sequences of bytes are returned from sockets, and are passed in
 parameters of the main function.
+
+--------------------
+
+### Pointer
+
+A pointer is a means of accessing a value indirectly. No pointer literal or
+constructor syntax is available - pointers are taken using the built-in
+`Std.Pointer.take` function. Consider the example below:
+
+    (let the_answer 42)
+    (let answer_pointer (Std.Pointer.take the_answer))
+
+To access the value to which the pointer points use the *pointer dereference*
+operator:
+
+    (print answer_pointer)      ; prints pointer representation
+    (print (^ answer_pointer))  ; prints 42
 
 --------------------------------------------------------------------------------
 
