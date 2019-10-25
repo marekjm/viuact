@@ -1254,12 +1254,33 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
         'or': 'or',
     }
 
+    carrying_operators = {
+        '+',
+        '-',
+        '*',
+        '/',
+        'and',
+        'or',
+    }
+
     if str(name.token) == 'not':
         body.append(Verbatim('{} {} {}'.format(
             operator_names[str(name.token)],
             slot.to_string(),
             applied_args[0].to_string(),
         )))
+    elif str(name.token) in carrying_operators:
+        for i in range(1, len(applied_args)):
+            lhs = (applied_args[0] if i == 1 else slot)
+            rhs = applied_args[i]
+
+            body.append(Verbatim('{} {} {} {}'.format(
+                operator_names[str(name.token)],
+                slot.to_string(pointer_dereference = False),
+                lhs.to_string(),
+                rhs.to_string(),
+            )))
+            slot.is_pointer = False
     else:
         body.append(Verbatim('{} {} {} {}'.format(
             operator_names[str(name.token)],

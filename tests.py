@@ -9,6 +9,7 @@ import sys
 TESTS = (
     'anonymous_values',
     'boolean_values',
+    'carry_on',
     'closure',
     'closure_holds_state',
     'compound_expr',
