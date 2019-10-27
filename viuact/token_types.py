@@ -31,9 +31,17 @@ class Let(Token_type):
     type_name = 'Keyword_let'
     pattern = re.compile(r'\blet\b')
 
+class Const(Token_type):
+    type_name = 'Keyword_const'
+    pattern = re.compile(r'\bconst\b')
+
 class Rec(Token_type):
     type_name = 'Keyword_rec'
     pattern = re.compile(r'\brec\b')
+
+class Val(Token_type):
+    type_name = 'Keyword_val'
+    pattern = re.compile(r'\bval\b')
 
 class If(Token_type):
     type_name = 'Keyword_if'
@@ -71,13 +79,37 @@ class Watchdog(Token_type):
     type_name = 'keyword_watchdog'
     pattern = re.compile(r'\bwatchdog\b')
 
+class Case(Token_type):
+    type_name = 'Keyword_case'
+    pattern = re.compile(r'\bcase\b')
+
 class Of(Token_type):
     type_name = 'Keyword_of'
     pattern = re.compile(r'\bof\b')
 
+class Class(Token_type):
+    type_name = 'Keyword_class'
+    pattern = re.compile(r'\bclass\b')
+
+class Match(Token_type):
+    type_name = 'Keyword_match'
+    pattern = re.compile(r'\bmatch\b')
+
 class With(Token_type):
     type_name = 'Keyword_with'
     pattern = re.compile(r'\bwith\b')
+
+class Trait(Token_type):
+    type_name = 'Keyword_trait'
+    pattern = re.compile(r'\btrait\b')
+
+class Impl(Token_type):
+    type_name = 'Keyword_impl'
+    pattern = re.compile(r'\bimpl\b')
+
+class For(Token_type):
+    type_name = 'Keyword_for'
+    pattern = re.compile(r'\bfor\b')
 
 class Try(Token_type):
     type_name = 'keyword_try'
@@ -86,6 +118,10 @@ class Try(Token_type):
 class Catch(Token_type):
     type_name = 'keyword_catch'
     pattern = re.compile(r'\bcatch\b')
+
+class Throw(Token_type):
+    type_name = 'keyword_throw'
+    pattern = re.compile(r'\bthrow\b')
 
 class In(Token_type):
     type_name = 'keyword_in'
@@ -178,6 +214,10 @@ class Right_curly(Token_type):
 class Name(Token_type):
     type_name = 'Name'
     pattern = re.compile('([a-z][a-zA-Z0-9_]*\'*|_)')
+
+class Template_parameter_name(Token_type):
+    type_name = 'Template_parameter_name'
+    pattern = re.compile('(\'[a-z][a-zA-Z0-9_]*)')
 
 class Labeled_parameter_name(Token_type):
     type_name = 'Labeled_parameter_name'

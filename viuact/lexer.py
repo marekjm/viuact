@@ -56,11 +56,22 @@ def lex(source):
         token_types.Right_curly,
 
         token_types.Let,            # Keywords
+        token_types.Const,
         token_types.Rec,
+        token_types.Val,
         token_types.If,
         token_types.Module,
         token_types.Import,
         token_types.Extern,
+        token_types.Case,
+        token_types.Of,
+        token_types.Class,
+        token_types.In,
+        token_types.Match,
+        token_types.With,
+        token_types.Trait,
+        token_types.Impl,
+        token_types.For,
 
         token_types.Struct,         # Basic-type ctors
         token_types.Vector,
@@ -97,14 +108,14 @@ def lex(source):
         token_types.Tailcall,
         token_types.Defer,
         token_types.Watchdog,
-        token_types.Try,
+
+        token_types.Try,            # Exception handling
         token_types.Catch,
+        token_types.Throw,
         token_types.In,
 
-        token_types.Of,             # Other keywords
-        token_types.With,
-
         token_types.Labeled_parameter_name,  # Names and ids
+        token_types.Template_parameter_name,
         token_types.Name,
         token_types.Module_name,
 
