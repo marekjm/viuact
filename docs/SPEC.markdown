@@ -714,17 +714,86 @@ Consider the example below:
 
 # Actor system
 
+Programs in Viuact are organised in actors. An actor is a function being
+executed concurrently with other actors, with assigned unique process id, and
+able to send and receive asynchronous messages  - nothing more, nothing less.
+All actors run concurrently, are isolated from each other, and their only
+built-in method of communication is asynchronous message passing.
+
+When a main function of an actor returns the actor finishes execution.
+
 ----------------------------------------
 
 ## Spawning actors
+
+Actors are spawned using *actor calls*. Actor calls are normal function calls,
+but prefixed with the `actor` keyword. The example below spawns a new actor
+implemented by the `fn` function:
+
+    (actor fn 1 2 3)
+
+An actor call expression does not yield the return value of the function called.
+It returns a *process id* (PID) which can be used to communicate with the actor
+identified by it - either by sending it messages, or by waiting for its
+completion.
 
 --------------------
 
 ### Child actors
 
+*Child actors* are actors that have a parent actor. Their return values are
+saved and may be retrieved when the parent actor waits for its child (similarly
+to how POSIX processes behave).
+
+Creating a child actor is implicit when the value of an actor expression is
+saved. The example below will crate a child actor:
+
+    (let doorkeeper (actor wait_for_connections "127.0.0.1" 8000))
+
+The `wait_for_connections` functions is run in a new actor, and its PID is saved
+in the `doorkeeper` variable. The actor spawned is a child actor because its PID
+was saved.
+
+You can wait for child actors using the `Std.Actor.join` function. The simplest
+code to wait for the doorkeeper actor is:
+
+    (let result (Std.Actor.join doorkeeper))
+
+It will wait infinitely, effectively blocking the waiting actor for an unbounded
+amount of time. A timeout for the join operation may be specified to avoid
+waiting for unpredictable amounts of time:
+
+    (let result (Std.Actor.join doorkeeper 1s))
+
+The code in the example above will wait at least 1 second (may wait longer if
+the scheduler has many other actors to run, and the waiting actor has to sit on
+the queue).
+
+If a child actor may not be joined after the timeout expires an exception is
+thrown.
+
 --------------------
 
 ### Free actors
+
+*Free actors* are actors that do not have a parent actor. Their return values
+are not saved, and they cannot be joined using the `Std.Actor.join` function.
+
+Creating a free actor is implicit when the value of an actor expression is not
+saved. The example below will create a free actor:
+
+    (actor wait_for_connections "127.0.0.1" 8000)
+
+How to obtain the PID of a free actor, in order to communicate with it? The
+easiest solution is to pass it the PID of the "parent" actor and have the free
+actor send its PID back. The "send PID and wait" technique is presented in the
+example below:
+
+    (actor wait_for_connections "127.0.0.1" 8000 (Std.Actor.self))
+    (let doorkeeper (Std.Actor.receive))
+
+The `Std.Actor.receive` returns the first message on the message queue of the
+caller, or blocks the caller until a message arrives.
 
 ----------------------------------------
 
