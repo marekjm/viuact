@@ -100,6 +100,7 @@ class State:
         if function_name is not None and type(function_name) is not str:
             raise TypeError(function_name)
         self.function_name = function_name
+        self.branches_encountered = 0
 
     def get_slot(self, name, register_set = DEFAULT_REGISTER_SET, anonymous = False):
         if name is None and not anonymous:
@@ -1308,12 +1309,18 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
     )
 
     true_arm_id = 'if_arm_true_{}'.format(hashlib.sha1(
-        repr(arms[0]).encode('utf-8') + repr(if_expr).encode('utf-8') + repr(id(arms[0])).encode('utf-8')
+        repr(arms[0]).encode('utf-8') + repr(if_expr).encode('utf-8')
+        + repr(state.branches_encountered).encode('utf-8')
     ).hexdigest())
     false_arm_id = 'if_arm_false_{}'.format(hashlib.sha1(
-        repr(arms[1]).encode('utf-8') + repr(if_expr).encode('utf-8') + repr(id(arms[1])).encode('utf-8')
+        repr(arms[1]).encode('utf-8') + repr(if_expr).encode('utf-8')
+        + repr(state.branches_encountered).encode('utf-8')
     ).hexdigest())
     if_end_id = 'if_end_{}'.format(hashlib.sha1(repr(if_expr).encode('utf-8')).hexdigest())
+
+    # Update the branch counter to give next arms a new value. Without this
+    # counter we risk creating two branches with the same name.
+    state.branches_encountered += 1
 
     body.append(Verbatim('if {} {} {}'.format(
         cond_slot.to_string(),
