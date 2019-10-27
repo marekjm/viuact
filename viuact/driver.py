@@ -223,7 +223,7 @@ def compile_as_executable(
     for each in meta.functions.values():
         module_function_mapping[each['from_module']].append(each['real_name'])
     for mod_name, contained_functions in module_function_mapping.items():
-        for fn_name in set(contained_functions):
+        for fn_name in sorted(list(set(contained_functions))):
             res = list(filter(lambda each: each[0] == fn_name, lowered_function_bodies))
             if res:
                 module_contents[mod_name].append(
@@ -292,11 +292,15 @@ def compile_as_executable(
                 sorted(meta.signatures),
             )))
             ofstream.write('\n\n')
+
+        fns = {}
+        for name, body in lowered_function_bodies:
+            fns[name] = body
         ofstream.write('\n\n'.join([
-            each
-            for (_, each)
-            in lowered_function_bodies
-            if meta.functions.get(_, {}).get('from_module') is None
+            fns[name]
+            for name
+            in sorted(fns.keys())
+            if meta.functions.get(name, {}).get('from_module') is None
         ]))
 
     with open(os.path.join(output_directory, '{}.d'.format(source_module_name)), 'w') as ofstream:
