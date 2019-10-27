@@ -22,6 +22,8 @@ TESTS = (
     'function_call',
     'hello_world',
     'higher_order',
+    'labeled_parameters',
+    'label_punning',
     'let_binding_of_call_result',
     'nested_fn',
     'nested_struct',
