@@ -173,6 +173,13 @@ def perform_imports(import_expressions, meta):
                             # function prefixed by the full name of the module in which it
                             # is contained.
                             fn_full_name = each['real_name']
+                            L = token_types.Labeled_parameter_name
+                            N = token_types.Name
+                            each['params'] = [
+                                (L(p) if p.startswith('~') else N(p))
+                                for p
+                                in each['params']
+                            ]
                             meta.import_function(
                                 name = fn_full_name,
                                 value = each,

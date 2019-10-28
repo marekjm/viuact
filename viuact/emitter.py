@@ -389,12 +389,14 @@ def emit_expr(
             arity = len(expr.arguments),
             real_name = real_name,
             from_module = meta.prefix,
+            params = expr.arguments,
         )
         meta.add_function(
             name = str(expr.name.token),
             arity = len(expr.arguments),
             real_name = real_name,
             from_module = meta.prefix,
+            params = expr.arguments,
         )
         nested_state = State(
             upper = state,
@@ -970,32 +972,30 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
                 got = len(args),
             )
 
-        # FIXME It should *never* be none.
-        if fn_spec.get('params') is not None:
-            params = fn_spec.get('params')
+        params = fn_spec.get('params')
 
-            need_labeled = len(list(filter(
-                lambda each: type(each) is token_types.Labeled_parameter_name, params)))
-            need_positional = len(list(filter(
-                lambda each: type(each) is token_types.Name, params)))
+        need_labeled = len(list(filter(
+            lambda each: type(each) is token_types.Labeled_parameter_name, params)))
+        need_positional = len(list(filter(
+            lambda each: type(each) is token_types.Name, params)))
 
-            got_labeled = len(list(filter(
-                lambda each: type(each) is group_types.Argument_bind, args)))
-            got_positional = len(list(filter(
-                lambda each: type(each) is not group_types.Argument_bind, args)))
+        got_labeled = len(list(filter(
+            lambda each: type(each) is group_types.Argument_bind, args)))
+        got_positional = len(list(filter(
+            lambda each: type(each) is not group_types.Argument_bind, args)))
 
-            if need_positional != got_positional:
-                raise exceptions.Invalid_number_of_positional_arguments(
-                    base = name,
-                    expected = need_positional,
-                    got = got_positional,
-                )
-            if need_labeled != got_labeled:
-                raise exceptions.Invalid_number_of_labeled_arguments(
-                    base = name,
-                    expected = need_labeled,
-                    got = got_labeled,
-                )
+        if need_positional != got_positional:
+            raise exceptions.Invalid_number_of_positional_arguments(
+                base = name,
+                expected = need_positional,
+                got = got_positional,
+            )
+        if need_labeled != got_labeled:
+            raise exceptions.Invalid_number_of_labeled_arguments(
+                base = name,
+                expected = need_labeled,
+                got = got_labeled,
+            )
 
     positional_args = list(filter(
         lambda each: type(each) is not group_types.Argument_bind, args))
@@ -1019,7 +1019,7 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
             + 'the function called is not known at compile time')
     if labeled_args:
         label_order = list(map(lambda each: str(each.token), filter(
-            lambda each: type(each) is token_types.Labeled_parameter_name, params)))
+            lambda each: type(each) is token_types.Labeled_parameter_name, fn_spec['params'])))
         labeled_args = dict(map(lambda each: (str(each.name.token), each.expr), labeled_args))
         for each in label_order:
             applied_args.append(emit_expr(

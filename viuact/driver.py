@@ -166,6 +166,7 @@ def compile_as_module(
                 'name': k,
                 'real_name': v['real_name'],
                 'from_module': v['from_module'],
+                'params': [ str(p.token) for p in v['params'] ],
             }
             for k, v
             in meta.functions.items()
