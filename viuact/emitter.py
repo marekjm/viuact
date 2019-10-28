@@ -42,6 +42,10 @@ BUILTIN_FUNCTIONS = (
     'Std::Vector::size',
 
     'Std::Pointer::take',
+
+    'Io::read',
+    'Io::write',
+    'Io::wait',
 )
 
 IGNORE_VALUE = '_'
@@ -937,6 +941,80 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
 
         slot.is_pointer = True
         slot.is_pointer_explicit = True
+        return slot
+    elif call_expr.to() == 'Io::read':
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        port_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        value_slot = emit_expr(
+            body = body,
+            expr = args[1],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        body.append(Verbatim('io_read {} {} {}'.format(
+            slot.to_string(),
+            port_slot.to_string(),
+            value_slot.to_string(),
+        )))
+
+        return slot
+    elif call_expr.to() == 'Io::write':
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        port_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        value_slot = emit_expr(
+            body = body,
+            expr = args[1],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        body.append(Verbatim('io_write {} {} {}'.format(
+            slot.to_string(),
+            port_slot.to_string(),
+            value_slot.to_string(),
+        )))
+
+        return slot
+    elif call_expr.to() == 'Io::wait':
+        request_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        timeout = (args[1] if args else token_types.Timeout(INFINITE_DURATION))
+        body.append(Verbatim('io_wait {} {} {}'.format(
+            Slot.to_address(slot),
+            request_slot.to_string(),
+            str(timeout.token),
+        )))
+
         return slot
     else:
         raise Exception('unimplemented built-in', call_expr.to())
