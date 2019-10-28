@@ -861,6 +861,30 @@ The actual waiting time may be longer.
 
 # Compilation pipeline overview
 
+The simplest possible examples of compiling code written in Viuact in different
+scenarios.
+
+## Compilation of a self-contained executable program
+
+To compile a self-contained executable:
+
+    viuact-cc --mode exec ./program.lisp
+    viuact-opt ./build/_default/program.asm
+
+These two commands will compile and link the main module and all its nested
+modules (even if they are not defined inline).
+
+## Compilation of a program with non-nested modules
+
+If the program you are compiling has some non-nested modules you have to compile
+all "root modules" (i.e. modules that are at the top of the hierarchy) manually.
+Viuact compiler does not automatically compile modules that are imported.
+
+    viuact-cc --mode module ./A_module.lisp
+    viuact-opt ./build/_default/A_module.asm
+    viuact-cc --mode exec ./program.lisp
+    viuact-opt ./build/_default/program.asm
+
 --------------------------------------------------------------------------------
 
                         Copyright (c) 2019 Marek Marecki
