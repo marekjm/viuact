@@ -61,6 +61,16 @@
 (let for_each (v fn)
     (tailcall for_each_impl v 0 fn))
 
+(module Foo (
+    (let fn (~x) (print x))
+))
+(import Foo)
+
+(module Bar)
+(import Bar)
+
+(import Baz)
+
 (let main () {
     (let message "Hello, World!")
     (print message)
@@ -141,6 +151,10 @@
 
     (let printer (x) (print x))
     (for_each v printer)
+
+    (Foo.fn (~x "Hello, World!"))
+    (Bar.fn (~x "Hello, World!"))
+    (Baz.fn (~x "Hello, World!"))
 
     0
 })
