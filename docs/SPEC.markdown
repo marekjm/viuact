@@ -853,6 +853,129 @@ The actual waiting time may be longer.
 
 # Module system
 
+Viuact has a simple module system.
+Modules can be defined only in the top-level file scope, or inside other modules.
+
+### Module definitions
+
+A module is a sequence of:
+
+- module imports
+- module definitions or declarations
+- function definitions
+
+No other forms may appear inside immedate module body.
+
+### Inline modules
+
+A module may be defined "inline" inside another module, or inside an executable.
+It is written like this:
+
+    (module A_module (
+        ; imports, module declarations or definitions, function definitions
+    ))
+
+After compilation an inline module is put in a separate file. There is no
+difference between modules defined inline and out-of-line. This also means that
+an inline module must be explicitly imported to use it.
+
+> Note: The fact that inline must be explicitly imported is there to provide
+> consistency - it should not matter whether the module is defined inline, or
+> out-of-line.
+
+### Module declarations
+
+A module declaration specifies that the module that is just being compiled has
+a nested module that should also be compiled.
+Such a structure allows the compiler to automatically discover the structure of
+modules in a project.
+
+A module declaration looks like this:
+
+    ; contents defined in A_module.lisp
+    (module A_module)
+
+The contents of declared module must be put inside the file that has the same
+name as the module (e.g. `(module A_module)` requires `A_module.lisp` file to
+exists), with the `.lisp` extension.
+
+The source file of the nested module must exist inside a directory named after
+the module containing the declaration. For example, assuming an `X_module.lisp`
+file with the following content:
+
+    (module A_module)
+
+we know that there is a module named `X_module` that has a nested module named
+`A_module`. So the file and directory structure must look like this:
+
+    X_module.lisp
+    X_module/A_module.lisp
+
+If the compiler is unable to find the required files it must abort the
+compilation with an error.
+
+### Module imports
+
+Module imports begin with the `import` keyword. It is followed by a module name;
+either qualified or not.
+
+    ; Import of an unqualified name.
+    (import A_module)
+
+    ; Import of a qualified name.
+    (import A_module.B_module.C_module)
+
+Imports of qualified names are used to import nested modules.
+Every module used must be imported explicitly; importing a module does not
+implicitly import its nested modules.
+
+Functions contained inside the module are available prefixed with the module's
+name. They must always be called by their fully qualified names.
+
+A function may be called by its unqualified name only by functions defined in
+the same module.
+Functions defined in nested module do not automatically get access to functions
+defined in outer modules. In order to use functions from the outer module the
+nested module must import it.
+
+Imports are always specified by the *full* path of the module, even when the
+import is done from a nested module.
+
+----
+
+### Example of how a module structure maps to filesystem structure
+
+File: `A_module.lisp`
+
+    (module B_module)
+    (module Ax_module (
+        ; Ax_module content
+    ))
+
+File: `A_module/B_module.lisp`
+
+    (module C_module)
+
+File: `A_module/B_module/C_module.lisp`
+
+    (module D_module (
+        ; D_module content
+    ))
+
+Given above files the source filesystem structure looks like this:
+
+    A_module.lisp
+    A_module/B_module.lisp
+    A_module/B_module/C_module.lisp
+
+The output filesystem structure looks like this:
+
+    A_module.asm
+    A_module/B_module.asm
+    A_module/Ax_module.asm
+    A_module/B_module/C_module.asm
+    A_module/B_module/C_module/D_module.asm
+
 --------------------------------------------------------------------------------
 
 # Built-in functions
@@ -888,178 +1011,3 @@ Viuact compiler does not automatically compile modules that are imported.
 --------------------------------------------------------------------------------
 
                         Copyright (c) 2019 Marek Marecki
-
-----
-
-## Conditional expressions
-
-The only conditional expression available is a simple if.
-The if expression has:
-
-- a condition: always evaluated to determine which arm should be evaluated
-- a true arm: evaluated only when the condition is true
-- a false arm: evaluated only when the condition is false
-
-The value of the if expression is the value of either true arm expression, or
-false arm expression (depending on the value of the condition epression).
-
-All expressions that make up the if expression may be arbitrarily complex.
-
-----
-
-## Modules
-
-Viuact has a simple module system.
-Modules can be defined only in the top-level file scope, or inside other modules.
-
-### Module definitions
-
-A module is a sequence of:
-
-- module imports
-- module definitions or declarations
-- function definitions
-
-No other forms may appear inside immedate module body.
-
-### Inline modules
-
-A module may be defined "inline" inside another module, or inside an executable.
-It is written like this:
-
-```
-(module A_module (
-    ; imports, module declarations or definitions, function definitions
-))
-```
-
-After compilation an inline module is put in a separate file. There is no
-difference between modules defined inline and out-of-line. This also means that
-an inline module must be explicitly imported to use it.
-
-> Note: The fact that inline must be explicitly imported is there to provide
-> consistency - it should not matter whether the module is defined inline, or
-> out-of-line.
-
-### Module declarations
-
-A module declaration specifies that the module that is just being compiled has
-a nested module that should also be compiled.
-Such a structure allows the compiler to automatically discover the structure of
-modules in a project.
-
-> Note: There is prior art to this approach - the Rust programming language
-> follows the same model of inline and out-of-line modules.
-
-A module declaration looks like this:
-
-```
-; contents defined in A_module.lisp
-(module A_module)
-```
-
-The contents of declared module must be put inside the file that has the same
-name as the module (e.g. `(module A_module)` requires `A_module.lisp` file to
-exists), with the `.lisp` extension.
-
-The source file of the nested module must exist inside a directory named after
-the module containing the declaration. For example, assuming an `X_module.lisp`
-file with the following content:
-
-```
-(module A_module)
-```
-
-we know that there is a module named `X_module` that has a nested module named
-`A_module`. So the file and directory structure must look like this:
-
-```
-X_module.lisp
-X_module/A_module.lisp
-```
-
-If the compiler is unable to find the required files it must abort the
-compilation with an error.
-
-### Module imports
-
-Module imports begin with the `import` keyword. It is followed by a module name;
-either qualified or not.
-
-```
-; Import of an unqualified name.
-(import A_module)
-
-; Import of a qualified name.
-(import A_module.B_module.C_module)
-```
-
-Imports of qualified names are used to import nested modules.
-Every module used must be imported explicitly; importing a module does not
-implicitly import its nested modules.
-
-Functions contained inside the module are available prefixed with the module's
-name. They must always be called by their fully qualified names.
-
-> Note: There is no way to "bring" a function to the current scope and use its
-> unqualified name. Unqualified names are only available inside the immediate
-> scope in which they are defined (i.e. functions may call other functions
-> defined inside the same module by their unqualified names).
->
-> Once again, this is caused by our extremely tight time budget.
-
-A function may be called by its unqualified name only by functions defined in
-the same module.
-Functions defined in nested module do not automatically get access to functions
-defined in outer modules. In order to use functions from the outer module the
-nested module must import it.
-
-Imports are always specified by the *full* path of the module, even when the
-import is done from a nested module.
-
-> Note: It is easier to implement this way. Time budget consideration.
-
-----
-
-### Example of how a module structure maps to filesystem structure
-
-File: `A_module.lisp`
-
-```
-(module B_module)
-(module Ax_module (
-    ; Ax_module content
-))
-```
-
-File: `A_module/B_module.lisp`
-
-```
-(module C_module)
-```
-
-File: `A_module/B_module/C_module.lisp`
-
-```
-(module D_module (
-    ; D_module content
-))
-```
-
-Given above files the source filesystem structure looks like this:
-
-```
-A_module.lisp
-A_module/B_module.lisp
-A_module/B_module/C_module.lisp
-```
-
-The output filesystem structure looks like this:
-
-```
-A_module.asm
-A_module/B_module.asm
-A_module/Ax_module.asm
-A_module/B_module/C_module.asm
-A_module/B_module/C_module/D_module.asm
-```
