@@ -799,6 +799,56 @@ caller, or blocks the caller until a message arrives.
 
 ## Communication using messages
 
+The only built-in means of communication between actors is message passing.
+Messages are sent and received by actors asynchronously, and without guaranteed
+delivery.
+
+Actors may of course communicate using external tools (e.g. databases, files)
+but using message passing is the easiest and most straightforward as it does not
+require anything besides what the language offers.
+
+--------------------
+
+### Sending messages
+
+Messages are sent using the `Std.Actor.send` function. This function takes a PID
+to which the message should be sent, and a value to send. Consider the example
+below:
+
+    (let doorkeeper (actor wait_for_connections "127.0.0.1" 8000))
+    (Std.Actor.send doorkeeper Doorkeeper.Commands.Shutdown)
+
+A shutdown command is sent to the doorkeeper actor. Sending a message is instant
+and does not block the calling actor.
+
+--------------------
+
+### Receiving messages
+
+Messages are received using the `Std.Actor.receive` function. This function does
+not require any arguments. Consider the example below:
+
+    (let await_new_command () {
+        (let command (Std.Actor.receive))
+        (handle command)
+        (tailcall await_new_command)
+    })
+
+Here, the actor receives a message, handles it, and then tail calls itself. It
+waits for the message indefinitely. Sometimes this is not desirable - for
+example, an actor should wait for about 1 second and if a message does not
+arrive it should resend a request, or perform some default housekeeping task.
+
+In order to set a timeout on the receive operation pass a literal timeout to the
+`Std.Actor.receive` function. Timeouts may be specified in seconds or
+milliseconds:
+
+    (Std.Actor.receive 1s)      ; return after at most 1 second
+    (Std.Actor.receive 1ms)     ; return after at most 1 millisecond
+
+The "at most" should be taken with a pinch of salt, as it is only a soft limit.
+The actual waiting time may be longer.
+
 --------------------------------------------------------------------------------
 
 # Module system
