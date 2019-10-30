@@ -39,7 +39,7 @@ watch-test:
 	find . -name '*.py' | entr -c make test
 
 watch-install:
-	find . -name '*.py' | entr -c make install
+	( find . -name '*.py' ; find ./stdlib -name '*.i' ) | entr -c make install
 
 pipeline.png: pipeline.dot
 	dot -Tpng pipeline.dot > pipeline.png
