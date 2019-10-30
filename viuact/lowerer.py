@@ -173,6 +173,20 @@ def perform_imports(import_expressions, meta):
                             # function prefixed by the full name of the module in which it
                             # is contained.
                             fn_full_name = each['real_name']
+
+                            if 'params' not in each:
+                                raise Exception('interface for {}() does include "params"'.format(
+                                    fn_full_name.replace('::', '.'),
+                                ))
+
+                            if each['arity'] != len(each['params']):
+                                s = 'interface for {}() has mismatched arity and parameters count: {} != {}'
+                                raise Exception(s.format(
+                                    fn_full_name.replace('::', '.'),
+                                    each['arity'],
+                                    len(each['params']),
+                                ))
+
                             L = token_types.Labeled_parameter_name
                             N = token_types.Name
                             each['params'] = [
@@ -180,6 +194,7 @@ def perform_imports(import_expressions, meta):
                                 for p
                                 in each['params']
                             ]
+
                             meta.import_function(
                                 name = fn_full_name,
                                 value = each,
