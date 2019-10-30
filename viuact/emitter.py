@@ -27,6 +27,7 @@ BUILTIN_FUNCTIONS = (
     'Std::Pid::eq',
 
     'Std::copy',
+    'Std::move',
 
     'Std::String::at',
     'Std::String::concat',
@@ -76,6 +77,10 @@ class Slot:
 
     def is_anonymous(self):
         return self.name is None
+
+    def become_anonymous(self):
+        self.name = None
+        return self
 
     def to_string(self, pointer_dereference = None):
         as_pointer = (self.is_pointer and not self.is_pointer_explicit)
@@ -617,6 +622,19 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
                 toplevel = False,
             ).to_string(),
         )))
+    elif call_expr.to() == 'Std::move':
+        # Make the slot anonymous to trigger move semantics.
+        slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = slot,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        slot.become_anonymous()
+        return slot
     elif call_expr.to() == 'Std::Actor::join':
         timeout = (args[1] if len(args) > 1 else token_types.Timeout(INFINITE_DURATION))
         body.append(Verbatim('join {} {} {}'.format(
