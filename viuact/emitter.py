@@ -46,6 +46,7 @@ BUILTIN_FUNCTIONS = (
 
     'Io::read',
     'Io::write',
+    'Io::close',
     'Io::wait',
 )
 
@@ -1013,6 +1014,24 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             slot.to_string(),
             port_slot.to_string(),
             value_slot.to_string(),
+        )))
+
+        return slot
+    elif call_expr.to() == 'Io::close':
+        if slot is None:
+            slot = state.get_slot(None, anonymous = True)
+        port_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = slot,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        body.append(Verbatim('io_close {} {}'.format(
+            slot.to_string(),
+            port_slot.to_string(),
         )))
 
         return slot
