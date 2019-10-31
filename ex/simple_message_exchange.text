@@ -1,5 +1,5 @@
 sender: sends a message...
+sender: sent a message!
 receiver: waits for a message...
 receiver: got a message!
 receiver: the message was: Hello World!
-sender: sent a message!
