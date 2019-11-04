@@ -48,6 +48,7 @@ BUILTIN_FUNCTIONS = (
     'Io::write',
     'Io::close',
     'Io::wait',
+    'Io::cancel',
 )
 
 IGNORE_VALUE = '_'
@@ -1053,6 +1054,21 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
         )))
 
         return slot
+    elif call_expr.to() == 'Io::cancel':
+        request_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = slot,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        body.append(Verbatim('io_cancel {}'.format(
+            request_slot.to_string(),
+        )))
+
+        return request_slot
     else:
         raise Exception('unimplemented built-in', call_expr.to())
 
