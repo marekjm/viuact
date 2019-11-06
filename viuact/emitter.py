@@ -1046,7 +1046,7 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             meta = None,
             toplevel = False,
         )
-        timeout = (args[1] if args else token_types.Timeout(INFINITE_DURATION))
+        timeout = (args[1] if len(args) >= 2 else token_types.Timeout(INFINITE_DURATION))
         body.append(Verbatim('io_wait {} {} {}'.format(
             Slot.to_address(slot),
             request_slot.to_string(),
