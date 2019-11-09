@@ -202,7 +202,10 @@ def parse_expression_impl(expr):
     elif leader_type is token_types.Struct:
         return group_types.Struct()
     elif leader_type is token_types.Vector:
-        return group_types.Vector()
+        init = []
+        if len(expr) > 1:
+            init = [parse_expression(each) for each in expr[1]]
+        return group_types.Vector(init)
     elif leader_type is token_types.Try:
         return group_types.Try_expression(
             expr = parse_expression(expr[1]),

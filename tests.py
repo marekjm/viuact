@@ -34,6 +34,7 @@ TESTS = (
     'struct_field_update',
     'tailcall',
     'vector',
+    'vector_init',
 )
 
 

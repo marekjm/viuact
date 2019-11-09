@@ -520,6 +520,25 @@ def emit_expr(
             slot,
             '',
         ))
+        # FIXME Use vector packing to create initialised vectors. It will
+        # increase register pressure but will be much more efficient.
+        if expr.init:
+            init_slot = state.get_slot(None, anonymous = True)
+            for each in expr.init:
+                init_slot = emit_expr(
+                    body = body,
+                    expr = each,
+                    state = state,
+                    slot = init_slot,
+                    must_emit = True,
+                    meta = meta,
+                    toplevel = False,
+                )
+                body.append(Verbatim('vpush {} {}'.format(
+                    slot.to_string(),
+                    init_slot.to_string(),
+                )))
+
         return slot
     elif leader_type is group_types.Compound_expression:
         return emit_compound_expr(

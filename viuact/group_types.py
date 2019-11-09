@@ -503,8 +503,8 @@ class Struct(Group_type):
 class Vector(Group_type):
     type_name = 'Vector'
 
-    def __init__(self):
-        pass
+    def __init__(self, init):
+        self.init = init
 
     def to_string(self):
         return 'vector'
