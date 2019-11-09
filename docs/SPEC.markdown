@@ -481,6 +481,13 @@ An example:
     (print (^ element))         ; prints 32
     (print (Std.Vector.size v)) ; prints 3
 
+A vector may also be initialised during construction:
+
+    (let v (vector (42 32 666)))
+    (print v)
+
+This initialisation is equivalent to the push-based code in the first example.
+
 --------------------
 
 ### Struct
