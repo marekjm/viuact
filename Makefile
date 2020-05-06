@@ -31,10 +31,12 @@ install:
 	cp ./cc.py $(BIN_DIR)/viuact-cc
 	cp ./opt.py $(BIN_DIR)/viuact-opt
 	cp ./format.py $(BIN_DIR)/viuact-format
+	cp ./front.py $(BIN_DIR)/viuact
 	chmod +x \
 		$(BIN_DIR)/viuact-cc \
 		$(BIN_DIR)/viuact-opt \
-		$(BIN_DIR)/viuact-format
+		$(BIN_DIR)/viuact-format \
+		$(BIN_DIR)/viuact
 	@mkdir -p ~/.local/lib/viuact
 	cp -Rv ./stdlib/Std/* ~/.local/lib/viuact/Std
 
