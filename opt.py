@@ -39,15 +39,27 @@ EXAMPLES
 
 SEE ALSO
     viuact-cc(1)
+    viuact-format(1)
 
 COPYRIGHT
-    Copyright (c) 2018-2019 Marek Marecki
+    Copyright (c) 2018-2020 Marek Marecki
 
     Some parts of the code were developed at Polish-Japanse Academy Of
     Information Technology in Gdańsk, Poland.
 
     This is Free Software published under GNU GPL v3 license.
 '''
+
+EXECUTABLE = 'viuact-opt'
+
+
+def print_help(executable, stream = None):
+    stream = (stream if stream is not None else sys.stdout)
+    stream.write(HELP.format(
+        executable = executable,
+        man_executable = executable.upper(),
+        exec_blank = (' ' * len(executable)),
+    ))
 
 
 def main(executable_name, args):
@@ -60,12 +72,7 @@ def main(executable_name, args):
         exit(0)
 
     if '--help' in args:
-        executable = os.path.split(executable_name)[1]
-        print(HELP.format(
-            man_executable = executable.upper(),
-            executable = executable,
-            exec_blank = (' ' * len(executable)),
-        ).strip())
+        print_help(EXECUTABLE)
         exit(0)
 
     viuact.driver.assemble_and_link(

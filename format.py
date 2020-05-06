@@ -32,16 +32,28 @@ OPTIONS
         Display this help screen.
 
 SEE ALSO
-    viuact-cc(1), viuact-opt(1)
+    viuact-cc(1)
+    viuact-opt(1)
 
 COPYRIGHT
-    Copyright (c) 2019 Marek Marecki
+    Copyright (c) 2019-2020 Marek Marecki
 
     Some parts of the code were developed at Polish-Japanse Academy Of
     Information Technology in Gdańsk, Poland.
 
     This is Free Software published under GNU GPL v3 license.
 '''
+
+EXECUTABLE = 'viuact-format'
+
+
+def print_help(executable, stream = None):
+    stream = (stream if stream is not None else sys.stdout)
+    stream.write(HELP.format(
+        executable = executable,
+        man_executable = executable.upper(),
+        exec_blank = (' ' * len(executable)),
+    ))
 
 def nicely_format_token_stream(tokens):
     nicely_formatted_source_code = str(tokens[0].token)
@@ -159,12 +171,7 @@ def main(executable_name, args):
         exit(0)
 
     if '--help' in args:
-        executable = os.path.split(executable_name)[1]
-        print(HELP.format(
-            man_executable = executable.upper(),
-            executable = executable,
-            exec_blank = (' ' * len(executable)),
-        ).strip())
+        print_help(EXECUTABLE)
         exit(0)
 
     source_file_name = args[-1]

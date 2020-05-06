@@ -48,9 +48,10 @@ EXAMPLES
 
 SEE ALSO
     viuact-opt(1)
+    viuact-format(1)
 
 COPYRIGHT
-    Copyright (c) 2018-2019 Marek Marecki
+    Copyright (c) 2018-2020 Marek Marecki
 
     Some parts of the code were developed at Polish-Japanse Academy Of
     Information Technology in Gdańsk, Poland.
@@ -58,6 +59,16 @@ COPYRIGHT
     This is Free Software published under GNU GPL v3 license.
 '''
 
+EXECUTABLE = 'viuact-cc'
+
+
+def print_help(executable, stream = None):
+    stream = (stream if stream is not None else sys.stdout)
+    stream.write(HELP.format(
+        executable = executable,
+        man_executable = executable.upper(),
+        exec_blank = (' ' * len(executable)),
+    ))
 
 def main(executable_name, args):
     if '--version' in args:
@@ -69,57 +80,7 @@ def main(executable_name, args):
         exit(0)
 
     if '--help' in args:
-        executable = os.path.split(executable_name)[1]
-        print(HELP.format(
-            man_executable = executable.upper(),
-            executable = executable,
-            exec_blank = (' ' * len(executable)),
-        ).strip())
-        exit(0)
-
-    if '--env' in args:
-        print('DEFAULT_OUTPUT_DIRECTORY: {}'.format(
-            viuact.env.DEFAULT_OUTPUT_DIRECTORY,
-        ))
-        print('STDLIB_HEADERS_DIRECTORY: {}'.format(
-            viuact.env.STDLIB_HEADERS_DIRECTORY,
-        ))
-        if viuact.env.VIUACT_LIBRARY_PATH:
-            prefix = 'VIUACT_LIBRARY_PATH:'
-            print('{} {}'.format(
-                prefix,
-                viuact.env.VIUACT_LIBRARY_PATH[0],
-            ))
-            for each in viuact.env.VIUACT_LIBRARY_PATH[1:]:
-                print('{} {}'.format(
-                    (len(prefix) * ' '),
-                    each,
-                ))
-        print('VIUA_ASM_PATH: {}'.format(
-            viuact.env.VIUA_ASM_PATH,
-        ))
-        if viuact.env.VIUACT_ASM_FLAGS:
-            prefix = 'VIUACT_ASM_FLAGS:'
-            print('{} {}'.format(
-                prefix,
-                viuact.env.VIUACT_ASM_FLAGS[0],
-            ))
-            for each in viuact.env.VIUACT_ASM_FLAGS[1:]:
-                print('{} {}'.format(
-                    (len(prefix) * ' '),
-                    each,
-                ))
-        if viuact.env.VIUACT_DUMP_INTERMEDIATE:
-            prefix = 'VIUACT_DUMP_INTERMEDIATE:'
-            print('{} {}'.format(
-                prefix,
-                viuact.env.VIUACT_DUMP_INTERMEDIATE[0],
-            ))
-            for each in viuact.env.VIUACT_DUMP_INTERMEDIATE[1:]:
-                print('{} {}'.format(
-                    (len(prefix) * ' '),
-                    each,
-                ))
+        print_help(EXECUTABLE)
         exit(0)
 
     viuact.driver.compile_file(**viuact.frontend.cc(executable_name, args))
