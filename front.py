@@ -340,6 +340,27 @@ def main(executable_name, args):
                     env = os.environ.get('PATH'),
                 ),
             }.items())), end = '')
+        elif switch_tool == 'if':
+            violent_exit = (item_or(args, 2) == '-e')
+            switch_name = (
+                item_or(args, 3)
+                if violent_exit
+                else item_or(args, 2))
+
+            if switch_name is None:
+                sys.stderr.write('error: no switch name\n')
+                exit(1)
+            if not Env_switch.exists(switch_name):
+                sys.stderr.write(
+                    'error: switch does not exist: {}\n'.format(switch_name))
+                exit(1)
+
+            is_active = Env_switch.is_active(switch_name)
+            if (not is_active) and violent_exit:
+                exit(1)
+
+            print('true' if is_active else 'false')
+            exit(0)
         else:
             sys.stderr.write(
                 'error: unknown switch subcommand: {}\n'.format(switch_tool))
