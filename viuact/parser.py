@@ -73,6 +73,11 @@ def group(tokens):
     i = 0
     while i < len(tokens):
         each = tokens[i]
+        if type(each) == token_types.Comment:
+            groups.append(each)
+            i += 1
+            continue
+
         g, n = group_impl(tokens[i:])
         groups.append(g[1:-1])
         i += n
