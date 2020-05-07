@@ -147,6 +147,29 @@ class Non_tag_field_cannot_bind(Parser_exception):
             self.main_token,
         )
 
+class Invalid_type_for_match(Parser_exception):
+    def __init__(self, where, a_type):
+        super().__init__(where)
+        self.a_type = a_type
+
+    def message(self):
+        return 'match expression cannot be done over {}: {}'.format(
+            self.a_type,
+            self.main_token,
+        )
+
+class Match_over_integers_must_have_a_catchall(Parser_exception):
+    MESSAGE = 'match over integers must have a catchall'
+
+    def __init__(self, where):
+        super().__init__(where)
+
+class Match_over_integers_cannot_bind(Parser_exception):
+    MESSAGE = 'match over integers cannot bind in with expression'
+
+    def __init__(self, where):
+        super().__init__(where)
+
 
 class Emitter_exception(Exception):
     pass
