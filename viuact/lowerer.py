@@ -107,6 +107,7 @@ class Visibility_information:
             'values': values,
             'real_name': (real_name or name),
             'from_module': from_module,
+            'is_tagged': any(each['tag'] for each in values.values()),
         }
 
     def insert_enum(self, name, value):

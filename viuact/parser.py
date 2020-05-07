@@ -80,6 +80,36 @@ def group(tokens):
     return groups
 
 
+def flatten_dot_path(base):
+    flattened = []
+
+    done = False
+    while not done:
+        if type(base) is list:
+            dot, base, leaf = base
+        elif type(base) in (token_types.Name, token_types.Module_name,):
+            leaf = base
+            done = True
+
+        flattened.append(leaf)
+
+    flattened.reverse()
+    return flattened
+
+def is_fn_dot_path(path):
+    path = flatten_dot_path(path)
+    return (
+        all([type(each) is token_types.Module_name for each in path[:-1]])
+        and
+        type(path[-1]) is token_types.Name
+    )
+
+def is_enum_ctor_dot_path(path):
+    return all([
+        type(each) is token_types.Module_name
+        for each
+        in flatten_dot_path(path)])
+
 def parse_expression_impl(expr):
     """Parsing turns "anonymous" groups of tokens into syntactic entities.
     Let bindings, name references, function calls, etc.
@@ -122,10 +152,18 @@ def parse_expression_impl(expr):
             args = [parse_expression(each) for each in expr[1:]],
         )
     elif leader_type is list and (type(leader[0]) in name_types or type(leader[0]) is token_types.Dot):
-        return group_types.Function_call(
-            name = parse_expression(expr[0]),
-            args = [parse_expression(each) for each in expr[1:]],
-        )
+        if is_fn_dot_path(expr[0]):
+            return group_types.Function_call(
+                name = parse_expression(expr[0]),
+                args = [parse_expression(each) for each in expr[1:]],
+            )
+        elif is_enum_ctor_dot_path(expr[0]):
+            return group_types.Enum_ctor_call(
+                name = parse_expression(expr[0]),
+                value = parse_expression(expr[1]),
+            )
+        else:
+            raise exceptions.Broken_syntax(expr[0])
     elif leader_type is token_types.Name:
         return group_types.Name_ref(
             name = expr,
@@ -348,10 +386,17 @@ def parse_enum_elements(source):
                 value = None,
             ))
         elif type(each) is list:
-            elements.append(group_types.Enum_element(
-                name = each[0],
-                value = each[1],
-            ))
+            if type(each[1]) == token_types.Name and each[1].token == '_':
+                elements.append(group_types.Enum_element(
+                    name = each[0],
+                    value = None,
+                    tag = True,
+                ))
+            else:
+                elements.append(group_types.Enum_element(
+                    name = each[0],
+                    value = each[1],
+                ))
     return elements
 
 def parse_enum(source):

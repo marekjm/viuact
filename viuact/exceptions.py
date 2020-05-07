@@ -59,6 +59,12 @@ class Unbalanced_parenthesis(Parser_exception):
     def message(self):
         return '{}: {}'.format(self.MESSAGE, self.main_token)
 
+class Broken_syntax(Parser_exception):
+    MESSAGE = 'broken syntax'
+
+    def __init__(self, got):
+        super().__init__(got)
+
 
 class Emitter_exception(Exception):
     pass

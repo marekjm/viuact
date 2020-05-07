@@ -173,6 +173,9 @@ class Verbatim:
         return self.text
 
 class Ctor:
+    TAG_ENUM_TAG_FIELD = repr('tag')
+    TAG_ENUM_VALUE_FIELD = repr('value')
+
     def __init__(self, of_type : str, slot : Slot, value : str):
         self.of_type = of_type
         self.slot = slot
@@ -332,6 +335,14 @@ def emit_expr(
             expr,
             state,
             slot,
+        )
+    elif leader_type is group_types.Enum_ctor_call:
+        return emit_enum_ctor_call(
+            body,
+            expr,
+            state,
+            slot,
+            meta,
         )
     elif leader_type is group_types.Field_assignment:
         return emit_field_assignment(
@@ -1221,7 +1232,7 @@ def emit_function_or_enum_ref(body : list, name_expr, state : State, slot : Slot
     if path in state.visible_fns.enums:
         body.append(Verbatim('integer {} {}'.format(
             slot.to_string(),
-            state.visible_fns.enums[path]['values'][member_name],
+            state.visible_fns.enums[path]['values'][member_name]['n'],
         )))
     else:
         body.append(Verbatim('function {} {}/{}'.format(
@@ -1449,6 +1460,51 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
             applied_args[1].to_string(),
         )))
         slot.is_pointer = False
+
+    return slot
+
+def emit_enum_ctor_call(body : list, call_expr, state : State, slot : Slot, meta):
+    name = call_expr.name
+    value = call_expr.value
+
+    if slot is None:
+        slot = state.get_slot(name = None, anonymous = True)
+
+    path, member_name = name.to_string().rsplit('::', 1)
+    enum_member = state.visible_fns.enums[path]['values'][member_name]
+    enum_member_id = enum_member['n']
+
+    key_slot = state.get_slot(name = None, anonymous = True)
+    value_slot = state.get_slot(name = None, anonymous = True)
+    expr_body = [
+        Ctor('struct', slot, '',),
+        Ctor('atom', key_slot, Ctor.TAG_ENUM_VALUE_FIELD,),
+    ]
+    value_slot = emit_expr(
+        body = expr_body,
+        expr = value,
+        state = state,
+        slot = value_slot,
+        must_emit = True,
+        meta = None,
+        toplevel = False,
+    )
+
+    expr_body.extend([
+        Verbatim('structinsert {} {} {}'.format(
+            slot.to_string(),
+            key_slot.to_string(),
+            value_slot.to_string(),
+        )),
+        Ctor('atom', key_slot, Ctor.TAG_ENUM_TAG_FIELD,),
+        Ctor('integer', value_slot, enum_member_id,),
+        Verbatim('structinsert {} {} {}'.format(
+            slot.to_string(),
+            key_slot.to_string(),
+            value_slot.to_string(),
+        )),
+    ])
+    body.extend(expr_body)
 
     return slot
 
@@ -1700,6 +1756,20 @@ def emit_match_expr(body : list, expr, state : State, slot : Slot = None, must_e
         toplevel = False,
     )
     expr_body.append(Verbatim('; matching expr of {} to withs'.format(expr_block_name)))
+
+    path, member_name = handlers[0].pattern.to_string().rsplit('::', 1)
+    is_tag_enum = state.visible_fns.enums[path]['is_tagged']
+    handlers_extract_value = any(each.name is not None for each in handlers)
+
+    if is_tag_enum and not handlers_extract_value:
+        tmp_slot = state.get_slot(name = None, anonymous = True)
+        expr_body.extend([
+            Ctor('atom', tmp_slot, Ctor.TAG_ENUM_TAG_FIELD),
+            Verbatim('structremove {slot} {slot} {tmp}'.format(
+                slot = slot.to_string(),
+                tmp = tmp_slot.to_string(),
+            )),
+        ])
 
     body.extend(expr_body)
 

@@ -68,13 +68,16 @@ class Module(Group_type):
 class Enum_element(Group_type):
     type_name = 'Enum_element'
 
-    def __init__(self, name, value):
+    def __init__(self, name, value, tag = False):
         self.name = name
         self.value = value
+        self.tag = tag
 
     def to_string(self):
         if self.value is None:
             return self.name.token
+        elif self.tag:
+            return '({} _)'.format(self.name.token)
         else:
             return '({} {})'.format(
                 self.name.token,
@@ -85,6 +88,7 @@ class Enum_element(Group_type):
         return {
             'name': self.name.to_data(),
             'value': (self.value.to_data() if self.value else None),
+            'tag': self.tag,
         }
 
     def elem_index(self, to_use_if_value_is_none):
@@ -94,7 +98,10 @@ class Enum_element(Group_type):
             return int(str(self.value.token))
 
     def elem_spec(self, to_use_if_value_is_none):
-        return (str(self.name.token), self.elem_index(to_use_if_value_is_none))
+        return (str(self.name.token), {
+            'n': self.elem_index(to_use_if_value_is_none),
+            'tag': self.tag,
+        })
 
 class Enum_definition(Group_type):
     type_name = 'Enum_definition'
@@ -170,6 +177,26 @@ class Let_binding(Group_type):
     def to_string(self):
         return '{} = {}'.format(
             str(self.name.token),
+            str(self.value),
+        )
+
+    def to_content(self):
+        return {
+            'name': self.name.to_data(),
+            'value': self.value.to_data(),
+        }
+
+
+class Enum_ctor_call(Group_type):
+    type_name = 'Enum_ctor_call'
+
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def to_string(self):
+        return '({} {})'.format(
+            self.name.to_string(),
             str(self.value),
         )
 
