@@ -211,10 +211,8 @@ def format_enum(tokens, indent):
 
     return formatted, i
 
-def format_token_stream(tokens):
+def format_token_stream_impl(tokens, indent):
     formatted_source_code = ''
-
-    indent = 0
 
     i = 0
     while i < len(tokens):
@@ -223,13 +221,28 @@ def format_token_stream(tokens):
             next = tokens[i + 1]
             if type(next) == token_types.Enum:
                 s, n = format_enum(tokens[i:], indent = indent)
-                formatted_source_code += s
+                formatted_source_code += s + '\n'
+                i += n
+                continue
+            elif type(next) == token_types.Module:
+                formatted_source_code += '{}(module {} (\n'.format(
+                    (INDENT_STRING * indent),
+                    tokens[i + 2].token
+                )
+                i += 4
+
+                s, n = format_token_stream_impl(tokens[i:], indent = indent + 1)
+                formatted_source_code += s.rstrip()
+                formatted_source_code += '\n{}))\n'.format(INDENT_STRING * indent)
                 i += n
                 continue
 
         i += 1
 
-    return formatted_source_code
+    return formatted_source_code, i
+
+def format_token_stream(tokens):
+    return format_token_stream_impl(tokens, 0)[0].strip()
 
 
 def main(executable_name, args):
