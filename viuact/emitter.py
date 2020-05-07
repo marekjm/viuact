@@ -202,6 +202,7 @@ class Ctor:
 class Move:
     MOVE = 'move'
     COPY = 'copy'
+    DELETE = 'delete'
 
     @staticmethod
     def make_move(source, dest):
@@ -217,6 +218,14 @@ class Move:
             Move.COPY,
             source,
             dest,
+        )
+
+    @staticmethod
+    def make_delete(source):
+        return Move(
+            Move.DELETE,
+            source,
+            None,
         )
 
     def __init__(self, of_type : str, source : Slot, dest : Slot):
