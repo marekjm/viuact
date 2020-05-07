@@ -161,6 +161,77 @@ def nicely_format_token_stream(tokens):
 
     return nicely_formatted_source_code.strip()
 
+
+INDENT_STRING = '  '
+
+class Unexpected_token(Exception):
+    def __init__(self, what):
+        self.what = what
+
+    def __str__(self):
+        line, character = self.what.token.location()
+        return 'unexpected token: {}:{} = {}'.format(
+            line + 1,
+            character + 1,
+            self.what,
+        )
+
+
+def format_enum(tokens, indent):
+    formatted = '{}(enum {} (\n'.format(
+        (INDENT_STRING * indent),
+        tokens[2].token,
+    )
+
+    i = 4
+
+    while i < len(tokens):
+        each = tokens[i]
+        if type(each) == token_types.Module_name:
+            formatted += '{}{}\n'.format(
+                INDENT_STRING * (indent + 1),
+                str(each.token),
+            )
+            i += 1
+        elif type(each) == token_types.Left_paren:
+            formatted += '{}({} {})\n'.format(
+                INDENT_STRING * (indent + 1),
+                tokens[i + 1].token,
+                tokens[i + 2].token,
+            )
+            i += 4
+        elif type(each) == token_types.Right_paren:
+            formatted += '{}))\n'.format(
+                (INDENT_STRING * indent),
+            )
+            i += 1
+            break
+        else:
+            raise Unexpected_token(each)
+
+    return formatted, i
+
+def format_token_stream(tokens):
+    formatted_source_code = ''
+
+    indent = 0
+
+    i = 0
+    while i < len(tokens):
+        each = tokens[i]
+        if type(each) == token_types.Left_paren:
+            next = tokens[i + 1]
+            if type(next) == token_types.Enum:
+                s, n = format_enum(tokens[i:], indent = indent)
+                formatted_source_code += s
+                i += n
+                continue
+
+        i += 1
+
+    return formatted_source_code
+
+
 def main(executable_name, args):
     if '--version' in args:
         print('{} version {} ({})'.format(
@@ -181,7 +252,7 @@ def main(executable_name, args):
 
     tokens = lexer.lex(source_code)
 
-    nice_source_code = nicely_format_token_stream(tokens)
+    nice_source_code = format_token_stream(tokens)
     if '-i' in args:
         with open(source_file_name, 'w') as ofstream:
             ofstream.write(nice_source_code + '\n')
