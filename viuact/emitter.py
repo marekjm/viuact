@@ -1755,6 +1755,7 @@ def emit_match_expr(body : list, expr, state : State, slot : Slot = None, must_e
         meta = meta,
         toplevel = False,
     )
+    match_slot = slot
     expr_body.append(Verbatim('; matching expr of {} to withs'.format(expr_block_name)))
 
     path, member_name = handlers[0].pattern.to_string().rsplit('::', 1)
@@ -1817,7 +1818,7 @@ def emit_match_expr(body : list, expr, state : State, slot : Slot = None, must_e
         with_expr_body.extend([
             Verbatim('eq {we} {we} {me}'.format(
                 we = with_expr_slot.to_string(),
-                me = slot.to_string(),
+                me = match_slot.to_string(),
             )),
             Verbatim('if {we} {with_expr_marker} +1'.format(
                 we = with_expr_slot.to_string(),
