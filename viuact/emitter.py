@@ -1837,7 +1837,6 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
                     with_expr_markers[i],
                 )),
             ]
-            print('with:', with_expr_body)
             body.extend(with_expr_body)
             break
 
@@ -1857,7 +1856,6 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
                 with_expr_marker = with_expr_markers[i],
             )),
         ])
-        print('with:', with_expr_body)
         body.extend(with_expr_body)
 
     body.append(Verbatim('; handling withs of {}'.format(expr_block_name)))
@@ -1903,7 +1901,6 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
                 )),
             )
 
-        print('with:', with_expr_body)
         body.extend(with_expr_body)
 
     body.append(Verbatim('; end of {}'.format(expr_block_name)))
@@ -1963,7 +1960,6 @@ def emit_match_integer_expr(body : list, expr, state : State, slot : Slot = None
                     with_expr_markers[i],
                 )),
             ]
-            print('with:', with_expr_body)
             body.extend(with_expr_body)
             break
 
@@ -2010,7 +2006,6 @@ def emit_match_integer_expr(body : list, expr, state : State, slot : Slot = None
                 )),
             )
 
-        print('with:', with_expr_body)
         body.extend(with_expr_body)
 
     body.append(Verbatim('; end of {}'.format(expr_block_name)))
