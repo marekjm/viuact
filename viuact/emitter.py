@@ -1768,10 +1768,10 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
     return slot
 
 
-def emit_match_expr(body : list, expr, state : State, slot : Slot = None, must_emit = False, meta = None):
-    expression = expr.expr
+def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
+        must_emit = False, meta = None):
     handlers = expr.handling_blocks
-
+    expression = expr.expr
     expr_block_name = 'match_{}'.format(hashlib.sha1(
         repr(expression).encode('utf-8')
         + repr(expr).encode('utf-8')
@@ -1790,8 +1790,8 @@ def emit_match_expr(body : list, expr, state : State, slot : Slot = None, must_e
     match_slot = slot
     expr_body.append(Verbatim('; matching expr of {} to withs'.format(expr_block_name)))
 
-    path, member_name = handlers[0].pattern.to_string().rsplit('::', 1)
-    is_tag_enum = state.visible_fns.enums[path]['is_tag_enum']
+    enum_name = handlers[0].pattern.to_string().rsplit('::', 1)[0]
+    is_tag_enum = state.visible_fns.enums[enum_name]['is_tag_enum']
     handlers_extract_value = any(each.name is not None for each in handlers)
 
     if is_tag_enum:
@@ -1880,8 +1880,7 @@ def emit_match_expr(body : list, expr, state : State, slot : Slot = None, must_e
                 Move.make_copy(value_slot.as_pointer(), value_slot),
                 Verbatim('; extracted value'),
             ])
-            slot = value_slot
-            state.name_slot(slot, extracted_name)
+            state.name_slot(value_slot, extracted_name)
         with_expr_slot = emit_expr(
             body = with_expr_body,
             expr = each.expr,
@@ -1911,6 +1910,56 @@ def emit_match_expr(body : list, expr, state : State, slot : Slot = None, must_e
     body.append(Verbatim('.mark: {}'.format(match_done_marker)))
 
     return with_expr_slot
+
+def emit_match_expr(body : list, expr, state : State, slot : Slot = None, must_emit = False, meta = None):
+    # Check if the match expression is consistent with regards to values it
+    # checks. Match expressions in Viuact only work on values of the same type;
+    # only on integers, strings, or members of the same enum. If they are mixed
+    # and matched we should throw an error.
+    handlers = expr.handling_blocks
+    if not handlers:
+        raise exceptions.Match_without_with_expressions(expr)
+
+    MATCH_KIND_ENUM = 0
+    MATCH_KIND_INTEGER = 1
+    MATCH_KIND_STRING = 1
+
+    match_kind = None
+    if type(handlers[0].pattern) == group_types.Id:
+        match_kind = MATCH_KIND_ENUM
+
+        path, field = handlers[0].pattern.to_string().rsplit('::', 1)
+        matched_enum = state.visible_fns.enums[path]
+        checked_fields = []
+        has_catchall = False
+        for each in handlers:
+            pat = each.pattern
+            if type(pat) == group_types.Name_ref and pat.name.token == '_':
+                has_catchall = True
+
+                if each.name is not None:
+                    raise exceptions.Catchall_with_cannot_bind(expr)
+
+                continue
+
+            each_path, each_field = pat.to_string().rsplit('::', 1)
+            if each_path != path:
+                raise exceptions.Mismatched_enums(expr, path, each_path)
+            if each_field not in matched_enum['values']:
+                raise exceptions.Enum_field_does_not_exist(
+                    expr, path, each_field)
+            if each.name and not matched_enum['values'][each_field]['tag']:
+                raise exceptions.Non_tag_field_cannot_bind(
+                    expr, path, each_field)
+            checked_fields.append(each_field)
+
+        checked_fields = set(checked_fields)
+        for each in sorted(matched_enum['values'].keys()):
+            if each not in checked_fields and not has_catchall:
+                raise exceptions.Enum_field_not_checked_for(expr, path, each)
+
+    if match_kind == MATCH_KIND_ENUM:
+        return emit_match_enum_expr(body, expr, state, slot, must_emit, meta)
 
 def resolve_field_access(expr):
     base_expr, fields = None, []

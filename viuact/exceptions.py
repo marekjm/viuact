@@ -83,6 +83,70 @@ class Unknown_enum(Parser_exception):
         fmt = '{} is not a known enum: {}'
         return fmt.format(self.enum_name, self.main_token)
 
+class Match_without_with_expressions(Parser_exception):
+    MESSAGE = 'match expression without any with expression'
+
+    def __init__(self, where):
+        super().__init__(where)
+
+class Mismatched_enums(Parser_exception):
+    def __init__(self, where, a, b):
+        super().__init__(where)
+        self.a = a
+        self.b = b
+
+    def message(self):
+        return 'match over enum {} includes value of enum {}: {}'.format(
+            self.a,
+            self.b,
+            self.main_token,
+        )
+
+class Enum_field_does_not_exist(Parser_exception):
+    def __init__(self, where, enum, field):
+        super().__init__(where)
+        self.enum = enum
+        self.field = field
+
+    def message(self):
+        return 'enum {} has no field {}: {}'.format(
+            self.enum,
+            self.field,
+            self.main_token,
+        )
+
+class Enum_field_not_checked_for(Parser_exception):
+    def __init__(self, where, enum, field):
+        super().__init__(where)
+        self.enum = enum
+        self.field = field
+
+    def message(self):
+        return 'field {} of enum {} is not checked for: {}'.format(
+            self.field,
+            self.enum,
+            self.main_token,
+        )
+
+class Catchall_with_cannot_bind(Parser_exception):
+    MESSAGE = 'catch-all with cannot bind'
+
+    def __init__(self, where):
+        super().__init__(where)
+
+class Non_tag_field_cannot_bind(Parser_exception):
+    def __init__(self, where, enum, field):
+        super().__init__(where)
+        self.enum = enum
+        self.field = field
+
+    def message(self):
+        return 'non-tag field {} of enum {} cannot bind: {}'.format(
+            self.field,
+            self.enum,
+            self.main_token,
+        )
+
 
 class Emitter_exception(Exception):
     pass
