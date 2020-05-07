@@ -222,6 +222,28 @@ def parse_expression_impl(expr):
                 in expr[2]
             ],
         )
+    elif leader_type is token_types.Match:
+        return group_types.Match_expression(
+            expr = parse_expression(expr[1]),
+            handling_blocks = [
+                (
+                    group_types.With_expression(
+                        pattern = parse_expression(each[1]),
+                        name = None,
+                        expr = parse_expression(each[2]),
+                    )
+                    if len(each) == 3
+                    else
+                    group_types.With_expression(
+                        pattern = parse_expression(each[1]),
+                        name = each[2],
+                        expr = parse_expression(each[3]),
+                    )
+                )
+                for each
+                in expr[2]
+            ],
+        )
     elif leader_type is token_types.Exception_tag_name:
         return group_types.Exception_tag(tag = expr[0])
     elif leader_type is token_types.Module_name:

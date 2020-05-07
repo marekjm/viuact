@@ -367,6 +367,54 @@ class Exception_tag(Group_type):
         }
 
 
+class Match_expression(Group_type):
+    type_name = 'Match_expression'
+
+    def __init__(self, expr, handling_blocks):
+        self.expr = expr
+        self.handling_blocks = handling_blocks
+
+    def to_string(self):
+        return 'match {} with ...'.format(
+            self.expr.to_string(),
+        )
+
+    def to_content(self):
+        return {
+            'expr': self.expr.to_data(),
+            'handling_blocks': list(map(lambda each: each.to_data(), self.handling_blocks)),
+        }
+
+
+class With_expression(Group_type):
+    type_name = 'With_expression'
+
+    def __init__(self, pattern, name, expr):
+        self.pattern = pattern
+        self.name = name
+        self.expr = expr
+
+    def to_string(self):
+        if self.name is None:
+            return '{} {}'.format(
+                self.pattern.to_string(),
+                (self.expr.to_string() if isinstance(self.expr, Group_type) else '...'),
+            )
+        else:
+            return '{} {} {}'.format(
+                self.pattern.to_string(),
+                str(self.name.token),
+                (self.expr.to_string() if isinstance(self.expr, Group_type) else '...'),
+            )
+
+    def to_content(self):
+        return {
+            'pattern': self.tag.to_data(),
+            'name': (None if self.name is None else self.name.to_data()),
+            'expr': self.expr.to_data(),
+        }
+
+
 class Name_ref(Group_type):
     type_name = 'Name_ref'
 

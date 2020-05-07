@@ -558,6 +558,15 @@ def emit_expr(
             must_emit,
             meta,
         )
+    elif leader_type is group_types.Match_expression:
+        return emit_match_expr(
+            body,
+            expr,
+            state,
+            slot,
+            must_emit,
+            meta,
+        )
     elif leader_type is list:
         raise exceptions.Emitter_exception(
             'expression could not be emitted, try removing parentheses surrounding it', expr)
@@ -1668,6 +1677,118 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
 
     return slot
 
+
+def emit_match_expr(body : list, expr, state : State, slot : Slot = None, must_emit = False, meta = None):
+    expression = expr.expr
+    handlers = expr.handling_blocks
+
+    expr_block_name = 'match_{}'.format(hashlib.sha1(
+        repr(expression).encode('utf-8')
+        + repr(expr).encode('utf-8')
+        + repr(id(expression)).encode('utf-8')
+    ).hexdigest())
+    expr_body = [
+        Verbatim('.mark: {}'.format(expr_block_name)),
+    ]
+    slot = emit_expr(
+        body = expr_body,
+        expr = expression,
+        state = state,
+        slot = slot,
+        must_emit = must_emit,
+        meta = meta,
+        toplevel = False,
+    )
+    expr_body.append(Verbatim('; matching expr of {} to withs'.format(expr_block_name)))
+
+    body.extend(expr_body)
+
+    with_expr_markers = []
+    for i, each in enumerate(handlers):
+        s = (repr(each.pattern) + repr(each.name) + repr(each.expr))
+        with_block_name = '{}_with_{}'.format(
+            expr_block_name,
+            hashlib.sha1(
+                s.encode('utf-8')
+                + s.encode('utf-8')
+                + repr(id(each.pattern) + id(each.name) + id(each.expr)).encode('utf-8')
+            ).hexdigest())
+        with_expr_markers.append(with_block_name)
+
+    match_done_marker = '{}_done'.format(expr_block_name)
+
+    with_expr_slot = state.get_slot(name = None, anonymous = True)
+
+    for i, each in enumerate(handlers):
+        with_expr_body = []
+
+        if type(each.pattern) == group_types.Name_ref and each.pattern.name.token == '_':
+            with_expr_body = [
+                Verbatim('; jump to the catch-all for {}'.format(
+                    expr_block_name,
+                )),
+                Verbatim('jump {}'.format(
+                    with_expr_markers[i],
+                )),
+            ]
+            print('with:', with_expr_body)
+            body.extend(with_expr_body)
+            break
+
+        with_expr_slot = emit_expr(
+            body = with_expr_body,
+            expr = each.pattern,
+            state = state,
+            slot = with_expr_slot,
+            must_emit = True,
+            meta = meta,
+            toplevel = False,
+        )
+        with_expr_body.extend([
+            Verbatim('eq {we} {we} {me}'.format(
+                we = with_expr_slot.to_string(),
+                me = slot.to_string(),
+            )),
+            Verbatim('if {we} {with_expr_marker} +1'.format(
+                we = with_expr_slot.to_string(),
+                with_expr_marker = with_expr_markers[i],
+            )),
+        ])
+        print('with:', with_expr_body)
+        body.extend(with_expr_body)
+
+    body.append(Verbatim('; handling withs of {}'.format(expr_block_name)))
+    for i, each in enumerate(handlers):
+        with_expr_body = [
+            Verbatim('.mark: {}'.format(with_expr_markers[i])),
+        ]
+
+        with_expr_slot = emit_expr(
+            body = with_expr_body,
+            expr = each.expr,
+            state = state,
+            slot = with_expr_slot,
+            must_emit = True,
+            meta = meta,
+            toplevel = False,
+        )
+
+        if i < (len(handlers) - 1):
+            with_expr_body.append(Verbatim('jump {}'.format(match_done_marker)))
+        else:
+            body.append(
+                Verbatim('; this is the catch-all for {}'.format(
+                    expr_block_name,
+                )),
+            )
+
+        print('with:', with_expr_body)
+        body.extend(with_expr_body)
+
+    body.append(Verbatim('; end of {}'.format(expr_block_name)))
+    body.append(Verbatim('.mark: {}'.format(match_done_marker)))
+
+    return with_expr_slot
 
 def resolve_field_access(expr):
     base_expr, fields = None, []
