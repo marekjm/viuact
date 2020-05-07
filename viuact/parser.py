@@ -48,7 +48,10 @@ def group_impl(tokens, break_on = token_types.Right_paren):
             continue
 
         if isinstance(each, token_types.Left_curly):
-            g, n = group_impl(tokens[i:], break_on = token_types.Right_curly)
+            g, n = group_impl(
+                tokens[i:],
+                break_on = token_types.Right_curly,
+            )
             grouped.append([ token_types.Compound_expression_marker(tokens[i]) ] + [ g[1:-1] ])
             i += n
             continue
@@ -248,9 +251,11 @@ def parse_expression(expr):
 
 def parse_function(source):
     if not isinstance(source[1], token_types.Name):
-        raise exceptions.make_fallout(exceptions.Unexpected_token, 'expected name', source[1])
+        raise exceptions.make_fallout(source[1], 'expected name',
+                exceptions.Unexpected_token('name', source[1]))
     if len(source) != 4:
-        raise exceptions.make_fallout(exceptions.Unexpected_token, 'invalid function definition', source[1])
+        raise exceptions.make_fallout(source[1], 'invalid function definition',
+                exceptions.Unexpected_token(source[1], source[1]))
 
     fn = group_types.Function(name = source[1])
 

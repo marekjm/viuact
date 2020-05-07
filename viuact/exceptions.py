@@ -34,6 +34,7 @@ class Unexpected_token(Parser_exception):
 
     def __init__(self, expected : str, got):
         super().__init__(got)
+        self.main_token = got
         self.expected = expected
 
     def message(self):
@@ -48,6 +49,15 @@ class Unexpected_group(Parser_exception):
 
     def message(self):
         return '{}: {}'.format(self.MESSAGE, self.expected)
+
+class Unbalanced_parenthesis(Parser_exception):
+    MESSAGE = 'unbalanced parenthesis'
+
+    def __init__(self, where):
+        super().__init__(where)
+
+    def message(self):
+        return '{}: {}'.format(self.MESSAGE, self.main_token)
 
 
 class Emitter_exception(Exception):
@@ -93,9 +103,9 @@ class Invalid_number_of_labeled_arguments(Invalid_number_of_arguments):
         return '{}: expected {}, got {}'.format(self.MESSAGE, self.expected, self.got)
 
 
-def make_fallout(e):
+def make_fallout(main_token, message, e):
     return Fallout(
-        token = e.main_token,
+        token = main_token,
         message = message,
         cause = e,
     )

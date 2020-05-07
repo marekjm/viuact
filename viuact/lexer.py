@@ -112,7 +112,6 @@ def lex(source):
         token_types.Try,            # Exception handling
         token_types.Catch,
         token_types.Throw,
-        token_types.In,
 
         token_types.Labeled_parameter_name,  # Names and ids
         token_types.Template_parameter_name,
