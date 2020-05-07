@@ -160,7 +160,7 @@ def parse_expression_impl(expr):
         elif is_enum_ctor_dot_path(expr[0]):
             return group_types.Enum_ctor_call(
                 name = parse_expression(expr[0]),
-                value = parse_expression(expr[1]),
+                value = (parse_expression(expr[1]) if len(expr) > 1 else None),
             )
         else:
             raise exceptions.Broken_syntax(expr[0])
@@ -261,26 +261,29 @@ def parse_expression_impl(expr):
             ],
         )
     elif leader_type is token_types.Match:
+        handling_exprs = []
+        for each in expr[2]:
+            handler = None
+            if len(each) == 3:
+                handler = group_types.With_expression(
+                    pattern = parse_expression(each[1]),
+                    name = None,
+                    expr = parse_expression(each[2]),
+                )
+            elif len(each) == 4:
+                if type(each[2]) is not token_types.Name:
+                    raise exceptions.Unexpected_token(
+                        'a name must follow an enum tag in an with expression',
+                        each[2])
+                handler = group_types.With_expression(
+                    pattern = parse_expression(each[1]),
+                    name = each[2],
+                    expr = parse_expression(each[3]),
+                )
+            handling_exprs.append(handler)
         return group_types.Match_expression(
             expr = parse_expression(expr[1]),
-            handling_blocks = [
-                (
-                    group_types.With_expression(
-                        pattern = parse_expression(each[1]),
-                        name = None,
-                        expr = parse_expression(each[2]),
-                    )
-                    if len(each) == 3
-                    else
-                    group_types.With_expression(
-                        pattern = parse_expression(each[1]),
-                        name = each[2],
-                        expr = parse_expression(each[3]),
-                    )
-                )
-                for each
-                in expr[2]
-            ],
+            handling_blocks = handling_exprs,
         )
     elif leader_type is token_types.Exception_tag_name:
         return group_types.Exception_tag(tag = expr[0])

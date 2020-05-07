@@ -65,6 +65,24 @@ class Broken_syntax(Parser_exception):
     def __init__(self, got):
         super().__init__(got)
 
+class Tag_enum_without_ctor_call(Parser_exception):
+    def __init__(self, where, enum):
+        super().__init__(where)
+        self.enum_name = enum
+
+    def message(self):
+        fmt = '{} is a tag enum, use ctor call to construct its values: {}'
+        return fmt.format(self.enum_name, self.main_token)
+
+class Unknown_enum(Parser_exception):
+    def __init__(self, where, enum):
+        super().__init__(where)
+        self.enum_name = enum
+
+    def message(self):
+        fmt = '{} is not a known enum: {}'
+        return fmt.format(self.enum_name, self.main_token)
+
 
 class Emitter_exception(Exception):
     pass
