@@ -188,6 +188,14 @@ def main(executable_name, args):
                     (len(prefix) * ' '),
                     each,
                 ))
+        print('VIUA_LIBRARY_PATH: {}'.format(
+            '\n'.join(map(lambda each: (
+                '{}{}'.format(
+                    (' ' * (len('VIUA_LIBRARY_PATH') + 2)),
+                    each,
+                )),
+                os.environ.get('VIUA_LIBRARY_PATH').split(':'))).strip(),
+        ))
         print('VIUA_ASM_PATH: {}'.format(
             viuact.env.VIUA_ASM_PATH,
         ))
@@ -335,9 +343,23 @@ def main(executable_name, args):
                     sw = switch_path,
                     env = os.environ.get('PATH')
                 ),
-                'VIUA_LIBRARY_PATH': '{sw}/lib/viua:{sw}/lib/viuact:{env}'.format(
+                'VIUA_LIBRARY_PATH': '{sw}/lib/viua:{sw}/lib/viuact{env}'.format(
                     sw = switch_path,
-                    env = os.environ.get('PATH'),
+                    env = (
+                        ':{}'.format(os.environ.get('VIUA_LIBRARY_PATH'))
+                        if
+                        os.environ.get('VIUA_LIBRARY_PATH')
+                        else
+                        ''),
+                ),
+                'VIUACT_LIBRARY_PATH': '{sw}/lib/viuact{env}'.format(
+                    sw = switch_path,
+                    env = (
+                        ':{}'.format(os.environ.get('VIUACT_LIBRARY_PATH'))
+                        if
+                        os.environ.get('VIUACT_LIBRARY_PATH')
+                        else
+                        ''),
                 ),
             }.items())), end = '')
         elif switch_tool == 'if':
