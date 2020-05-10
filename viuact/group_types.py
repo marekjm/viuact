@@ -634,3 +634,23 @@ class Pointer_dereference(Group_type):
         return {
             'value': self.value.to_data(),
         }
+
+
+class Throw_expression(Group_type):
+    type_name = 'Throw_expression'
+
+    def __init__(self, tag, value):
+        self.tag = tag
+        self.value = value
+
+    def to_string(self):
+        return '(throw {} {}'.format(
+            str(self.tag.token),
+            ('_' if self.value is None else str(self.value)),
+        )
+
+    def to_content(self):
+        return {
+            'name': self.tag.to_data(),
+            'value': self.value.to_data(),
+        }

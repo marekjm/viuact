@@ -618,6 +618,13 @@ def emit_expr(
         )
         deref_slot.is_pointer = True
         return deref_slot
+    elif leader_type is group_types.Throw_expression:
+        emit_throw_expr(
+            body = body,
+            expr = expr,
+            state = state,
+        )
+        return None
     else:
         raise exceptions.Emitter_exception('expression could not be emitted', expr)
 
@@ -639,6 +646,45 @@ def emit_let(body : list, let_expr, state : State, slot : Slot):
         toplevel = False,
     )
     return slot
+
+
+def emit_throw_expr(body : list, expr, state : State):
+    tag_slot = state.get_slot(name = None, anonymous = True)
+    exception_slot = state.get_slot(name = None, anonymous = True)
+
+    expr_body = [
+        Ctor('atom', tag_slot, repr(str(expr.tag.token))),
+    ]
+    if expr.value is not None:
+        value_slot = emit_expr(
+            body = expr_body,
+            expr = expr.value,
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        expr_body.append(
+            Verbatim('exception {} {} {}'.format(
+                exception_slot.to_string(),
+                tag_slot.to_string(),
+                value_slot.to_string(),
+            ))
+        )
+    else:
+        expr_body.append(
+            Verbatim('exception {} {} void'.format(
+                exception_slot.to_string(),
+                tag_slot.to_string(),
+            ))
+        )
+
+    expr_body.append(Verbatim('throw {}'.format(exception_slot.to_string())))
+
+    body.extend(expr_body)
+
+    return None
 
 
 def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
@@ -1741,8 +1787,12 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
                 exception_variable_slot.to_string(),
             )))
         else:
+            name_slot = state.get_slot(exception_variable_name)
             handler_body.append(Verbatim('draw {}'.format(
-                state.get_slot(exception_variable_name).to_string(),
+                name_slot.to_string(),
+            )))
+            handler_body.append(Verbatim('exception_value {ex} {ex}'.format(
+                ex = name_slot.to_string(),
             )))
 
         emit_expr(

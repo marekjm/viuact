@@ -292,6 +292,15 @@ def parse_expression_impl(expr):
         )
     elif leader_type is token_types.Exception_tag_name:
         return group_types.Exception_tag(tag = expr[0])
+    elif leader_type is token_types.Throw:
+        tag = expr[1]
+        value = (expr[2] if len(expr) > 2 else None)
+        if type(value) is token_types.Name and value.token == '_':
+            value = None
+        return group_types.Throw_expression(
+            tag = parse_expression_impl(tag),
+            value = (parse_expression_impl(value) if value else None),
+        )
     elif leader_type is token_types.Module_name:
         return expr
     else:
