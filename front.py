@@ -381,7 +381,8 @@ def main(executable_name, args):
             if (not is_active) and violent_exit:
                 exit(1)
 
-            print('true' if is_active else 'false')
+            if not violent_exit:
+                print('true' if is_active else 'false')
             exit(0)
         else:
             sys.stderr.write(
