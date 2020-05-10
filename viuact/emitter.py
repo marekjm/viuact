@@ -1869,7 +1869,10 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
                 + s.encode('utf-8')
                 + repr(id(each.pattern) + id(each.name) + id(each.expr)).encode('utf-8')
             ).hexdigest())
-        with_expr_markers.append(with_block_name)
+        with_expr_markers.append((
+            (with_block_name + '_true'),
+            (with_block_name + '_false'),
+        ))
 
     match_done_marker = '{}_done'.format(expr_block_name)
 
@@ -1884,7 +1887,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
                     expr_block_name,
                 )),
                 Verbatim('jump {}'.format(
-                    with_expr_markers[i],
+                    with_expr_markers[i][0],
                 )),
             ]
             body.extend(with_expr_body)
@@ -1901,9 +1904,13 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
                 we = with_expr_slot.to_string(),
                 me = match_slot.to_string(),
             )),
-            Verbatim('if {we} {with_expr_marker} +1'.format(
+            Verbatim('if {we} {with_expr_true} {with_expr_false}'.format(
                 we = with_expr_slot.to_string(),
-                with_expr_marker = with_expr_markers[i],
+                with_expr_true = with_expr_markers[i][0],
+                with_expr_false = with_expr_markers[i][1],
+            )),
+            Verbatim('.mark: {}'.format(
+                with_expr_markers[i][1],
             )),
         ])
         body.extend(with_expr_body)
@@ -1911,14 +1918,17 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
     body.append(Verbatim('; handling withs of {}'.format(expr_block_name)))
     for i, each in enumerate(handlers):
         with_expr_body = [
-            Verbatim('.mark: {}'.format(with_expr_markers[i])),
+            Verbatim('.mark: {}'.format(with_expr_markers[i][0])),
         ]
 
         extracted_name = (str(each.name.token) if each.name is not None else None)
         if extracted_name:
-            value_slot = state.get_slot(name = None, anonymous = True)
+            # value_slot = state.get_slot(name = extracted_name, anonymous = True)
+            value_slot = state.get_slot(name = extracted_name)
             with_expr_body.extend([
-                Verbatim('; extracting value...'),
+                Verbatim(
+                    '; extracting value named {}...'.format(
+                        repr(extracted_name))),
                 Ctor('atom', tmp_slot, Ctor.TAG_ENUM_VALUE_FIELD),
                 Verbatim('structat {value_slot} {slot} {tmp}'.format(
                     value_slot = value_slot.to_string(),
@@ -1928,7 +1938,6 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
                 Move.make_copy(value_slot.as_pointer(), value_slot),
                 Verbatim('; extracted value'),
             ])
-            state.name_slot(value_slot, extracted_name)
         with_expr_slot = emit_expr(
             body = with_expr_body,
             expr = each.expr,
@@ -1992,7 +2001,10 @@ def emit_match_integer_expr(body : list, expr, state : State, slot : Slot = None
                 + s.encode('utf-8')
                 + repr(id(each.pattern) + id(each.name) + id(each.expr)).encode('utf-8')
             ).hexdigest())
-        with_expr_markers.append(with_block_name)
+        with_expr_markers.append((
+            (with_block_name + '_true'),
+            (with_block_name + '_false'),
+        ))
 
     match_done_marker = '{}_done'.format(expr_block_name)
 
@@ -2024,9 +2036,13 @@ def emit_match_integer_expr(body : list, expr, state : State, slot : Slot = None
                 we = with_expr_slot.to_string(),
                 me = match_slot.to_string(),
             )),
-            Verbatim('if {we} {with_expr_marker} +1'.format(
+            Verbatim('if {we} {with_expr_true} {with_expr_false}'.format(
                 we = with_expr_slot.to_string(),
-                with_expr_marker = with_expr_markers[i],
+                with_expr_true = with_expr_markers[i][0],
+                with_expr_false = with_expr_markers[i][1],
+            )),
+            Verbatim('.mark: {}'.format(
+                with_expr_markers[i][1],
             )),
         ])
         body.extend(with_expr_body)
@@ -2034,7 +2050,7 @@ def emit_match_integer_expr(body : list, expr, state : State, slot : Slot = None
     body.append(Verbatim('; handling withs of {}'.format(expr_block_name)))
     for i, each in enumerate(handlers):
         with_expr_body = [
-            Verbatim('.mark: {}'.format(with_expr_markers[i])),
+            Verbatim('.mark: {}'.format(with_expr_markers[i][0])),
         ]
         with_expr_slot = emit_expr(
             body = with_expr_body,
