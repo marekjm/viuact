@@ -273,7 +273,8 @@ def main(executable_name, args):
 
             SWITCH_DIRS = (
                 'bin',
-                'lib/viuact',
+                'lib/viua/std',
+                'lib/viuact/Std',
             )
             for each in SWITCH_DIRS:
                 os.makedirs(os.path.join(switch_path, each))
