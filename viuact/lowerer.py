@@ -452,6 +452,32 @@ def output_function_body(fn, in_module, meta):
             len(fn.arguments),
         )),
     ]
+
+    if True:
+        actual_pressure = state.next_slot[emitter.LOCAL_REGISTER_SET]
+        static_pressure = state.register_pressure[emitter.LOCAL_REGISTER_SET]
+        if actual_pressure < static_pressure:
+            fmt = '; local register pressure = {} (actually used {})'
+            body.append(emitter.Verbatim(fmt.format(
+                static_pressure,
+                actual_pressure,
+            )))
+
+            fmt = '; actual pressure is {:.4f}% of static pressure'
+            body.append(emitter.Verbatim(fmt.format(
+                ((actual_pressure / static_pressure) * 100),
+            )))
+
+            body.append(emitter.Verbatim('; saved {} local register(s)'.format(
+                (static_pressure - actual_pressure),
+            )))
+        else:
+            fmt = '; local register pressure = {} (actually used {})'
+            body.append(emitter.Verbatim(fmt.format(
+                static_pressure,
+                actual_pressure,
+            )))
+
     body.append(emitter.Verbatim('allocate_registers %{} local'.format(
         state.next_slot[emitter.LOCAL_REGISTER_SET],
     )))

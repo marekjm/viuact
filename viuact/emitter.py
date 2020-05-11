@@ -102,10 +102,18 @@ class Slot:
 
 class State:
     def __init__(self, upper, visible_fns, function_name):
+        self.register_pressure = {
+            'local': 0,
+            'static': 0,
+        }
         self.next_slot = {
             'local': 1,
             'static': 0,
             'parameters': 0,
+        }
+        self.free_slots = {
+            'local': [],
+            'static': [],
         }
         self.name_to_slot = {}
         self.last_used_slot = None
@@ -125,22 +133,43 @@ class State:
         if anonymous:
             slot = Slot(
                 None,
-                self.next_slot[register_set],
+                self.allocate_slot(register_set),
                 register_set,
             )
-            self.next_slot[register_set] += 1
             self.last_used_slot = slot
             return slot
 
         if name not in self.name_to_slot:
             self.name_to_slot[name] = Slot(
                 name,
-                self.next_slot[register_set],
+                self.allocate_slot(register_set),
                 register_set,
             )
-            self.next_slot[register_set] += 1
         self.last_used_slot = self.name_to_slot[name]
         return self.last_used_slot
+
+    def allocate_slot(self, register_set):
+        self.register_pressure[register_set] += 1
+
+        if self.free_slots[register_set]:
+            return self.free_slots[register_set].pop(0)
+
+        slot_index = self.next_slot[register_set]
+        self.next_slot[register_set] += 1
+        return slot_index
+
+    def deallocate_slot(self, name = None, slot = None):
+        if (name is None) and (slot is None):
+            raise Exception('slot and name cannot both be none')
+        if (name is not None) and (slot is not None):
+            raise Exception('slot and name cannot both not be none')
+
+        if name is not None:
+            slot = self.name_to_slot.get(name)
+            if slot is None:
+                raise Exception('unknown name: {}'.format(name))
+
+        self.free_slots[slot.register_set].append(slot.index)
 
     def name_slot(self, slot, name):
         self.name_to_slot[name] = slot
@@ -569,6 +598,7 @@ def emit_expr(
                     slot.to_string(),
                     init_slot.to_string(),
                 )))
+            state.deallocate_slot(slot = init_slot)
 
         return slot
     elif leader_type is group_types.Compound_expression:
@@ -673,6 +703,7 @@ def emit_throw_expr(body : list, expr, state : State):
                 value_slot.to_string(),
             ))
         )
+        state.deallocate_slot(slot = value_slot)
     else:
         expr_body.append(
             Verbatim('exception {} {} void'.format(
@@ -682,6 +713,9 @@ def emit_throw_expr(body : list, expr, state : State):
         )
 
     expr_body.append(Verbatim('throw {}'.format(exception_slot.to_string())))
+
+    state.deallocate_slot(slot = exception_slot)
+    state.deallocate_slot(slot = tag_slot)
 
     body.extend(expr_body)
 
@@ -1587,6 +1621,9 @@ def emit_enum_ctor_call(body : list, call_expr, state : State, slot : Slot, meta
     ])
     body.extend(expr_body)
 
+    state.deallocate_slot(slot = value_slot)
+    state.deallocate_slot(slot = key_slot)
+
     return slot
 
 
@@ -1681,6 +1718,7 @@ def emit_function(body : list, expr, state : State, slot : Slot):
             source,
             dest,
         ))
+        state.deallocate_slot(slot = dest)
     if expr.arguments:
         inner_body.append(Verbatim(''))
 
@@ -1694,6 +1732,9 @@ def emit_function(body : list, expr, state : State, slot : Slot):
         toplevel = False,
     )
 
+    body.append(Verbatim('; local register pressure = {}'.format(
+        state.register_pressure[LOCAL_REGISTER_SET],
+    )))
     body.append(Verbatim('allocate_registers %{} local'.format(
         state.next_slot[LOCAL_REGISTER_SET],
     )))
@@ -1779,6 +1820,7 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
         ]
 
         exception_variable_name = str(each.name.token)
+        name_slot = None
         if exception_variable_name == '_':
             exception_variable_slot = state.get_slot(None, anonymous = True)
             handler_body.append(Verbatim('draw {}'.format(
@@ -1787,6 +1829,7 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
             handler_body.append(Verbatim('delete {}'.format(
                 exception_variable_slot.to_string(),
             )))
+            state.deallocate_slot(slot = exception_variable_slot)
         else:
             name_slot = state.get_slot(exception_variable_name)
             handler_body.append(Verbatim('draw {}'.format(
@@ -1805,6 +1848,8 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
             meta = meta,
             toplevel = False,
         )
+        if name_slot is not None:
+            state.deallocate_slot(slot = name_slot)
 
         handler_body.append(Verbatim('leave'))
         handler_body.append(Verbatim('.end'))
@@ -1857,6 +1902,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
             )),
             Move.make_copy(match_slot.as_pointer(), match_slot),
         ])
+        state.deallocate_slot(slot = tmp_slot)
 
     body.extend(expr_body)
 
@@ -1965,6 +2011,9 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
 
     body.append(Verbatim('; end of {}'.format(expr_block_name)))
     body.append(Verbatim('.mark: {}'.format(match_done_marker)))
+
+    if is_tag_enum:
+        state.deallocate_slot(slot = match_slot)
 
     return with_expr_slot
 
@@ -2222,6 +2271,10 @@ def emit_field_assignment(body : list, expr, state : State, slot : Slot):
         slot.to_string(),
     )))
 
+    if inner_struct_slot:
+        state.deallocate_slot(slot = inner_struct_slot)
+    state.deallocate_slot(slot = field_name_slot)
+
     # FIXME Figure out what to do if we want struct field updates to return values.
     # body.append(Verbatim('structat {} {} {}'.format(
     #     slot.to_string(),
@@ -2264,6 +2317,8 @@ def emit_struct_field_access(body : list, expr, state : State, slot : Slot, must
             field_name_slot.to_string(),
         )))
         base_source_slot = slot
+
+    state.deallocate_slot(slot = field_name_slot)
 
     slot.is_pointer = True
     return slot
