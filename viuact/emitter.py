@@ -636,6 +636,7 @@ def emit_let(body : list, let_expr, state : State, slot : Slot):
         slot = None
     else:
         slot = state.get_slot(name)
+    body.append(Verbatim('; let {} ...'.format(name)))
     emit_expr(
         body = body,
         expr = let_expr.value,
