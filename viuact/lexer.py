@@ -81,8 +81,7 @@ def lex(source):
 
         token_types.Ellipsis,
 
-        token_types.String,         # Literals
-        token_types.Timeout,
+        token_types.Timeout,        # Literals
         token_types.Float,
         token_types.Integer,
         token_types.Boolean,
@@ -139,6 +138,27 @@ def lex(source):
                 i += len(s)
                 character_in_line += len(s)
                 break
+
+        if source[i] == '"':
+            n = i + 1
+            escaped = False
+            while n < len(source):
+                if source[n] == '"' and not escaped:
+                    match_found = True
+                    s = source[i:n + 1]
+                    i = n + 1
+                    tokens.append(token_types.String(make_token(
+                        text = s,
+                        line = line,
+                        character = character_in_line,
+                    )))
+                    character_in_line += len(s)
+                    break
+                if source[n] == '\\':
+                    escaped = not escaped
+                if escaped and source[n] != '\\':
+                    escaped = False
+                n += 1
 
         if match_found:
             continue
