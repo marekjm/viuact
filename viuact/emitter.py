@@ -1897,11 +1897,11 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
     # with expressions. It gets its own slot as its result will never be
     # returned to the parent expression (if any). This slot may be deallocated
     # after we emitted the whole match-expression.
-    slot = emit_expr(
+    checked_expr_slot = emit_expr(
         body = expr_body,
         expr = expression,
         state = state,
-        slot = slot,
+        slot = state.get_slot(name = None, anonymous = True),
         must_emit = must_emit,
         meta = meta,
         toplevel = False,
@@ -1928,7 +1928,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
             Ctor('atom', tmp_slot, Ctor.TAG_ENUM_TAG_FIELD),
             Verbatim('structat {enum_tag_slot} {slot} {tmp}'.format(
                 enum_tag_slot = enum_tag_slot.to_string(),
-                slot = slot.to_string(),
+                slot = checked_expr_slot.to_string(),
                 tmp = tmp_slot.to_string(),
             )),
             Move.make_copy(enum_tag_slot.as_pointer(), enum_tag_slot),
@@ -2021,9 +2021,9 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
                     '; extracting value named {}...'.format(
                         repr(extracted_name))),
                 Ctor('atom', tmp_slot, Ctor.TAG_ENUM_VALUE_FIELD),
-                Verbatim('structat {value_slot} {slot} {tmp}'.format(
+                Verbatim('structat {value_slot} {checked_slot} {tmp}'.format(
                     value_slot = value_slot.to_string(),
-                    slot = slot.to_string(),
+                    checked_slot = checked_expr_slot.to_string(),
                     tmp = tmp_slot.to_string(),
                 )),
                 Move.make_copy(value_slot.as_pointer(), value_slot),
@@ -2058,6 +2058,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
 
     if is_tag_enum:
         state.deallocate_slot(slot = enum_tag_slot)
+    state.deallocate_slot(slot = checked_expr_slot)
 
     return with_expr_slot
 
