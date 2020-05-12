@@ -208,7 +208,7 @@ class State:
         self.free_slots[slot.register_set].sort()
 
         if self.tracker:
-            self.tracker.release(slot)
+            self.tracker.release(slot, safe = True)
 
     def deallocate_slot_if_anonymous(self, slot):
         if not slot.is_anonymous():
