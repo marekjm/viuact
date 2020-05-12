@@ -1825,11 +1825,17 @@ def emit_function(body : list, expr, state : State, slot : Slot):
         dest = state.get_slot(
             str(each.token),
         )
+        inner_body.append(Verbatim('; location => {}:{}'.format(
+            each.token.line + 1,
+            each.token.character + 1,
+        )))
+        inner_body.append(Verbatim('; parameter {}'.format(
+            str(each.token),
+        )))
         inner_body.append(Move.make_move(
             source,
             dest,
         ))
-        state.deallocate_slot(slot = dest)
     if expr.arguments:
         inner_body.append(Verbatim(''))
 
