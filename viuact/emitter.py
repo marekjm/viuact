@@ -126,28 +126,6 @@ class State:
         self.function_name = function_name
         self.branches_encountered = 0
 
-    def get_slot(self, name, register_set = DEFAULT_REGISTER_SET, anonymous = False):
-        if name is None and not anonymous:
-            raise Exception('requested slot without a name')
-
-        if anonymous:
-            slot = Slot(
-                None,
-                self.allocate_slot(register_set),
-                register_set,
-            )
-            self.last_used_slot = slot
-            return slot
-
-        if name not in self.name_to_slot:
-            self.name_to_slot[name] = Slot(
-                name,
-                self.allocate_slot(register_set),
-                register_set,
-            )
-        self.last_used_slot = self.name_to_slot[name]
-        return self.last_used_slot
-
     def allocate_slot(self, register_set):
         self.register_pressure[register_set] += 1
 
@@ -173,6 +151,28 @@ class State:
                 raise Exception('unknown name: {}'.format(name))
 
         self.free_slots[slot.register_set].append(slot.index)
+
+    def get_slot(self, name, register_set = DEFAULT_REGISTER_SET, anonymous = False):
+        if name is None and not anonymous:
+            raise Exception('requested non-anonymous slot without a name')
+
+        if anonymous:
+            slot = Slot(
+                None,
+                self.allocate_slot(register_set),
+                register_set,
+            )
+            self.last_used_slot = slot
+            return slot
+
+        if name not in self.name_to_slot:
+            self.name_to_slot[name] = Slot(
+                name,
+                self.allocate_slot(register_set),
+                register_set,
+            )
+        self.last_used_slot = self.name_to_slot[name]
+        return self.last_used_slot
 
     def name_slot(self, slot, name):
         self.name_to_slot[name] = slot
