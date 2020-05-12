@@ -1906,7 +1906,6 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         meta = meta,
         toplevel = False,
     )
-    match_slot = slot
     expr_body.append(Verbatim('; matching expr of {} to withs'.format(expr_block_name)))
 
     # Then, we determine the name of the enum that is matched by this
