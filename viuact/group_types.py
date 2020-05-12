@@ -207,29 +207,6 @@ class Enum_ctor_call(Group_type):
         }
 
 
-class Function_call(Group_type):
-    type_name = 'Function_call'
-
-    def __init__(self, name, args):
-        self.name = name
-        self.args = args
-
-    def to(self):
-        return (str(self.name.token) if type(self.name) is token_types.Name else self.name.to_string())
-
-    def to_string(self):
-        return '{}({})'.format(
-            self.to(),
-            ', '.join(map(str, self.args)),
-        )
-
-    def to_content(self):
-        return {
-            'to': self.name.to_data(),
-            'args': [each.to_data() for each in self.args],
-        }
-
-
 class Operator_call(Group_type):
     type_name = 'Operator_call'
 
@@ -255,84 +232,52 @@ class Operator_call(Group_type):
         }
 
 
-class Actor_call(Group_type):
+class Generic_call(Group_type):
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
+
+    def to(self):
+        return (str(self.name.token) if type(self.name) is token_types.Name else self.name.to_string())
+
+    def to_string(self):
+        return '{}({})'.format(
+            self.to(),
+            ', '.join(map(str, self.args)),
+        )
+
+    def to_content(self):
+        return {
+            'to': self.name.to_data(),
+            'args': [each.to_data() for each in self.args],
+        }
+
+class Function_call(Generic_call):
+    type_name = 'Function_call'
+
+class Actor_call(Generic_call):
     type_name = 'Actor_call'
 
-    def __init__(self, name, args):
-        self.name = name
-        self.args = args
-
-    def to(self):
-        return (str(self.name.token) if type(self.name) is token_types.Name else self.name.to_string())
-
     def to_string(self):
-        return 'actor {}({})'.format(
-            self.to(),
-            ', '.join(map(str, self.args)),
-        )
+        return 'actor {}'.format(super().to_string())
 
-    def to_content(self):
-        return Function_call.to_content(self)
-
-
-class Tail_call(Group_type):
+class Tail_call(Generic_call):
     type_name = 'Tail_call'
 
-    def __init__(self, name, args):
-        self.name = name
-        self.args = args
-
-    def to(self):
-        return (str(self.name.token) if type(self.name) is token_types.Name else self.name.to_string())
-
     def to_string(self):
-        return 'tailcall {}({})'.format(
-            self.to(),
-            ', '.join(map(str, self.args)),
-        )
+        return 'tailcall {}'.format(super().to_string())
 
-    def to_content(self):
-        return Function_call.to_content(self)
-
-
-class Deferred_call(Group_type):
+class Deferred_call(Generic_call):
     type_name = 'Deferred_call'
 
-    def __init__(self, name, args):
-        self.name = name
-        self.args = args
-
-    def to(self):
-        return (str(self.name.token) if type(self.name) is token_types.Name else self.name.to_string())
-
     def to_string(self):
-        return 'defer {}({})'.format(
-            self.to(),
-            ', '.join(map(str, self.args)),
-        )
-
-    def to_content(self):
-        return Function_call.to_content(self)
-
+        return 'defer {}'.format(super().to_string())
 
 class Watchdog_call(Group_type):
     type_name = 'Watchdog_call'
 
-    def __init__(self, name, args):
-        self.name = name
-        self.args = args
-
-    def to(self):
-        return (str(self.name.token) if type(self.name) is token_types.Name else self.name.to_string())
-
     def to_string(self):
-        return 'defer {}({})'.format(
-            self.to(),
-            ', '.join(map(str, self.args)),
-        )
-
-    def to_content(self):
-        return Function_call.to_content(self)
+        return 'watchdog {}'.format(super().to_string())
 
 
 class Try_expression(Group_type):

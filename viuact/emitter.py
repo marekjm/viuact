@@ -429,6 +429,7 @@ def emit_expr(
             expr,
             state,
             slot,
+            meta,
         )
     elif leader_type is group_types.Deferred_call:
         return emit_deferred_call(
@@ -1326,12 +1327,15 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     name = call_expr.name
     args = call_expr.args
 
-    if call_expr.to() in BUILTIN_FUNCTIONS:
+    if ((call_expr.to() in BUILTIN_FUNCTIONS) and
+            type(call_expr) == group_types.Function_call):
         return emit_builtin_call(body, call_expr, state, slot)
 
     name_token = None
     if type(name) is group_types.Id:
         name_token = name.name[-1].token
+    elif type(name) is group_types.Name_ref:
+        name_token = name.name.token
     else:
         name_token = name.token
 
@@ -1435,9 +1439,23 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     if state.has_slot(fn_name):
         to = state.slot_of(fn_name).to_string()
 
+    call_kind = type(call_expr)
+    if call_kind == group_types.Function_call:
+        call_kind = Call.Kind.Synchronous
+    elif call_kind == group_types.Actor_call:
+        call_kind = Call.Kind.Actor
+    elif call_kind == group_types.Tail_call:
+        call_kind = Call.Kind.Tail
+    elif call_kind == group_types.Watchdog_call:
+        call_kind = Call.Kind.Watchdog
+    else:
+        raise Exception('{} cannot be used as a call expression'.format(
+            str(type(call_expr))[8:-2],
+        ))
     body.append(Call(
         to = to,
         slot = slot,
+        kind = call_kind,
     ))
 
     return slot
@@ -1511,50 +1529,10 @@ def emit_actor_call(body : list, call_expr, state : State, slot : Slot):
     return slot
 
 
-def emit_tail_call(body : list, call_expr, state : State, slot : Slot):
-    name = call_expr.name
-    args = call_expr.args
-
+def emit_tail_call(body : list, call_expr, state : State, slot : Slot, meta):
     if call_expr.to() in BUILTIN_FUNCTIONS:
         raise Exception('cannot tail call built-in function', call_expr)
-
-    applied_args = []
-    for i, each in enumerate(args):
-        arg_slot = state.get_slot(None, anonymous = True)
-        applied_args.append(emit_expr(
-            body = body,
-            expr = each,
-            state = state,
-            slot = arg_slot,
-            must_emit = False,
-            meta = None,
-            toplevel = False,
-        ))
-
-    body.append(Verbatim('frame %{}'.format(len(args))))
-    for i, each in enumerate(applied_args):
-        body.append(Verbatim('copy %{} arguments %{} local'.format(
-            i,
-            each.index,
-        )))
-
-    name_token = None
-    if type(name) is group_types.Id:
-        name_token = name.name[-1].token
-    else:
-        name_token = name.name.token
-
-    fn_name = call_expr.to()
-    if not state.has_slot(fn_name):
-        fn_name = state.visible_fns.real_name(fn_name, token = name_token)
-
-    body.append(Call(
-        to = '{}/{}'.format(fn_name, len(args)),
-        slot = None,
-        kind = Call.Kind.Tail,
-    ))
-
-    return slot
+    return emit_call(body, call_expr, state, slot, meta)
 
 
 def emit_deferred_call(body : list, call_expr, state : State, slot : Slot):
