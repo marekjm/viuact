@@ -886,6 +886,7 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             pid_slot.to_string(),
             message_slot.to_string(),
         )))
+        state.deallocate_slot(slot = message_slot)
     elif call_expr.to() == 'Std::Actor::self':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
