@@ -1957,16 +1957,15 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
             (with_block_name + '_false'),
         ))
 
-    with_expr_slot = state.get_slot(name = None, anonymous = True)
-
     # Then, we emit the actual comparison code. It is a simple sequence of ifs
     # that try to match the match-condition-expression's value to each
     # with-expression tag in sequence.
+    tag_check_slot = state.get_slot(name = None, anonymous = True)
     for i, each in enumerate(handlers):
-        with_expr_body = []
+        tag_check_body = []
 
         if type(each.pattern) == group_types.Name_ref and each.pattern.name.token == '_':
-            with_expr_body = [
+            tag_check_body = [
                 Verbatim('; jump to the catch-all for {}'.format(
                     expr_block_name,
                 )),
@@ -1974,30 +1973,33 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
                     with_expr_markers[i][0],
                 )),
             ]
-            body.extend(with_expr_body)
+            body.extend(tag_check_body)
             break
 
-        with_expr_slot = emit_enum_member_id(
-            with_expr_body,
+        emit_enum_member_id(
+            tag_check_body,
             each.pattern,
             state,
-            with_expr_slot,
+            tag_check_slot,
             meta)
-        with_expr_body.extend([
-            Verbatim('eq {we} {we} {me}'.format(
-                we = with_expr_slot.to_string(),
-                me = enum_tag_slot.to_string(),
+        tag_check_body.extend([
+            Verbatim('eq {tag_check} {tag_check} {enum_tag}'.format(
+                tag_check = tag_check_slot.to_string(),
+                enum_tag = enum_tag_slot.to_string(),
             )),
-            Verbatim('if {we} {with_expr_true} {with_expr_false}'.format(
-                we = with_expr_slot.to_string(),
-                with_expr_true = with_expr_markers[i][0],
-                with_expr_false = with_expr_markers[i][1],
+            Verbatim('if {tag_check} {tag_check_true} {tag_check_false}'.format(
+                tag_check = tag_check_slot.to_string(),
+                tag_check_true = with_expr_markers[i][0],
+                tag_check_false = with_expr_markers[i][1],
             )),
             Verbatim('.mark: {}'.format(
                 with_expr_markers[i][1],
             )),
         ])
-        body.extend(with_expr_body)
+        body.extend(tag_check_body)
+    state.deallocate_slot(slot = tag_check_slot)
+
+    with_expr_slot = state.get_slot(name = None, anonymous = True)
 
     # As the last step, let's emit the actual with-expressions that the overall
     # match-expression should evaluate to.
