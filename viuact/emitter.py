@@ -1871,12 +1871,20 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         must_emit = False, meta = None):
     handlers = expr.handling_blocks
     expression = expr.expr
+
     expr_block_name = 'match_{}'.format(hashlib.sha1(
         repr(expression).encode('utf-8')
         + repr(expr).encode('utf-8')
         + repr(id(expression)).encode('utf-8')
     ).hexdigest())
-    expr_body = []
+    expr_body = [
+        Verbatim('; match ... (with ...)'.format(expr_block_name)),
+    ]
+
+    # First, we emit the expression whose result is to be matched to patterns of
+    # with expressions. It gets its own slot as its result will never be
+    # returned to the parent expression (if any). This slot may be deallocated
+    # after we emitted the whole match-expression.
     slot = emit_expr(
         body = expr_body,
         expr = expression,
@@ -1889,10 +1897,17 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
     match_slot = slot
     expr_body.append(Verbatim('; matching expr of {} to withs'.format(expr_block_name)))
 
+    # Then, we determine the name of the enum that is matched by this
+    # expression. We have to do this because we need to know if this is a tag
+    # enum, as in case of tag enums two additional slots are needed: one for the
+    # tag, and one for the value.
     enum_name = handlers[0].pattern.to_string().rsplit('::', 1)[0]
     is_tag_enum = state.visible_fns.enums[enum_name]['is_tag_enum']
     handlers_extract_value = any(each.name is not None for each in handlers)
 
+    # If this is a tag enum then we need to extract its tag. After that it is
+    # simple integer comparisons, but since tag enums may carry a value we have
+    # to deconstruct them.
     if is_tag_enum:
         tmp_slot = state.get_slot(name = None, anonymous = True)
         match_slot = state.get_slot(name = None, anonymous = True)
@@ -1909,6 +1924,10 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
 
     body.extend(expr_body)
 
+    # Then, let's create markers for with-expressions. We need two markers for
+    # each expression - one for a match, and one for a non-match. Why? Because
+    # the if instruction that actually implements the comparisons has two
+    # targets, so we emit a marker for both of them.
     with_expr_markers = []
     for i, each in enumerate(handlers):
         s = (repr(each.pattern) + repr(each.name) + repr(each.expr))
@@ -1928,6 +1947,9 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
 
     with_expr_slot = state.get_slot(name = None, anonymous = True)
 
+    # Then, we emit the actual comparison code. It is a simple sequence of ifs
+    # that try to match the match-condition-expression's value to each
+    # with-expression tag in sequence.
     for i, each in enumerate(handlers):
         with_expr_body = []
 
@@ -1965,6 +1987,8 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         ])
         body.extend(with_expr_body)
 
+    # As the last step, let's emit the actual with-expressions that the overall
+    # match-expression should evaluate to.
     body.append(Verbatim('; handling withs of {}'.format(expr_block_name)))
     for i, each in enumerate(handlers):
         with_expr_body = [
