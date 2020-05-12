@@ -679,6 +679,7 @@ def emit_let(body : list, let_expr, state : State, slot : Slot):
         meta = None,
         toplevel = False,
     )
+    body.append(Verbatim(''))
     return slot
 
 

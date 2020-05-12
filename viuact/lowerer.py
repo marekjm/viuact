@@ -443,6 +443,7 @@ def output_function_body(fn, in_module, meta):
         expr = fn.body,
         state = state,
         meta = meta,
+        slot = None,
         toplevel = False,
     )
 
@@ -487,6 +488,8 @@ def output_function_body(fn, in_module, meta):
         pass    # We don't have to return anything for tail calls as they will
                 # replace our call frame anyway.
     else:
+        body.append(emitter.Verbatim(''))
+        body.append(emitter.Verbatim('; set return value'))
         body.append(emitter.Move.make_move(
             return_slot,
             emitter.Slot(None, 0,)
