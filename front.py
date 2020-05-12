@@ -168,6 +168,10 @@ def main(executable_name, args):
             viuact.__version__,
             viuact.__commit__,
         ))
+        if '--verbose' in args:
+            print('code fingerprint: {}'.format(
+                viuact.__code__,
+            ))
     elif arg == '--help':
         print_help(EXECUTABLE)
     elif arg == '--env':

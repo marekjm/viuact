@@ -2,7 +2,10 @@ PREFIX=~/.local
 BIN_DIR=$(PREFIX)/bin
 PYTHON_LIB_DIR=$(PREFIX)/lib/python$(shell python3 --version | grep -Po '3\.\d+')/site-packages
 VIUACT_LIBS_DIR=$(PYTHON_LIB_DIR)/viuact
+
 VIUACT_HEAD_COMMIT=$(shell git rev-parse HEAD)
+VIUACT_CODE_HASH=$(shell (find ./viuact -name '*.py' | sort | xargs -n 1 cat ; \
+	cat cc.py format.py front.py opt.py) | sha384sum | cut -d' ' -f1)
 
 BUILD_DIR=./build
 OUTPUT_DIR=$(BUILD_DIR)/_default
@@ -28,6 +31,7 @@ install:
 	@mkdir -p $(VIUACT_LIBS_DIR)
 	cp ./viuact/*.py $(VIUACT_LIBS_DIR)/
 	@sed -i "s/'HEAD'/'$(VIUACT_HEAD_COMMIT)'/" $(VIUACT_LIBS_DIR)/__init__.py
+	@sed -i "s/__code__ = 'CODE'/__code__ = '$(VIUACT_CODE_HASH)'/" $(VIUACT_LIBS_DIR)/__init__.py
 	cp ./cc.py $(BIN_DIR)/viuact-cc
 	cp ./opt.py $(BIN_DIR)/viuact-opt
 	cp ./format.py $(BIN_DIR)/viuact-format
