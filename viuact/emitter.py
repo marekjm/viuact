@@ -1941,6 +1941,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
     # each expression - one for a match, and one for a non-match. Why? Because
     # the if instruction that actually implements the comparisons has two
     # targets, so we emit a marker for both of them.
+    match_done_marker = '{}_done'.format(expr_block_name)
     with_expr_markers = []
     for i, each in enumerate(handlers):
         s = (repr(each.pattern) + repr(each.name) + repr(each.expr))
@@ -1955,8 +1956,6 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
             (with_block_name + '_true'),
             (with_block_name + '_false'),
         ))
-
-    match_done_marker = '{}_done'.format(expr_block_name)
 
     with_expr_slot = state.get_slot(name = None, anonymous = True)
 
@@ -2012,6 +2011,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         if extracted_name:
             # value_slot = state.get_slot(name = extracted_name, anonymous = True)
             value_slot = state.get_slot(name = extracted_name)
+            tmp_slot = state.get_slot(name = None, anonymous = True)
             with_expr_body.extend([
                 Verbatim(
                     '; location => {}:{}'.format(
@@ -2029,6 +2029,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
                 Move.make_copy(value_slot.as_pointer(), value_slot),
                 Verbatim('; extracted value'),
             ])
+            state.deallocate_slot(slot = tmp_slot)
         with_expr_slot = emit_expr(
             body = with_expr_body,
             expr = each.expr,
