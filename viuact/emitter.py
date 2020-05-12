@@ -669,6 +669,13 @@ def emit_let(body : list, let_expr, state : State, slot : Slot):
         slot = None
     else:
         slot = state.get_slot(name)
+
+    if body and body[-1].to_string():
+        body.append(Verbatim(''))
+    body.append(Verbatim('; location => {}:{}'.format(
+        let_expr.name.token.line + 1,
+        let_expr.name.token.character + 1,
+    )))
     body.append(Verbatim('; let {} ...'.format(name)))
     emit_expr(
         body = body,
@@ -2001,6 +2008,10 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
             # value_slot = state.get_slot(name = extracted_name, anonymous = True)
             value_slot = state.get_slot(name = extracted_name)
             with_expr_body.extend([
+                Verbatim(
+                    '; location => {}:{}'.format(
+                        each.name.token.line + 1,
+                        each.name.token.character + 1,)),
                 Verbatim(
                     '; extracting value named {}...'.format(
                         repr(extracted_name))),

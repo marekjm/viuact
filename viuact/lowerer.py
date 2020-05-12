@@ -431,6 +431,9 @@ def output_function_body(fn, in_module, meta):
             if type(each) is token_types.Labeled_parameter_name
             else str(each.token))
         dest = state.get_slot(parameter_label)
+        inner_body.append(emitter.Verbatim('; parameter {}'.format(
+            str(each.token),
+        )))
         inner_body.append(emitter.Move.make_move(
             source,
             dest,
