@@ -1961,6 +1961,8 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
                 ex = name_slot.to_string(),
             )))
 
+        tracker = State.Allocation_tracker()
+        state.track_slot_allocations(tracker)
         emit_expr(
             body = handler_body,
             expr = each.expr,
@@ -1970,6 +1972,8 @@ def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emi
             meta = meta,
             toplevel = False,
         )
+        state.release_tracked_allocations(tracker)
+
         if name_slot is not None:
             state.deallocate_slot(slot = name_slot)
 
