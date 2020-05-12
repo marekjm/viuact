@@ -777,17 +777,21 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
         )))
     elif call_expr.to() == 'Std::move':
         # Make the slot anonymous to trigger move semantics.
-        slot = emit_expr(
+        moved_from = emit_expr(
             body = body,
             expr = args[0],
             state = state,
-            slot = slot,
+            slot = None,
             must_emit = False,
             meta = None,
             toplevel = False,
         )
-        slot.become_anonymous()
-        return slot
+        body.append(Move.make_move(
+            source = moved_from,
+            dest = slot,
+        ))
+        slot = slot.become_anonymous()
+        state.deallocate_slot(slot = moved_from)
     elif call_expr.to() == 'Std::Actor::join':
         timeout = (args[1] if len(args) > 1 else token_types.Timeout(INFINITE_DURATION))
         body.append(Verbatim('join {} {} {}'.format(
