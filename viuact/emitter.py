@@ -1998,8 +1998,6 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         body.extend(tag_check_body)
     state.deallocate_slot(slot = tag_check_slot)
 
-    with_expr_slot = state.get_slot(name = None, anonymous = True)
-
     # As the last step, let's emit the actual with-expressions that the overall
     # match-expression should evaluate to.
     body.append(Verbatim('; handling withs of {}'.format(expr_block_name)))
@@ -2031,11 +2029,11 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
                 Verbatim('; extracted value'),
             ])
             state.deallocate_slot(slot = tmp_slot)
-        with_expr_slot = emit_expr(
+        slot = emit_expr(
             body = with_expr_body,
             expr = each.expr,
             state = state,
-            slot = with_expr_slot,
+            slot = slot,
             must_emit = True,
             meta = meta,
             toplevel = False,
@@ -2062,7 +2060,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         state.deallocate_slot(slot = enum_tag_slot)
     state.deallocate_slot(slot = checked_expr_slot)
 
-    return with_expr_slot
+    return slot
 
 def emit_match_integer_expr(body : list, expr, state : State, slot : Slot = None,
         must_emit = False, meta = None):
