@@ -1920,17 +1920,18 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
     # If this is a tag enum then we need to extract its tag. After that it is
     # simple integer comparisons, but since tag enums may carry a value we have
     # to deconstruct them.
+    enum_tag_slot = None
     if is_tag_enum:
         tmp_slot = state.get_slot(name = None, anonymous = True)
-        match_slot = state.get_slot(name = None, anonymous = True)
+        enum_tag_slot = state.get_slot(name = None, anonymous = True)
         expr_body.extend([
             Ctor('atom', tmp_slot, Ctor.TAG_ENUM_TAG_FIELD),
-            Verbatim('structat {match_slot} {slot} {tmp}'.format(
-                match_slot = match_slot.to_string(),
+            Verbatim('structat {enum_tag_slot} {slot} {tmp}'.format(
+                enum_tag_slot = enum_tag_slot.to_string(),
                 slot = slot.to_string(),
                 tmp = tmp_slot.to_string(),
             )),
-            Move.make_copy(match_slot.as_pointer(), match_slot),
+            Move.make_copy(enum_tag_slot.as_pointer(), enum_tag_slot),
         ])
         state.deallocate_slot(slot = tmp_slot)
 
@@ -1986,7 +1987,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         with_expr_body.extend([
             Verbatim('eq {we} {we} {me}'.format(
                 we = with_expr_slot.to_string(),
-                me = match_slot.to_string(),
+                me = enum_tag_slot.to_string(),
             )),
             Verbatim('if {we} {with_expr_true} {with_expr_false}'.format(
                 we = with_expr_slot.to_string(),
@@ -2056,7 +2057,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
     body.append(Verbatim('.mark: {}'.format(match_done_marker)))
 
     if is_tag_enum:
-        state.deallocate_slot(slot = match_slot)
+        state.deallocate_slot(slot = enum_tag_slot)
 
     return with_expr_slot
 
