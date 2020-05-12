@@ -1383,7 +1383,9 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
 
     applied_args = []
     for each in positional_args:
-        applied_args.append(emit_expr(
+        tracker = State.Allocation_tracker()
+        state.track_slot_allocations(tracker)
+        arg_slot = emit_expr(
             body = body,
             expr = each,
             state = state,
@@ -1391,7 +1393,10 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
             must_emit = False,
             meta = None,
             toplevel = False,
-        ))
+        )
+        tracker.release(arg_slot, safe = True)
+        state.release_tracked_allocations(tracker)
+        applied_args.append(arg_slot)
 
     if (not statically_known) and labeled_args:
         raise Exception('OH NOES: labeled arguments cannot be used if '
@@ -1401,7 +1406,9 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
             lambda each: type(each) is token_types.Labeled_parameter_name, fn_spec['params'])))
         labeled_args = dict(map(lambda each: (str(each.name.token), each.expr), labeled_args))
         for each in label_order:
-            applied_args.append(emit_expr(
+            tracker = State.Allocation_tracker()
+            state.track_slot_allocations(tracker)
+            arg_slot = emit_expr(
                 body = body,
                 expr = labeled_args[each],
                 state = state,
@@ -1409,7 +1416,10 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
                 must_emit = False,
                 meta = None,
                 toplevel = False,
-            ))
+            )
+            tracker.release(arg_slot, safe = True)
+            state.release_tracked_allocations(tracker)
+            applied_args.append(arg_slot)
 
     body.append(Verbatim('frame %{}'.format(len(args))))
     for i, each in enumerate(applied_args):
@@ -1419,6 +1429,7 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
             dest = Slot(None, i, ARGUMENTS_REGISTER_SET),
             source = each,
         ))
+        state.deallocate_slot_if_anonymous(each)
 
     to = '{}/{}'.format(fn_name, len(args))
     if state.has_slot(fn_name):
