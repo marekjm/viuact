@@ -165,6 +165,9 @@ class State:
             raise Exception('slot and name cannot both not be none')
 
         if name is not None:
+            if type(name) is not str:
+                raise Exception('name must be a string, but is {}'.format(
+                    str(type(name))[8:-2]))
             slot = self.name_to_slot.get(name)
             if slot is None:
                 raise Exception('unknown name: {}'.format(name))
