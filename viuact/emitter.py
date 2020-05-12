@@ -2139,6 +2139,9 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
                 Verbatim('; extracted value'),
             ])
             state.deallocate_slot(slot = tmp_slot)
+
+        tracker = State.Allocation_tracker()
+        state.track_slot_allocations(tracker)
         slot = emit_expr(
             body = with_expr_body,
             expr = each.expr,
@@ -2148,6 +2151,9 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
             meta = meta,
             toplevel = False,
         )
+        tracker.release(slot, safe = True)
+        state.release_tracked_allocations(tracker)
+
         if extracted_name:
             state.deallocate_slot(name = extracted_name)
 

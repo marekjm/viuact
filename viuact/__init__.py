@@ -1,3 +1,3 @@
-__version__ = '0.0.55'
+__version__ = '0.0.56'
 __commit__ = 'HEAD'
 __code__ = 'CODE'
