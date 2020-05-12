@@ -151,6 +151,7 @@ class State:
                 raise Exception('unknown name: {}'.format(name))
 
         self.free_slots[slot.register_set].append(slot.index)
+        self.free_slots[slot.register_set].sort()
 
     def get_slot(self, name, register_set = DEFAULT_REGISTER_SET, anonymous = False):
         if name is None and not anonymous:
