@@ -195,6 +195,14 @@ class State:
             slot = self.name_to_slot.get(name)
             if slot is None:
                 raise Exception('unknown name: {}'.format(name))
+        else:
+            for k, v in self.name_to_slot.items():
+                if slot == v:
+                    name = k
+                    break
+
+        if name is not None:
+            del self.name_to_slot[name]
 
         self.free_slots[slot.register_set].append(slot.index)
         self.free_slots[slot.register_set].sort()
@@ -472,7 +480,10 @@ def emit_expr(
             )))
             return slot
 
-        evaluated_slot = state.slot_of(str(expr.name.token))
+        try:
+            evaluated_slot = state.slot_of(str(expr.name.token))
+        except KeyError:
+            raise exceptions.Unbound_name(None, expr.name.token)
         if must_emit:
             if slot is None:
                 slot = state.get_slot(None, anonymous = True)
