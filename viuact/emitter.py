@@ -1770,6 +1770,7 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
         true_arm_id,
         false_arm_id,
     )))
+    state.deallocate_slot_if_anonymous(cond_slot)
 
     if slot is None:
         slot = state.get_slot(None, anonymous = True)
