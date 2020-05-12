@@ -63,6 +63,14 @@ class Slot:
         self.is_pointer = False
         self.is_pointer_explicit = False
 
+    def __eq__(self, other):
+        if type(other) is not Slot:
+            return False
+        return (
+                (self.index == other.index)
+            and (self.register_set == other.register_set)
+        )
+
     def __str__(self):
         return '{} = %{} {}'.format(
             self.name,
@@ -101,7 +109,28 @@ class Slot:
 
 
 class State:
+    class Allocation_tracker:
+        class Slot_not_tracked(Exception):
+            pass
+
+        def __init__(self):
+            self.slots = []
+
+        def save(self, slot):
+            self.slots.append(slot)
+
+        def release(self, slot, safe = False):
+            if slot is None:
+                return
+            if (slot not in self.slots):
+                if not safe:
+                    raise State.Allocation_tracker.Slot_not_tracked(slot)
+                else:
+                    return
+            self.slots.remove(slot)
+
     def __init__(self, upper, visible_fns, function_name):
+        self.tracker = None
         self.register_pressure = {
             'local': 0,
             'static': 0,
@@ -126,14 +155,31 @@ class State:
         self.function_name = function_name
         self.branches_encountered = 0
 
+    def track_slot_allocations(self, tracker):
+        self.tracker = tracker
+
+    def release_tracked_allocations(self, tracker):
+        for each in tracker.slots:
+            self.deallocate_slot(slot = each)
+        self.tracker = None
+
     def allocate_slot(self, register_set):
         self.register_pressure[register_set] += 1
 
+        slot_index = None
         if self.free_slots[register_set]:
-            return self.free_slots[register_set].pop(0)
+            slot_index = self.free_slots[register_set].pop(0)
+        else:
+            slot_index = self.next_slot[register_set]
+            self.next_slot[register_set] += 1
 
-        slot_index = self.next_slot[register_set]
-        self.next_slot[register_set] += 1
+        if self.tracker:
+            self.tracker.save(Slot(
+                name = None,
+                index = slot_index,
+                register_set = register_set,
+            ))
+
         return slot_index
 
     def deallocate_slot(self, name = None, slot = None):
@@ -152,6 +198,9 @@ class State:
 
         self.free_slots[slot.register_set].append(slot.index)
         self.free_slots[slot.register_set].sort()
+
+        if self.tracker:
+            self.tracker.release(slot)
 
     def get_slot(self, name, register_set = DEFAULT_REGISTER_SET, anonymous = False):
         if name is None and not anonymous:
@@ -1772,6 +1821,9 @@ def emit_compound_expr(body : list, expr, state : State, slot : Slot = None, mus
             exceptions.Compound_expression_cannot_be_empty.MESSAGE,
             expr,
         )
+
+    tracker = State.Allocation_tracker()
+    state.track_slot_allocations(tracker)
     for each in expr.expressions[:-1]:
         emit_expr(
             body = body,
@@ -1784,7 +1836,7 @@ def emit_compound_expr(body : list, expr, state : State, slot : Slot = None, mus
                                 # compound expression do not need to return a
                                 # visible value.
         )
-    return emit_expr(
+    value_slot = emit_expr(
         body = body,
         expr = expr.expressions[-1],
         state = state,
@@ -1793,6 +1845,14 @@ def emit_compound_expr(body : list, expr, state : State, slot : Slot = None, mus
         meta = meta,
         toplevel = False,
     )
+
+    # Release the value slot as we do not want to deallocate the value we are
+    # about to return. Safe release is needed because the slot may have been
+    # allocated before we started tracking.
+    tracker.release(value_slot, safe = True)
+    state.release_tracked_allocations(tracker)
+
+    return value_slot
 
 
 def emit_try_expr(body : list, expr, state : State, slot : Slot = None, must_emit = False, meta = None):
