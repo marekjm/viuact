@@ -2008,7 +2008,6 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
 
         extracted_name = (str(each.name.token) if each.name is not None else None)
         if extracted_name:
-            # value_slot = state.get_slot(name = extracted_name, anonymous = True)
             value_slot = state.get_slot(name = extracted_name)
             tmp_slot = state.get_slot(name = None, anonymous = True)
             with_expr_body.extend([
@@ -2039,7 +2038,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
             toplevel = False,
         )
         if extracted_name:
-            state.unname_slot(extracted_name)
+            state.deallocate_slot(name = extracted_name)
 
         if i < (len(handlers) - 1):
             with_expr_body.append(Verbatim('jump {}'.format(match_done_marker)))
