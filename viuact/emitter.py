@@ -210,6 +210,11 @@ class State:
         if self.tracker:
             self.tracker.release(slot)
 
+    def deallocate_slot_if_anonymous(self, slot):
+        if not slot.is_anonymous():
+            return
+        self.deallocate_slot(slot = slot)
+
     def get_slot(self, name, register_set = DEFAULT_REGISTER_SET, anonymous = False):
         if name is None and not anonymous:
             raise Exception('requested non-anonymous slot without a name')
@@ -810,6 +815,7 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
         body.append(Verbatim('print {}'.format(
             slot.to_string()
         )))
+        state.deallocate_slot_if_anonymous(slot)
     elif call_expr.to() == 'echo':
         slot = emit_expr(
             body = body,
@@ -823,19 +829,22 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
         body.append(Verbatim('echo {}'.format(
             slot.to_string()
         )))
+        state.deallocate_slot_if_anonymous(slot)
     elif call_expr.to() == 'Std::copy':
+        source_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
         body.append(Verbatim('copy {} {}'.format(
             slot.to_string(),
-            emit_expr(
-                body = body,
-                expr = args[0],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
+            source_slot.to_string(),
         )))
+        state.deallocate_slot_if_anonymous(source_slot)
     elif call_expr.to() == 'Std::move':
         # Make the slot anonymous to trigger move semantics.
         moved_from = emit_expr(
@@ -904,189 +913,208 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
         body.append(Verbatim('self {}'.format(
             slot.to_string(),
         )))
-        return slot
     elif call_expr.to() == 'Std::Pid::eq':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
+        lhs_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        rhs_slot = emit_expr(
+            body = body,
+            expr = args[1],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
         body.append(Verbatim('pideq {} {} {}'.format(
             slot.to_string(),
-            emit_expr(
-                body = body,
-                expr = args[0],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
-            emit_expr(
-                body = body,
-                expr = args[1],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
+            lhs_slot.to_string(),
+            rhs_slot.to_string(),
         )))
-        return slot
+        state.deallocate_slot_if_anonymous(lhs_slot)
+        state.deallocate_slot_if_anonymous(rhs_slot)
     elif call_expr.to() == 'Std::String::to_string':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
+        source_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
         body.append(Verbatim('text {} {}'.format(
             slot.to_string(),
-            emit_expr(
-                body = body,
-                expr = args[0],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
+            source_slot.to_string(),
         )))
-        return slot
+        state.deallocate_slot_if_anonymous(source_slot)
     elif call_expr.to() == 'Std::String::concat':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
+        lhs_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        rhs_slot = emit_expr(
+            body = body,
+            expr = args[1],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
         body.append(Verbatim('textconcat {} {} {}'.format(
             slot.to_string(),
-            emit_expr(
-                body = body,
-                expr = args[0],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
-            emit_expr(
-                body = body,
-                expr = args[1],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
+            lhs_slot.to_string(),
+            rhs_slot.to_string(),
         )))
-        return slot
+        state.deallocate_slot_if_anonymous(lhs_slot)
+        state.deallocate_slot_if_anonymous(rhs_slot)
     elif call_expr.to() == 'Std::String::at':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
+        string_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        index_slot = emit_expr(
+            body = body,
+            expr = args[1],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
         body.append(Verbatim('textat {} {} {}'.format(
             slot.to_string(),
-            emit_expr(
-                body = body,
-                expr = args[0],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
-            emit_expr(
-                body = body,
-                expr = args[1],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
+            string_slot.to_string(),
+            index_slot.to_string(),
         )))
-        return slot
+        state.deallocate_slot_if_anonymous(string_slot)
+        state.deallocate_slot_if_anonymous(index_slot)
     elif call_expr.to() == 'Std::String::substr':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
+        string_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        from_index_slot = emit_expr(
+            body = body,
+            expr = args[1],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        to_index_slot = emit_expr(
+            body = body,
+            expr = args[2],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
         body.append(Verbatim('textsub {} {} {} {}'.format(
             slot.to_string(),
-            emit_expr(
-                body = body,
-                expr = args[0],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
-            emit_expr(
-                body = body,
-                expr = args[1],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
-            emit_expr(
-                body = body,
-                expr = args[2],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
+            string_slot.to_string(),
+            from_index_slot.to_string(),
+            to_index_slot.to_string(),
         )))
-        return slot
+        state.deallocate_slot_if_anonymous(string_slot)
+        state.deallocate_slot_if_anonymous(from_index_slot)
+        state.deallocate_slot_if_anonymous(to_index_slot)
     elif call_expr.to() == 'Std::String::eq':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
+        lhs_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
+        rhs_slot = emit_expr(
+            body = body,
+            expr = args[1],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
         body.append(Verbatim('texteq {} {} {}'.format(
             slot.to_string(),
-            emit_expr(
-                body = body,
-                expr = args[0],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
-            emit_expr(
-                body = body,
-                expr = args[1],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
+            lhs_slot.to_string(),
+            rhs_slot.to_string(),
         )))
-        return slot
+        state.deallocate_slot_if_anonymous(lhs_slot)
+        state.deallocate_slot_if_anonymous(rhs_slot)
     elif call_expr.to() == 'Std::String::size':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
+        string_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
         body.append(Verbatim('textlength {} {}'.format(
             slot.to_string(),
-            emit_expr(
-                body = body,
-                expr = args[0],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
+            string_slot.to_string(),
         )))
-        return slot
+        state.deallocate_slot_if_anonymous(string_slot)
     elif call_expr.to() == 'Std::Integer::of_bytes':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
+        source_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
         body.append(Verbatim('stoi {} {}'.format(
             slot.to_string(),
-            emit_expr(
-                body = body,
-                expr = args[0],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
+            source_slot.to_string(),
         )))
-        return slot
+        state.deallocate_slot_if_anonymous(source_slot)
     elif call_expr.to() == 'Std::Vector::push':
         vector_slot = emit_expr(
             body = body,
@@ -1110,26 +1138,28 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             vector_slot.to_string(),
             value_slot.to_string(),
         )))
+        state.deallocate_slot(slot = value_slot)
 
         # We don't create or use a slot provided by the caller because we need
         # to return the slot in which the vector resides.
-        return vector_slot
+        slot = vector_slot
     elif call_expr.to() == 'Std::Vector::size':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
+        source_slot = emit_expr(
+            body = body,
+            expr = args[0],
+            state = state,
+            slot = None,
+            must_emit = False,
+            meta = None,
+            toplevel = False,
+        )
         body.append(Verbatim('vlen {} {}'.format(
             slot.to_string(),
-            emit_expr(
-                body = body,
-                expr = args[0],
-                state = state,
-                slot = None,
-                must_emit = False,
-                meta = None,
-                toplevel = False,
-            ).to_string(),
+            source_slot.to_string(),
         )))
-        return slot
+        state.deallocate_slot_if_anonymous(source_slot)
     elif call_expr.to() == 'Std::Vector::at':
         vector_slot = emit_expr(
             body = body,
@@ -1157,8 +1187,10 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             index_slot.to_string(),
         )))
 
+        state.deallocate_slot_if_anonymous(vector_slot)
+        state.deallocate_slot_if_anonymous(index_slot)
+
         slot.is_pointer = True
-        return slot
     elif call_expr.to() == 'Std::Pointer::take':
         expr_slot = emit_expr(
             body = body,
@@ -1176,9 +1208,10 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             expr_slot.to_string(),
         )))
 
+        state.deallocate_slot_if_anonymous(expr_slot)
+
         slot.is_pointer = True
         slot.is_pointer_explicit = True
-        return slot
     elif call_expr.to() == 'Io::read':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
@@ -1206,7 +1239,8 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             value_slot.to_string(),
         )))
 
-        return slot
+        state.deallocate_slot_if_anonymous(port_slot)
+        state.deallocate_slot_if_anonymous(value_slot)
     elif call_expr.to() == 'Io::write':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
@@ -1234,7 +1268,8 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             value_slot.to_string(),
         )))
 
-        return slot
+        state.deallocate_slot_if_anonymous(port_slot)
+        state.deallocate_slot_if_anonymous(value_slot)
     elif call_expr.to() == 'Io::close':
         if slot is None:
             slot = state.get_slot(None, anonymous = True)
@@ -1252,7 +1287,7 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             port_slot.to_string(),
         )))
 
-        return slot
+        state.deallocate_slot_if_anonymous(port_slot)
     elif call_expr.to() == 'Io::wait':
         request_slot = emit_expr(
             body = body,
@@ -1269,10 +1304,8 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             request_slot.to_string(),
             str(timeout.token),
         )))
-
-        return slot
     elif call_expr.to() == 'Io::cancel':
-        request_slot = emit_expr(
+        emit_expr(
             body = body,
             expr = args[0],
             state = state,
@@ -1282,10 +1315,8 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             toplevel = False,
         )
         body.append(Verbatim('io_cancel {}'.format(
-            request_slot.to_string(),
+            slot.to_string(),
         )))
-
-        return request_slot
     else:
         raise Exception('unimplemented built-in', call_expr.to())
 
