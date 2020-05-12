@@ -1605,9 +1605,16 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
     name = call_expr.operator
     args = call_expr.args
 
+    # FIXME Emitting arguments and applying the operator to them one-by-one
+    # would greatly reduce register pressure. Emitting all arguments first and
+    # then applying the operator wastes many registers as they cannot be reused
+    # for different arguments.
+
     applied_args = []
     for i, each in enumerate(args):
-        applied_args.append(emit_expr(
+        tracker = State.Allocation_tracker()
+        state.track_slot_allocations(tracker)
+        arg_slot = emit_expr(
             body = body,
             expr = each,
             state = state,
@@ -1615,7 +1622,10 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
             must_emit = False,
             meta = None,
             toplevel = False,
-        ))
+        )
+        applied_args.append(arg_slot)
+        tracker.release(arg_slot, safe = True)
+        state.release_tracked_allocations(tracker)
 
     if slot is None:
         slot = state.get_slot(None, anonymous = True)
@@ -1670,6 +1680,9 @@ def emit_operator_call(body : list, call_expr, state : State, slot : Slot):
             applied_args[1].to_string(),
         )))
         slot.is_pointer = False
+
+    for each in applied_args:
+        state.deallocate_slot_if_anonymous(each)
 
     return slot
 
