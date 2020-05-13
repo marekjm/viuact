@@ -1,5 +1,6 @@
 import collections
 import hashlib
+import sys
 
 from viuact import exceptions, group_types, token_types
 
@@ -2018,6 +2019,10 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         must_emit = False, meta = None):
     handlers = expr.handling_blocks
     expression = expr.expr
+
+    sys.stderr.write('match-expression given slot := {}\n'.format(
+        Slot.to_address(slot),
+    ))
 
     expr_block_name = 'match_{}'.format(hashlib.sha1(
         repr(expression).encode('utf-8')
