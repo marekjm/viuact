@@ -1800,7 +1800,7 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
     state.deallocate_slot_if_anonymous(cond_slot)
 
     if slot is None:
-        slot = state.get_slot(None, anonymous = True)
+        slot = state.get_slot(None, anonymous = True).as_void()
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(true_arm_id)))
