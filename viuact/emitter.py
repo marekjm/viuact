@@ -2115,11 +2115,25 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         body.extend(tag_check_body)
     state.deallocate_slot(slot = tag_check_slot)
 
+    # We need to create ensure that a single slot is used for output of all
+    # with-expressions. However, if the given slot is void (meaning that the
+    # value of the match-expression is ignored) each with-expression would have
+    # a new slot automatically allocated and this is not what we want.
+    # To prevent this automatic allocation we create a dummy slot that will act
+    # as a placeholder for the values generated. This dummy slot can be later
+    # deallocated.
+    effective_slot = (slot or
+        state.get_slot(name = None, anonymous = True).as_void())
+
     # As the last step, let's emit the actual with-expressions that the overall
     # match-expression should evaluate to.
     body.append(Verbatim('; handling withs of {}'.format(expr_block_name)))
     for i, each in enumerate(handlers):
         with_expr_body = [
+            Verbatim(''),
+            Verbatim('; with {} ...'.format(
+                each.pattern.to_string(),
+            )),
             Verbatim('.mark: {}'.format(with_expr_markers[i][0])),
         ]
 
@@ -2148,16 +2162,15 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
 
         tracker = State.Allocation_tracker()
         state.track_slot_allocations(tracker)
-        slot = emit_expr(
+        emit_expr(
             body = with_expr_body,
             expr = each.expr,
             state = state,
-            slot = slot,
+            slot = effective_slot,
             must_emit = True,
             meta = meta,
             toplevel = False,
         )
-        tracker.release(slot, safe = True)
         state.release_tracked_allocations(tracker)
 
         if extracted_name:
@@ -2182,7 +2195,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         state.deallocate_slot(slot = enum_tag_slot)
     state.deallocate_slot(slot = checked_expr_slot)
 
-    return slot
+    return effective_slot
 
 def emit_match_integer_expr(body : list, expr, state : State, slot : Slot = None,
         must_emit = False, meta = None):
