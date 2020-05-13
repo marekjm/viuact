@@ -1,0 +1,27 @@
+(enum Maybe (
+    (Some _)
+    None
+))
+
+(let main () {
+    (let s (Maybe.Some "Hello, World!"))
+    (let n (Maybe.None))
+
+    (match s (
+        (with Maybe.Some value (print value))
+        (with Maybe.None _)))
+
+    (print (match s (
+        (with Maybe.Some value value)
+        (with Maybe.None "nothing"))))
+
+    (match n (
+        (with Maybe.Some value (print value))
+        (with Maybe.None _)))
+
+    (print (match n (
+        (with Maybe.Some value value)
+        (with Maybe.None "nothing"))))
+
+    0
+})

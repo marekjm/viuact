@@ -25,6 +25,7 @@ TESTS = (
     'labeled_parameters',
     'label_punning',
     'let_binding_of_call_result',
+    'match',
     'nested_fn',
     'nested_struct',
     'separate_module',
