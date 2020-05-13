@@ -829,6 +829,8 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
     args = call_expr.args
 
     if call_expr.to() == 'print':
+        if slot is None and type(args[0]) != group_types.Name_ref:
+            slot = state.get_slot(name = None, anonymous = True)
         slot = emit_expr(
             body = body,
             expr = args[0],
