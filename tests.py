@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import hashlib
 import json
 import os
 import subprocess
@@ -75,11 +76,24 @@ def run_test(test_name, test_index):
     run_stage_stdout = run_stage_stdout.decode('utf-8')
 
     if run_stage_exit:
+        print('[reason: exit code {}]'.format(run_stage_exit))
         print(run_stage_stdout)
         raise Failed()
 
     if run_stage_stdout != expected_output:
-        print(run_stage_stdout)
+        print('[reason: expected does not match actual output]')
+        print('[reason: {} vs {} byte(s)]'.format(
+            len(expected_output),
+            len(run_stage_stdout),
+        ))
+        print('[note: expected: {}]'.format(
+            hashlib.sha384(expected_output.encode('utf-8')).hexdigest(),
+        ))
+        print('[note: actual:   {}]'.format(
+            hashlib.sha384(run_stage_stdout.encode('utf-8')).hexdigest(),
+        ))
+        print(repr(expected_output))
+        print(repr(run_stage_stdout))
         raise Failed()
 
     print(HEADER_OK)
