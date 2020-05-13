@@ -2045,11 +2045,14 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
     # with expressions. It gets its own slot as its result will never be
     # returned to the parent expression (if any). This slot may be deallocated
     # after we emitted the whole match-expression.
+    checked_expr_slot = None
+    if type(expression) != group_types.Name_ref:
+        checked_expr_slot = state.get_slot(name = None, anonymous = True)
     checked_expr_slot = emit_expr(
         body = expr_body,
         expr = expression,
         state = state,
-        slot = state.get_slot(name = None, anonymous = True),
+        slot = checked_expr_slot,
         must_emit = must_emit,
         meta = meta,
         toplevel = False,
@@ -2224,7 +2227,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
 
     if is_tag_enum:
         state.deallocate_slot(slot = enum_tag_slot)
-    state.deallocate_slot(slot = checked_expr_slot)
+    state.deallocate_slot_if_anonymous(slot = checked_expr_slot)
 
     return effective_slot
 
