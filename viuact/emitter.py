@@ -62,6 +62,7 @@ class Slot:
         self.register_set = register_set
         self.is_pointer = False
         self.is_pointer_explicit = False
+        self.explicit_void = False
 
     def __eq__(self, other):
         if type(other) is not Slot:
@@ -83,10 +84,27 @@ class Slot:
         return ('void' if slot is None else slot.to_string())
 
     def is_void(self):
-        return self.index is None
+        return ((self.index is None) or self.explicit_void)
+
+    def as_void(self):
+        self.explicit_void = True
+        return self
 
     def is_anonymous(self):
         return self.name is None
+
+    @staticmethod
+    def is_drop(name):
+        if type(name) == str:
+            return (name == IGNORE_VALUE)
+        elif type(name) == group_types.Name_ref:
+            return (str(name.name.token) == IGNORE_VALUE)
+        elif type(name) == Slot:
+            return name.is_void()
+        else:
+            raise Exception('cannot compare {} with drop'.format(
+                name,
+            ))
 
     def become_anonymous(self):
         self.name = None
