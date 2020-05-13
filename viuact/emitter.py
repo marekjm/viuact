@@ -494,6 +494,12 @@ def emit_expr(
             slot,
         )
     elif leader_type is group_types.Name_ref:
+        if Slot.is_drop(expr):
+            if not Slot.is_drop(slot):
+                fmt = "cannot use _ as result if the expression's value is used"
+                raise Exception(fmt)
+            return None
+
         if state.what_is_it(str(expr.name.token)) == State.Name_kind.Function:
             if slot is None:
                 slot = state.get_slot(name = None, anonymous = True)
