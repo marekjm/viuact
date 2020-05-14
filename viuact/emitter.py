@@ -772,8 +772,17 @@ def emit_expr(
 def emit_let(body : list, let_expr, state : State, slot : Slot):
     # Let-bindings always create their own slots.
     name = str(let_expr.name.token)
-    if name == IGNORE_VALUE:
-        slot = None
+
+    if slot is not None:
+        fmt = 'warning: let-binding for {} received a slot: {}\n'
+        sys.stderr.write(fmt.format(
+            name,
+            Slot.to_address_debug(slot),
+        ))
+        state.deallocate_slot_if_anonymous(slot)
+
+    if Slot.is_drop(name):
+        slot = state.get_slot(name = None, anonymous = True)
     else:
         slot = state.get_slot(name)
 
@@ -794,6 +803,14 @@ def emit_let(body : list, let_expr, state : State, slot : Slot):
         toplevel = False,
     )
     body.append(Verbatim(''))
+
+    if slot.is_anonymous():
+        fmt = 'warning: let-binding for {} outputs to anonymous slot: {}\n'
+        sys.stderr.write(fmt.format(
+            name,
+            Slot.to_address(slot),
+        ))
+
     return slot
 
 
