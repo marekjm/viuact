@@ -782,7 +782,7 @@ def emit_let(body : list, let_expr, state : State, slot : Slot):
         state.deallocate_slot_if_anonymous(slot)
 
     if Slot.is_drop(name):
-        slot = state.get_slot(name = None, anonymous = True)
+        raise Exception(let_expr, let_expr.name.token.location(), 'let-binding uses _ as name')
     else:
         slot = state.get_slot(name)
 
