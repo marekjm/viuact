@@ -805,11 +805,18 @@ def emit_let(body : list, let_expr, state : State, slot : Slot):
     body.append(Verbatim(''))
 
     if slot.is_anonymous():
-        fmt = 'warning: let-binding for {} outputs to anonymous slot: {}\n'
+        fmt = 'warning: let-binding for {}: outputs to anonymous slot: {}\n'
         sys.stderr.write(fmt.format(
             name,
             Slot.to_address(slot),
         ))
+        fmt = ('warning: let-binding for {name}: reassigning name {name} to '
+               'slot {slot}\n')
+        sys.stderr.write(fmt.format(
+            name = name,
+            slot = Slot.to_address(slot),
+        ))
+        slot.name = name
 
     return slot
 
