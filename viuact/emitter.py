@@ -84,8 +84,18 @@ class Slot:
     def to_address(slot):
         return ('void' if slot is None else slot.to_string())
 
-    def is_void(self):
-        return ((self.index is None) or self.explicit_void)
+    @staticmethod
+    def to_address_debug(slot):
+        base = ('void' if slot is None else slot.to_string())
+        if slot is not None:
+            if slot.is_anonymous():
+                base += ' ; anonymous'
+            else:
+                base += ' ; named {}'.format(slot.name)
+        return base
+
+    def is_void(self, allow_explicit = True):
+        return ((self.index is None) or (self.explicit_void and allow_explicit))
 
     def as_void(self):
         self.explicit_void = True
@@ -115,6 +125,8 @@ class Slot:
         as_pointer = (self.is_pointer and not self.is_pointer_explicit)
         if pointer_dereference is not None:
             as_pointer = pointer_dereference
+        if self.is_void(allow_explicit = False):
+            return 'void'
         return '{}{} {}'.format(
             ('*' if as_pointer else '%'),
             self.index,
