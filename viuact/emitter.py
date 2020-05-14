@@ -2256,6 +2256,8 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         state.deallocate_slot(slot = enum_tag_slot)
     state.deallocate_slot_if_anonymous(slot = checked_expr_slot)
 
+    state.last_used_slot = effective_slot
+
     return effective_slot
 
 def emit_match_integer_expr(body : list, expr, state : State, slot : Slot = None,
