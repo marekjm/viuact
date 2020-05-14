@@ -2088,6 +2088,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
     checked_expr_slot = None
     if type(expression) != group_types.Name_ref:
         checked_expr_slot = state.get_slot(name = None, anonymous = True)
+    original_checked_expr_slot = checked_expr_slot
     checked_expr_slot = emit_expr(
         body = expr_body,
         expr = expression,
@@ -2282,7 +2283,9 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
     body.append(Verbatim('; end of {}'.format(expr_block_name)))
     body.append(Verbatim('.mark: {}'.format(match_done_marker)))
 
-    state.deallocate_slot_if_anonymous(slot = checked_expr_slot)
+    state.deallocate_slot_if_anonymous(original_checked_expr_slot)
+    if checked_expr_slot != original_checked_expr_slot:
+        state.deallocate_slot_if_anonymous(checked_expr_slot)
 
     state.last_used_slot = effective_slot
 
