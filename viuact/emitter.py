@@ -2260,7 +2260,12 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         state.release_tracked_allocations(tracker)
 
         if extracted_name:
-            state.deallocate_slot(name = extracted_name)
+            try:
+                state.deallocate_slot(name = extracted_name)
+            except exceptions.Unbound_name:
+                # If the value was Std.move'd than it was already deallocated,
+                # thus the error.
+                pass
 
         if i < (len(handlers) - 1):
             with_expr_body.append(Verbatim('jump {}'.format(match_done_marker)))
