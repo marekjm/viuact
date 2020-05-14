@@ -1,4 +1,5 @@
 from viuact import exceptions, token_types, group_types
+from viuact.lexer import Token
 
 
 def group_impl(tokens, break_on = token_types.Right_paren):
@@ -272,7 +273,11 @@ def parse_expression_impl(expr):
             if len(each) == 3:
                 handler = group_types.With_expression(
                     pattern = parse_expression(each[1]),
-                    name = None,
+                    name = group_types.Name_ref(token_types.Name(Token(
+                        text = '_',
+                        line = each[0].token.line,
+                        character = each[0].token.character,
+                    ))),
                     expr = parse_expression(each[2]),
                 )
             elif len(each) == 4:
@@ -282,7 +287,7 @@ def parse_expression_impl(expr):
                         each[2])
                 handler = group_types.With_expression(
                     pattern = parse_expression(each[1]),
-                    name = each[2],
+                    name = parse_expression(each[2]),
                     expr = parse_expression(each[3]),
                 )
             handling_exprs.append(handler)

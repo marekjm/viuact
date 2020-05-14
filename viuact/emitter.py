@@ -2216,15 +2216,15 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
             Verbatim('.mark: {}'.format(with_expr_markers[i][0])),
         ]
 
-        extracted_name = (str(each.name.token) if each.name is not None else None)
-        if extracted_name:
+        extracted_name = (each.name.to_string() if not Slot.is_drop(each.name) else None)
+        if extracted_name is not None:
             value_slot = state.get_slot(name = extracted_name)
             tmp_slot = state.get_slot(name = None, anonymous = True)
             with_expr_body.extend([
                 Verbatim(
                     '; location => {}:{}'.format(
-                        each.name.token.line + 1,
-                        each.name.token.character + 1,)),
+                        each.name.name.token.line + 1,
+                        each.name.name.token.character + 1,)),
                 Verbatim(
                     '; extracting value named {}...'.format(
                         repr(extracted_name))),
@@ -2425,7 +2425,8 @@ def emit_match_expr(body : list, expr, state : State, slot : Slot = None, must_e
             if each_field not in matched_enum['values']:
                 raise exceptions.Enum_field_does_not_exist(
                     expr, path, each_field)
-            if each.name and not matched_enum['values'][each_field]['tag']:
+            if ((not Slot.is_drop(each.name)) and
+                    (not matched_enum['values'][each_field]['tag'])):
                 raise exceptions.Non_tag_field_cannot_bind(
                     expr, path, each_field)
             checked_fields.append(each_field)
