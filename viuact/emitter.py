@@ -225,7 +225,7 @@ class State:
                     str(type(name))[8:-2]))
             slot = self.name_to_slot.get(name)
             if slot is None:
-                raise Exception('unknown name: {}'.format(name))
+                raise exceptions.Unbound_name('cannot deallocate', name)
         else:
             for k, v in self.name_to_slot.items():
                 if slot == v:
