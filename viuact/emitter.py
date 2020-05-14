@@ -1783,11 +1783,12 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
     condition = if_expr.condition
     arms = if_expr.arms
 
+    allocated_cond_slot = state.get_slot(name = None, anonymous = True)
     cond_slot = emit_expr(
         body = body,
         expr = condition,
         state = state,
-        slot = None,
+        slot = allocated_cond_slot,
         must_emit = True,
         meta = None,
         toplevel = False,
@@ -1812,7 +1813,7 @@ def emit_if(body : list, if_expr, state : State, slot : Slot):
         true_arm_id,
         false_arm_id,
     )))
-    state.deallocate_slot_if_anonymous(cond_slot)
+    state.deallocate_slot_if_anonymous(allocated_cond_slot)
 
     if slot is None:
         slot = state.get_slot(None, anonymous = True).as_void()
