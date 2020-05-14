@@ -1521,7 +1521,7 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
 
 def emit_enum_member_id(body : list, expr, state : State, slot : Slot, meta):
     if slot is None:
-        slot = state.get_slot(name = None, anonymous = True)
+        raise exceptions.Slot_not_allocated_for(expr)
 
     path, member_name = expr.to_string().rsplit('::', 1)
     if path not in state.visible_fns.enums:

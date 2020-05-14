@@ -183,6 +183,9 @@ class Compound_expression_cannot_be_empty(Emitter_exception):
 class Unbound_name(Emitter_exception):
     pass
 
+class Slot_not_allocated_for(Emitter_exception):
+    pass
+
 class Lowerer_exception(Exception):
     pass
 
