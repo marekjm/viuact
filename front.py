@@ -321,10 +321,16 @@ def main(executable_name, args):
             if os.path.isdir(switch_path):
                 shutil.rmtree(switch_path, ignore_errors = True)
         elif switch_tool == 'ls':
+            mark_active = ('-s' not in args)
             try:
                 for switch_name in sorted(Env_switch.available_switches()):
                     print('{}{}'.format(
-                        ('*' if Env_switch.is_active(switch_name) else ' '),
+                        (
+                            '*'
+                            if (Env_switch.is_active(switch_name) and
+                                mark_active) else
+                            ' '
+                        ),
                         switch_name,
                     ))
             except FileNotFoundError:
