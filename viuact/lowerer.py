@@ -441,12 +441,20 @@ def output_function_body(fn, in_module, meta):
     if fn.arguments:
         inner_body.append(emitter.Verbatim(''))
 
+    allocated_return_slot = None
+    body_type = type(fn.body)
+    if body_type == group_types.Name_ref:
+        pass
+    else:
+        allocated_return_slot = state.get_slot(name = None, anonymous = True)
+
+    state.get_slot(name = None, anonymous = True)
     return_slot = emitter.emit_expr(
         body = inner_body,
         expr = fn.body,
         state = state,
         meta = meta,
-        slot = None,
+        slot = allocated_return_slot,
         toplevel = False,
     )
 
