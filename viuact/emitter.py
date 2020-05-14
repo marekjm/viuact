@@ -2072,6 +2072,17 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         meta = meta,
         toplevel = False,
     )
+    if True:
+        sys.stderr.write('checked-expression slot (actual)   := {}{}\n'.format(
+            Slot.to_address_debug(checked_expr_slot),
+            (
+                ' (anonymous)'
+                if (checked_expr_slot and checked_expr_slot.is_anonymous()) else
+                ''
+        )))
+        sys.stderr.write('checked-expression slot (original) := {}\n'.format(
+            Slot.to_address_debug(original_checked_expr_slot),
+        ))
     expr_body.append(Verbatim('; matching expr of {} to withs'.format(expr_block_name)))
 
     # Then, we determine the name of the enum that is matched by this
