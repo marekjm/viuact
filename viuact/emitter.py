@@ -2175,6 +2175,7 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         ])
         body.extend(tag_check_body)
     state.deallocate_slot(slot = tag_check_slot)
+    state.deallocate_slot_if_anonymous(enum_tag_slot)
 
     # We need to create ensure that a single slot is used for output of all
     # with-expressions. However, if the given slot is void (meaning that the
@@ -2252,8 +2253,6 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
     body.append(Verbatim('; end of {}'.format(expr_block_name)))
     body.append(Verbatim('.mark: {}'.format(match_done_marker)))
 
-    if is_tag_enum:
-        state.deallocate_slot(slot = enum_tag_slot)
     state.deallocate_slot_if_anonymous(slot = checked_expr_slot)
 
     state.last_used_slot = effective_slot
