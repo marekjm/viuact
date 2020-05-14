@@ -242,6 +242,9 @@ class State:
             self.tracker.release(slot, safe = True)
 
     def deallocate_slot_if_anonymous(self, slot):
+        if slot is None:
+            sys.stderr.write('warning: deallocating slot passed as none\n')
+            return
         if not slot.is_anonymous():
             return
         self.deallocate_slot(slot = slot)
