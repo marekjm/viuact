@@ -102,6 +102,10 @@ _viuact()
 
     case "$(_viuact_argtype $cmd $prev)" in
         FILE|FILENAME) compgen_opt+=(-o filenames -f);;
+        VIUACT_SOURCE_FILE)
+            _viuact_add_f find . -name '*.vt'
+            _viuact_add_f find . -name '*.viuact'
+            ;;
         DIR|ROOT) compgen_opt+=(-o filenames -d);;
         MAKE|CMD) compgen_opt+=(-c);;
         KIND) _viuact_add http local git;;
@@ -144,22 +148,53 @@ _viuact()
         switch)
             case $COMP_CWORD in
                 2)
-                    _viuact_add status make rm ls to if
+                    _viuact_add create if init ls rm show to
                     _viuact_add --help
                     ;;
                 *)
                     case "$subcmd" in
-                        status) ;;
-                        make) ;;
-                        rm|to)
-                            _viuact_add_f viuact switch ls -s
+                        create)
+                            if [ $COMP_CWORD -eq 3 ]; then
+                                _viuact_add --set
+                            fi
                             ;;
+                        if)
+                            if [ $COMP_CWORD -eq 3 ]; then
+                                _viuact_add -e
+                                _viuact_add_f viuact switch ls -s
+                            elif [ "$prev" == '-e' ]; then
+                                # FIXME for some reason _viuact_add_f does not
+                                # work here
+                                _viuact_add "$(viuact switch ls -s)"
+                            fi
+                            ;;
+                        init) ;;
                         ls)
                             _viuact_add -s
                             ;;
-                        if)
-                            _viuact_add -e
+                        rm)
                             _viuact_add_f viuact switch ls -s
+                            ;;
+                        show)
+                            if [ $COMP_CWORD -eq 3 ]; then
+                                _viuact_add --verbose --default
+                            elif [ $COMP_CWORD -eq 5 ]; then
+                                true
+                            elif [ "$prev" == '--default' ]; then
+                                _viuact_add --verbose
+                            elif [ "$prev" == '--verbose' ]; then
+                                _viuact_add --default
+                            fi
+                            ;;
+                        to)
+                            if [ $COMP_CWORD -eq 3 ]; then
+                                _viuact_add --set --default
+                                _viuact_add_f viuact switch ls -s
+                            elif [ "$prev" == '--set' ]; then
+                                # FIXME for some reason _viuact_add_f does not
+                                # work here
+                                _viuact_add "$(viuact switch ls -s)"
+                            fi
                             ;;
                         *) ;;
                     esac;;

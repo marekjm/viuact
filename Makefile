@@ -43,13 +43,18 @@ install:
 		$(BIN_DIR)/viuact
 	@mkdir -p ~/.local/lib/viuact
 	cp -Rv ./stdlib/Std/* ~/.local/lib/viuact/Std
+	@mkdir -p ~/.local/share/viuact/switch/init/
+	cp -Rv switch/init/* ~/.local/share/viuact/switch/init/
 
 watch-test:
 	find . -name '*.py' | entr -c make test
 
 watch-install:
-	( find . -name '*.py' ; find ./stdlib -name '*.i' ) | \
-		entr -cs \
+	( \
+		find . -name '*.py' ; \
+		find ./stdlib -name '*.i' ; \
+		find ./switch -type f \
+	) | entr -cs \
 		"make install && dd if=/dev/urandom count=512 2>/dev/null | sha384sum"
 
 pipeline.png: pipeline.dot
