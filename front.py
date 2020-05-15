@@ -289,10 +289,13 @@ def print_help(executable, stream = None, text = None):
     ))
 
 
-KNOWN_TOOLS = (
+CORE_TOOLS = (
     'cc',
     'link',
     'fmt',
+)
+KNOWN_TOOLS = (
+    *CORE_TOOLS,
     'exec',
     'switch',
 )
@@ -364,6 +367,16 @@ def colorise(color, s):
         colored.attr('reset'),
     )
 
+DEFAULT_CORE_DIR = '.'
+CORE_DIR = os.environ.get('VIUACT_CORE_DIR', DEFAULT_CORE_DIR)
+def get_core_exec_path(executable):
+    is_development = (CORE_DIR == '.')
+    return os.path.join(os.path.expanduser(CORE_DIR), {
+        'cc': ('cc.py' if is_development else 'viuact-cc'),
+        'fmt': ('format.py' if is_development else 'viuact-format'),
+        'link': ('opt.py' if is_development else 'viuact-opt'),
+    }.get(executable))
+
 def main(executable_name, args):
     arg = (args[0] or '--help')
     tool = None
@@ -381,6 +394,9 @@ def main(executable_name, args):
     elif arg == '--help':
         print_help(EXECUTABLE)
     elif arg == '--env':
+        print('VIUACT_CORE_DIR: {}'.format(
+            os.environ.get('VIUACT_CORE_DIR', '(none)'),
+        ))
         print('DEFAULT_OUTPUT_DIRECTORY: {}'.format(
             viuact.env.DEFAULT_OUTPUT_DIRECTORY,
         ))
@@ -443,14 +459,10 @@ def main(executable_name, args):
     if tool is None:
         exit(0)
 
-    if tool == 'cc':
-        os.execvp('viuact-cc', args)
-    elif tool == 'link':
-        os.execvp('viuact-opt', args)
-    elif tool == 'fmt':
-        os.execvp('viuact-format', args)
-    elif tool == 'exec':
-        pass
+    if tool in CORE_TOOLS:
+        executable_path = get_core_exec_path(tool)
+        argv = (executable_path, *args[1:],)
+        os.execvp(executable_path, argv)
     elif tool == 'switch':
         if '--help' in args:
             print_help(
@@ -488,6 +500,7 @@ def main(executable_name, args):
 
             SWITCH_DIRS = (
                 'bin',
+                'lib/viuact-core',
                 'lib/viua/std',
                 'lib/viuact/Std',
             )
@@ -495,19 +508,31 @@ def main(executable_name, args):
                 os.makedirs(os.path.join(switch_path, each))
 
             BASE_BIN_DIR = os.path.expanduser('~/.local/bin')
+            BASE_CORE_DIR = os.path.expanduser('~/.local/lib/viuact-core')
+
             SWITCH_BIN_DIR = os.path.join(switch_path, 'bin')
+            SWITCH_CORE_DIR = os.path.join(switch_path, 'lib/viuact-core')
+
             SWITCH_EXECUTABLES = (
-                'viuact-cc',
-                'viuact-opt',
-                'viuact-format',
                 'viua-vm',
                 'viua-asm',
                 'viua-dis',
             )
+            SWITCH_CORE_EXECUTABLES = (
+                'viuact-cc',
+                'viuact-opt',
+                'viuact-format',
+            )
+
             for each in SWITCH_EXECUTABLES:
                 os.link(
                     os.path.join(BASE_BIN_DIR, each),
                     os.path.join(SWITCH_BIN_DIR, each),
+                )
+            for each in SWITCH_CORE_EXECUTABLES:
+                os.link(
+                    os.path.join(BASE_CORE_DIR, each),
+                    os.path.join(SWITCH_CORE_DIR, each),
                 )
 
             with open(os.path.join(switch_path, '.meta'), 'w') as ofstream:
@@ -658,6 +683,9 @@ def main(executable_name, args):
             ), {
                 'VIUACT_SWITCH': switch_name,
                 'VIUACT_SWITCH_PREFIX': switch_path,
+                'VIUACT_CORE_DIR': '{sw}/lib/viuact-core'.format(
+                    sw = switch_path,
+                ),
                 'VIUA_LIBRARY_PATH': '{sw}/lib/viua:{sw}/lib/viuact{env}'.format(
                     sw = switch_path,
                     env = formatted_env_or_empty('VIUA_LIBRARY_PATH')
@@ -682,5 +710,10 @@ def main(executable_name, args):
             sys.stderr.write(
                 'error: unknown switch subcommand: {}\n'.format(switch_tool))
             exit(1)
+    else:
+        sys.stderr.write('warning: tool not implemented\n')
+        exit(1)
+
+    exit(0)
 
 main(sys.argv[0], sys.argv[1:])

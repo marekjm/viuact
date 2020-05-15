@@ -1,6 +1,15 @@
+PYTHON_VERSION=$(shell python3 --version | grep -Po '3\.\d+')
+
 PREFIX=~/.local
 BIN_DIR=$(PREFIX)/bin
-PYTHON_LIB_DIR=$(PREFIX)/lib/python$(shell python3 --version | grep -Po '3\.\d+')/site-packages
+LIB_DIR=$(PREFIX)/lib
+SHARE_DIR=$(PREFIX)/share
+
+CORE_DIR=$(LIB_DIR)/viuact-core
+SWITCH_TEMPLATE_DIR=$(SHARE_DIR)/viuact/switch
+
+PYTHON_LIB_DIR=$(PREFIX)/lib/python$(PYTHON_VERSION)/site-packages
+
 VIUACT_LIBS_DIR=$(PYTHON_LIB_DIR)/viuact
 
 VIUACT_HEAD_COMMIT=$(shell git rev-parse HEAD)
@@ -28,23 +37,26 @@ test:
 
 install:
 	@mkdir -p $(BIN_DIR)
+	@mkdir -p $(LIB_DIR)
+	@mkdir -p $(CORE_DIR)
 	@mkdir -p $(VIUACT_LIBS_DIR)
 	cp ./viuact/*.py $(VIUACT_LIBS_DIR)/
 	@sed -i "s/'HEAD'/'$(VIUACT_HEAD_COMMIT)'/" $(VIUACT_LIBS_DIR)/__init__.py
 	@sed -i "s/__code__ = 'CODE'/__code__ = '$(VIUACT_CODE_HASH)'/" $(VIUACT_LIBS_DIR)/__init__.py
-	cp ./cc.py $(BIN_DIR)/viuact-cc
-	cp ./opt.py $(BIN_DIR)/viuact-opt
-	cp ./format.py $(BIN_DIR)/viuact-format
+	cp ./cc.py $(CORE_DIR)/viuact-cc
+	cp ./opt.py $(CORE_DIR)/viuact-opt
+	cp ./format.py $(CORE_DIR)/viuact-format
 	cp ./front.py $(BIN_DIR)/viuact
+	@sed -i "s%DEFAULT_CORE_DIR = '.*'%DEFAULT_CORE_DIR = '$(CORE_DIR)'%" $(BIN_DIR)/viuact
 	chmod +x \
-		$(BIN_DIR)/viuact-cc \
-		$(BIN_DIR)/viuact-opt \
-		$(BIN_DIR)/viuact-format \
+		$(CORE_DIR)/viuact-cc \
+		$(CORE_DIR)/viuact-opt \
+		$(CORE_DIR)/viuact-format \
 		$(BIN_DIR)/viuact
-	@mkdir -p ~/.local/lib/viuact
-	cp -Rv ./stdlib/Std/* ~/.local/lib/viuact/Std
-	@mkdir -p ~/.local/share/viuact/switch/init/
-	cp -Rv switch/init/* ~/.local/share/viuact/switch/init/
+	@mkdir -p $(LIB_DIR)/viuact
+	cp -Rv ./stdlib/Std/* $(LIB_DIR)/viuact/Std
+	@mkdir -p $(SWITCH_TEMPLATE_DIR)/init
+	cp -Rv switch/init/* $(SWITCH_TEMPLATE_DIR)/init/
 
 watch-test:
 	find . -name '*.py' | entr -c make test
