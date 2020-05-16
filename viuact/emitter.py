@@ -243,7 +243,7 @@ class State:
 
     def deallocate_slot_if_anonymous(self, slot):
         if slot is None:
-            sys.stderr.write('warning: deallocating slot passed as none\n')
+            sys.stderr.write('warning: deallocate_slot_if_anonymous() received slot which is None\n')
             return
         if not slot.is_anonymous():
             return
@@ -805,17 +805,6 @@ def emit_let(body : list, let_expr, state : State, slot : Slot):
     body.append(Verbatim(''))
 
     if slot.is_anonymous():
-        fmt = 'warning: let-binding for {}: outputs to anonymous slot: {}\n'
-        sys.stderr.write(fmt.format(
-            name,
-            Slot.to_address(slot),
-        ))
-        fmt = ('warning: let-binding for {name}: reassigning name {name} to '
-               'slot {slot}\n')
-        sys.stderr.write(fmt.format(
-            name = name,
-            slot = Slot.to_address(slot),
-        ))
         slot.name = name
 
     return slot
@@ -2068,10 +2057,6 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
     handlers = expr.handling_blocks
     expression = expr.expr
 
-    sys.stderr.write('match-expression given slot := {}\n'.format(
-        Slot.to_address(slot),
-    ))
-
     expr_block_name = 'match_{}'.format(hashlib.sha1(
         repr(expression).encode('utf-8')
         + repr(expr).encode('utf-8')
@@ -2098,17 +2083,6 @@ def emit_match_enum_expr(body : list, expr, state : State, slot : Slot = None,
         meta = meta,
         toplevel = False,
     )
-    if True:
-        sys.stderr.write('checked-expression slot (actual)   := {}{}\n'.format(
-            Slot.to_address_debug(checked_expr_slot),
-            (
-                ' (anonymous)'
-                if (checked_expr_slot and checked_expr_slot.is_anonymous()) else
-                ''
-        )))
-        sys.stderr.write('checked-expression slot (original) := {}\n'.format(
-            Slot.to_address_debug(original_checked_expr_slot),
-        ))
     expr_body.append(Verbatim('; matching expr of {} to withs'.format(expr_block_name)))
 
     # Then, we determine the name of the enum that is matched by this

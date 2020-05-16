@@ -223,7 +223,6 @@ def perform_imports(import_expressions, meta):
         if found:
             continue
 
-        sys.stderr.write('warning: available modules: {}\n'.format(', '.join(meta.modules)))
         raise exceptions.No_such_module('no such module: {}'.format(mod_name), spec)
 
 
