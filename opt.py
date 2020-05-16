@@ -9,7 +9,7 @@ import viuact.util.help
 
 
 HELP = '''{NAME}
-    {executable} - Viuact linker
+    {executable} - output Viua VM bytecode
 
 {SYNOPSIS}
     {exec_tool} build/_default/%fg(arg)FILE%r.asm

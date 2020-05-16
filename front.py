@@ -22,7 +22,7 @@ HELP = '''{NAME}
     {exec_blank} --help
     {exec_blank} --env
     {exec_blank} cc     --mode %fg(man_var)MODE%r %arg(file).vt
-    {exec_blank} link   %arg(file).asm
+    {exec_blank} opt    %arg(file).asm
     {exec_blank} fmt    %arg(file).vt
     {exec_blank} switch [<%fg(man_const)tool%r>] [%arg(option)...] [%arg(arg)]
 
@@ -42,8 +42,8 @@ HELP = '''{NAME}
     %fg(man_se)cc%r %arg(file).vt
         Compile modules and executables.
 
-    %fg(man_se)link%r %arg(file).asm
-        Link modules and executables.
+    %fg(man_se)opt%r %arg(file).asm
+        Output modules and executables.
 
     %fg(man_se)fmt%r %arg(file).vt
         Format Viuact source code.
@@ -254,7 +254,7 @@ EXECUTABLE = 'viuact'
 
 CORE_TOOLS = (
     'cc',
-    'link',
+    'opt',
     'fmt',
 )
 KNOWN_TOOLS = (
@@ -328,7 +328,7 @@ def get_core_exec_path(executable):
     return os.path.join(os.path.expanduser(CORE_DIR), {
         'cc': ('cc.py' if is_development else 'viuact-cc'),
         'fmt': ('format.py' if is_development else 'viuact-format'),
-        'link': ('opt.py' if is_development else 'viuact-opt'),
+        'opt': ('opt.py' if is_development else 'viuact-opt'),
     }.get(executable))
 
 def main(executable_name, args):

@@ -32,7 +32,7 @@ _viuact_commands()
 {
     echo "cc"
     echo "fmt"
-    echo "link"
+    echo "opt"
     echo "switch"
 }
 
@@ -136,7 +136,7 @@ _viuact()
                     ;;
             esac
             ;;
-        link)
+        opt)
             _viuact_add_f find ./build/_default -name '*.asm'
             _viuact_add --help --version
             ;;
