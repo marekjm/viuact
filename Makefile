@@ -40,7 +40,8 @@ install:
 	@mkdir -p $(LIB_DIR)
 	@mkdir -p $(CORE_DIR)
 	@mkdir -p $(VIUACT_LIBS_DIR)
-	cp ./viuact/*.py $(VIUACT_LIBS_DIR)/
+	@find . -name '__pycache__' | xargs -n 1 --no-run-if-empty rm -r
+	cp -Rv ./viuact/* $(VIUACT_LIBS_DIR)/
 	@sed -i "s/'HEAD'/'$(VIUACT_HEAD_COMMIT)'/" $(VIUACT_LIBS_DIR)/__init__.py
 	@sed -i "s/__code__ = 'CODE'/__code__ = '$(VIUACT_CODE_HASH)'/" $(VIUACT_LIBS_DIR)/__init__.py
 	cp ./cc.py $(CORE_DIR)/viuact-cc
