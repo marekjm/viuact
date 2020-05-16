@@ -5,59 +5,50 @@ import sys
 
 import viuact
 from viuact import token_types, group_types, lexer, parser
+import viuact.util.help
 
-HELP = '''{man_executable}(1)
 
-NAME
+HELP = '''{NAME}
     {executable} - format Viuact source code
 
-SYNOPSIS
-    {executable} [-i] [-s <n>] <file>
+{SYNOPSIS}
+    {exec_tool} [-i] [-s %a(n)] %arg(file).vt
     {exec_blank} --version
     {exec_blank} --help
 
-DESCRIPTION
+{DESCRIPTION}
+    %text
     Format Viuact source code according to a predefined coding style. This helps
     enforcing a uniform look for all source code.
 
-OPTIONS
-    -i
+{OPTIONS}
+    %opt(-i)
         Edit the file in-place instead of printing formatted source code on
         standard output.
 
-    -s <n>
-        Use n spaces as indent level. The default value is 4.
+    %opt(-s) %arg(n)
+        %text
+        Use %fg(arg)n%r spaces as indent level. The default value is
+        %fg(int)4%r.
 
-    --version
+    %opt(--version)
         Display version information.
 
-    --help
+    %opt(--help)
         Display this help screen.
 
-SEE ALSO
-    viuact-cc(1)
-    viuact-opt(1)
-    viuact(1)
+{COPYRIGHT}
+    %copyright(2019-2020) Marek Marecki
 
-COPYRIGHT
-    Copyright (c) 2019-2020 Marek Marecki
-
+    %text
     Some parts of the code were developed at Polish-Japanse Academy Of
     Information Technology in Gdańsk, Poland.
 
     This is Free Software published under GNU GPL v3 license.
 '''
 
+
 EXECUTABLE = 'viuact-format'
-
-
-def print_help(executable, stream = None):
-    stream = (stream if stream is not None else sys.stdout)
-    stream.write(HELP.format(
-        executable = executable,
-        man_executable = executable.upper(),
-        exec_blank = (' ' * len(executable)),
-    ))
 
 
 class Formatter_error(Exception):
@@ -469,14 +460,19 @@ def format_source_code(groups, indent_width):
 def main(executable_name, args):
     if '--version' in args:
         print('{} version {} ({})'.format(
-            os.path.split(executable_name)[1],
+            EXECUTABLE,
             viuact.__version__,
             viuact.__commit__,
         ))
         exit(0)
 
     if '--help' in args:
-        print_help(EXECUTABLE)
+        viuact.util.help.print_help(
+            EXECUTABLE,
+            suite = viuact.suite,
+            version = viuact.__version__,
+            text = HELP,
+        )
         exit(0)
 
     source_file_name = args[-1]

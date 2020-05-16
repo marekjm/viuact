@@ -6,109 +6,135 @@ import re
 import shutil
 import sys
 
-try:
-    import colored
-except ImportError:
-    colored = None
-
 import viuact
 import viuact.frontend
 import viuact.driver
 import viuact.env
+import viuact.util.help
 
 
-HELP = '''{man_exec}{man_pad_left}{man_title}{man_pad_right}{man_exec}
-
-{NAME}
+HELP = '''{NAME}
     {executable} - Viuact language tools
 
 {SYNOPSIS}
-    {executable} --version
+    {exec_tool} <%fg(man_const)tool%r> [%arg(option)...] [%arg(arg)]
+    {exec_blank} --version
     {exec_blank} --help
     {exec_blank} --env
-    {exec_blank} <tool> [<option>...] [<operand>...]
+    {exec_blank} cc     --mode %fg(man_var)MODE%r %arg(file).vt
+    {exec_blank} link   %arg(file).asm
+    {exec_blank} fmt    %arg(file).vt
+    {exec_blank} switch [<%fg(man_const)tool%r>] [%arg(option)...] [%arg(arg)]
 
 {DESCRIPTION}
+    %text
     This executable is a front for tooling supplied for the Viuact langauge. It
     can be used as a driver for those other tools (compiler, linker, formatter).
     Each tool can be used on its own without this wrapper.
 
+    %text
     This is also an executable that can be used to inspect state of the Viuact
     installation on a system by checking paths, environment variables' values,
     etc.
 
-{OPTIONS}
-    --help
-        Display this message.
-
-    --version
-        Display version information.
-
-    --env
-        Display information about the environment that the compiler will use.
-
 {TOOLS}
 
-    cc
+    %fg(man_se)cc%r %arg(file).vt
         Compile modules and executables.
 
-    link
+    %fg(man_se)link%r %arg(file).asm
         Link modules and executables.
 
-    fmt
+    %fg(man_se)fmt%r %arg(file).vt
         Format Viuact source code.
 
-    switch
-        Create and manage semi-isolated Viua environments (switches).
+    %fg(man_se)switch%r
+        %text
+        Manage multiple Viua environments.
+
+{OPTIONS}
+    %opt(--help)
+        Display this message.
+
+    %opt(--version)
+        Display version information.
+
+    %opt(--env)
+        %text
+        Display information about the environment that the compiler will use.
 
 {EXAMPLES}
-
+    %text
     Some examples to give you a taste of how to use this program.
 
-    THE CANONICAL PROGRAM
+    %fg(man_se)THE CANONICAL PROGRAM%r
 
+        %text
         Here's how you would go about compiling the canonical "Hello, World!"
         program:
 
-            $ cat hello.lisp
-            (let main () (print "Hello, World!"))
-            $ viuact cc --mode exec hello.lisp
-            $ viuact opt build/_default/hello.asm
-            $ viua-vm build/_default/hello.bc
-            Hello, World!
+            %fg(white)$ cat hello.lisp
+            %fg(white)(let main () (print "Hello, World!"))
+            %fg(white)$ viuact cc --mode exec hello.lisp
+            %fg(white)$ viuact opt build/_default/hello.asm
+            %fg(white)$ viua-vm build/_default/hello.bc
+            %fg(white)Hello, World!
 
         Quite simple.
 
-    CREATING NEW SWITCH
+    %fg(man_se)CREATING NEW SWITCH%r
 
-            $ viuact switch make foo
-            $ viuact switch ls
-             foo
+        %text
+        The following command will create a switch named %fg(man_var)foo%r if it
+        does not already exist:
 
-        This command will create a new switch named "foo".
+            %fg(white)$ viuact switch create foo
+            %fg(white)$ viuact switch ls
+            %fg(white)   foo
 
-    ACTIVATING A SWITCH (SWITCHING TO A SWITCH)
+        %text
+        Use %fg(man_se)viuact switch ls%r to get a list of all created switches.
 
-            $ `viuact switch to foo`
-            $ viuact switch ls
-            *foo
+    %fg(man_se)ACTIVATING A SWITCH (SWITCHING TO A SWITCH)%r
 
+        %text
+        The following command will activate a switch named %fg(man_var)foo%r:
+
+            %fg(white)$ `viuact switch to foo`
+            %fg(white)$ viuact switch ls
+            %fg(white)*  foo
+
+        %text
         The backquotes are necessary to make your shell execute the exports
         required to make the switch work. Note how a star appears before the
         name of the active switch.
 
-{SEE_ALSO}
-    viuact-cc(1)
-    viuact-opt(1)
-    viuact-format(1)
+    %fg(man_se)ACTIVATING A SWITCH ON SHELL INITIALISATION (ZSH)%r
+
+        %text
+        Add the following line to your %fg(man_const)~/.zshrc%r file:
+
+            %fg(white). ~/.local/viuact/switch/init/init.zsh \\
+            %fg(white)    >/dev/null 2>/dev/null || true
+
+        %text
+        This will activate a default switch (if any) during ZSH initialisation.
+
+        %text
+        You can set a default switch using the following command:
+
+            %fg(white)$ viuact switch to --set foo
+            %fg(white)$ viuact switch ls
+            %fg(white) = foo
+
+        %text
+        The = character appearing before switch's name means that it is set as
+        the default one.
 
 {COPYRIGHT}
-    Copyright (c) 2020 Marek Marecki
+    %copyright(2020) Marek Marecki
 
     This is Free Software published under GNU GPL v3 license.
-
-
-{suite} {version}{bottom_pad}{man_exec}
 '''
 
 HELP_SWITCH = '''{man_exec}{man_pad_left}{man_title}{man_pad_right}{man_exec}
@@ -129,35 +155,43 @@ HELP_SWITCH = '''{man_exec}{man_pad_left}{man_title}{man_pad_right}{man_exec}
     {exec_blank} to     [{opt_ex}...] [{arg_ex}]
 
 {DESCRIPTION}
+    %text
     This executable is a front for tooling supplied for the Viuact langauge. It
     can be used as a driver for those other tools (compiler, linker, formatter).
     Each tool can be used on its own without this wrapper.
 
+    %text
     This is also an executable that can be used to inspect state of the Viuact
     installation on a system by checking paths, environment variables' values,
     etc.
 
 {COMMANDS}
+    %text
     If no command is given, the default is %fg(man_se)show%r.
 
     %fg(man_se)create%r %fg(man_ex)name%r
         Create new switch named %fg(man_ex)name%r.
 
     %fg(man_se)if%r %fg(man_ex)name%r
-        Check if %fg(man_ex)name%r is the active switch. Prints %fg(steel_blue_3)true%r to
-        standard output if swith %fg(man_ex)name%r is active; %fg(steel_blue_3)false%r otherwise.
-        Always exit with 0.
+        %text
+        Check if %fg(man_ex)name%r is the active switch. Prints
+        %fg(bool)true%r to standard output if swith %fg(man_ex)name%r is
+        active; %fg(bool)false%r otherwise. Always exit with 0 unless
+        %fg(man_ex)-e%r option is present on the command line.
 
         %fg(man_ex)-e%r
+            %text
             Instead of printing to standard output use exit code to signal the
-            result of the operation. Exit with %fg(steel_blue_3)0%r if switch %fg(man_ex)name%r is active;
-            %fg(steel_blue_3)1%r otherwise.
+            result of the operation. Exit with %fg(int)0%r if switch
+            %fg(man_ex)name%r is active; %fg(int)1%r otherwise.
 
     %fg(man_se)init%r
+        %text
         Initialise switch root directory. This command needs to be executed
         before any other %fg(man_se)viuact switch%r command.
 
     %fg(man_se)ls%r
+        %text
         List created switches. Active switch is prepended with * and its name is
         displayed %fg(green)green%r. Default switch is prepended with = and its
         name is displayed %fg(red)red%r.
@@ -169,23 +203,27 @@ HELP_SWITCH = '''{man_exec}{man_pad_left}{man_title}{man_pad_right}{man_exec}
         Remove switch named %fg(man_ex)name%r.
 
     %fg(man_se)show%r
+        %text
         Show active switch. If the %fg(man_ex)--default%r option is given then
         show the default switch. The %fg(man_ex)--verbose%r option may be used
         to get information about the active switch.
 
         %fg(man_ex)--verbose%r
+            %text
             Show information about the active switch instead of just its name.
 
         %fg(man_ex)--default%r
             Use default switch instead of the active one.
 
     %fg(man_se)to%r %fg(man_ex)name%r
+        %text
         Emit shell script required to activate a switch named %fg(man_ex)name%r.
         Use `%fg(man_se)viuact switch to %fg(man_ex)foo%r` to activate a switch
         named %fg(man_ex)foo%r. Use %fg(man_ex)--set%r option to also set the
         switch as default.
 
         %fg(man_ex)--set%r
+            %text
             Set the switch %fg(man_ex)name%r as default in addition to emitting
             the activating commands.
 
@@ -210,83 +248,8 @@ HELP_SWITCH = '''{man_exec}{man_pad_left}{man_title}{man_pad_right}{man_exec}
 {suite} {version}{bottom_pad}{man_exec}
 '''
 
+
 EXECUTABLE = 'viuact'
-SUITE = 'Viuact'
-
-def print_help(executable, stream = None, text = None):
-    stream = (stream if stream is not None else sys.stdout)
-
-    COLUMN_COUNT = 80
-
-    man_title = 'Viuact Manual'
-    man_executable = '{}(1)'.format(executable.upper())
-
-    man_padding_left = ((COLUMN_COUNT - len(man_title)) // 2)
-    man_padding_left -= len(man_executable)
-
-    man_padding_right = COLUMN_COUNT
-    man_padding_right -= len(man_title)
-    man_padding_right -= man_padding_left
-    man_padding_right -= (2 * len(man_executable))
-
-    version_string = viuact.__version__
-    bottom_padding = (COLUMN_COUNT - 1)
-    bottom_padding -= len(SUITE)
-    bottom_padding -= len(version_string)
-    bottom_padding -= len(man_executable)
-
-    MAN_SECTION_COLOR = 'light_red'
-    MAN_EX_COLOR = 'green_3b'
-
-    text = (text or HELP)
-
-    fg = re.compile(r'%fg\(([a-z][a-z_]+(?:_[1-4][ab]?)?)\)')
-    attr_reset = re.compile(r'%r\b')
-    colorings = re.findall(fg, text)
-
-    def map_color(color):
-        mapped = {
-            'man_ex': MAN_EX_COLOR,
-            'man_se': MAN_SECTION_COLOR,
-        }.get(color, color)
-        return mapped
-
-    for color in colorings:
-        text = text.replace(
-            '%fg({})'.format(color),
-            (colored.fg(map_color(color)) if colored else ''))
-    text = re.sub(attr_reset, (colored.attr('reset') if colored else ''), text)
-
-    stream.write((text or HELP).format(
-        executable = executable,
-        exec_tool = executable.replace('-', ' '),
-        exec_blank = (' ' * len(executable)),
-
-        man_exec = man_executable,
-        man_title = man_title,
-        man_pad_left = (' ' * man_padding_left),
-        man_pad_right = (' ' * man_padding_right),
-
-        executable_ex = colorise(
-            MAN_SECTION_COLOR, executable.replace('-', ' ')),
-        cmd_ex = colorise(MAN_EX_COLOR, 'COMMAND'),
-        arg_ex = colorise(MAN_EX_COLOR, 'ARG'),
-        opt_ex = colorise(MAN_EX_COLOR, 'OPTION'),
-
-        suite = SUITE,
-        version = version_string,
-        bottom_pad = (' ' * bottom_padding),
-
-        NAME = colorise(MAN_SECTION_COLOR, 'NAME'),
-        SYNOPSIS = colorise(MAN_SECTION_COLOR, 'SYNOPSIS'),
-        DESCRIPTION = colorise(MAN_SECTION_COLOR, 'DESCRIPTION'),
-        COMMANDS = colorise(MAN_SECTION_COLOR, 'COMMANDS'),
-        OPTIONS = colorise(MAN_SECTION_COLOR, 'OPTIONS'),
-        TOOLS = colorise(MAN_SECTION_COLOR, 'TOOLS'),
-        EXAMPLES = colorise(MAN_SECTION_COLOR, 'EXAMPLES'),
-        SEE_ALSO = colorise(MAN_SECTION_COLOR, 'SEE ALSO'),
-        COPYRIGHT = colorise(MAN_SECTION_COLOR, 'COPYRIGHT'),
-    ))
 
 
 CORE_TOOLS = (
@@ -358,15 +321,6 @@ class Env_switch:
 def item_or(seq, n, default = None):
     return (seq[n] if n < len(seq) else default)
 
-def colorise(color, s):
-    if (colored is None) or (color is None):
-        return s
-    return '{}{}{}'.format(
-        colored.fg(color),
-        s,
-        colored.attr('reset'),
-    )
-
 DEFAULT_CORE_DIR = '.'
 CORE_DIR = os.environ.get('VIUACT_CORE_DIR', DEFAULT_CORE_DIR)
 def get_core_exec_path(executable):
@@ -392,7 +346,12 @@ def main(executable_name, args):
                 viuact.__code__,
             ))
     elif arg == '--help':
-        print_help(EXECUTABLE)
+        viuact.util.help.print_help(
+            EXECUTABLE,
+            suite = viuact.suite,
+            version = viuact.__version__,
+            text = HELP,
+        )
     elif arg == '--env':
         print('VIUACT_CORE_DIR: {}'.format(
             os.environ.get('VIUACT_CORE_DIR', '(none)'),
@@ -465,8 +424,10 @@ def main(executable_name, args):
         os.execvp(executable_path, argv)
     elif tool == 'switch':
         if '--help' in args:
-            print_help(
+            viuact.util.help.print_help(
                 executable = 'viuact-switch',
+                suite = SUITE,
+                version = viuact.__version__,
                 text = HELP_SWITCH,
             )
             exit(0)
@@ -617,7 +578,7 @@ def main(executable_name, args):
                             if is_default else
                             ' '
                         ),
-                        name = colorise(color, switch_name),
+                        name = viuact.util.help.colorise(color, switch_name),
                     ))
             except FileNotFoundError:
                 sys.stderr.write('error: switch directory does not exist\n')
@@ -698,7 +659,7 @@ def main(executable_name, args):
                     sw = switch_path,
                     env = formatted_env_or_empty('PATH'),
                 ),
-                'MANPATH': '{sw}/man{env}'.format(
+                'MANPATH': '{env}:{sw}/man'.format(
                     sw = switch_path,
                     env = formatted_env_or_empty('MANPATH'),
                 ),

@@ -5,74 +5,59 @@ import sys
 
 import viuact
 import viuact.driver
+import viuact.util.help
 
 
-HELP = '''{man_executable}(1)
-
-NAME
+HELP = '''{NAME}
     {executable} - Viuact linker
 
-SYNOPSIS
-    {executable} build/_default/<file>.asm
+{SYNOPSIS}
+    {exec_tool} build/_default/%fg(arg)FILE%r.asm
     {exec_blank} --help
+    {exec_blank} --version
 
-DESCRIPTION
-    The "linker" drives the Viua VM assembler to convert files emitted by Viuact
-    compiler into bytecode modules, and then link them into an executable.
+{DESCRIPTION}
+    %text
+    The %fg(man_const)opt%r tool uses the Viua VM assembler to produce bytecode
+    modules from .asm files produced by %fg(man_const)viuact cc%r.
 
-OPTIONS
-    --help
+{OPTIONS}
+    %opt(--help)
         Display this message.
 
-    --version
+    %opt(--version)
         Display version information.
 
-EXAMPLES
-    The canonical program
+{COPYRIGHT}
+    %copyright(2018-2020) Marek Marecki
 
-        $ cat hello.lisp
-        (let main () (print "Hello, World!"))
-        $ viuact-cc --mode exec hello.lisp
-        $ viuact-opt build/_default/hello.asm
-        $ viua-vm build/_default/hello.bc
-        Hello, World!
-
-SEE ALSO
-    viuact-cc(1)
-    viuact-format(1)
-
-COPYRIGHT
-    Copyright (c) 2018-2020 Marek Marecki
-
+    %text
     Some parts of the code were developed at Polish-Japanse Academy Of
     Information Technology in Gdańsk, Poland.
 
     This is Free Software published under GNU GPL v3 license.
 '''
 
+
 EXECUTABLE = 'viuact-opt'
-
-
-def print_help(executable, stream = None):
-    stream = (stream if stream is not None else sys.stdout)
-    stream.write(HELP.format(
-        executable = executable,
-        man_executable = executable.upper(),
-        exec_blank = (' ' * len(executable)),
-    ))
 
 
 def main(executable_name, args):
     if '--version' in args:
         print('{} version {} ({})'.format(
-            os.path.split(executable_name)[1],
+            EXECUTABLE,
             viuact.__version__,
             viuact.__commit__,
         ))
         exit(0)
 
     if '--help' in args:
-        print_help(EXECUTABLE)
+        viuact.util.help.print_help(
+            EXECUTABLE,
+            suite = viuact.suite,
+            version = viuact.__version__,
+            text = HELP,
+        )
         exit(0)
 
     viuact.driver.assemble_and_link(
