@@ -1435,6 +1435,20 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
                 got = got_labeled,
             )
 
+    call_kind = type(call_expr)
+    if call_kind == group_types.Function_call:
+        call_kind = Call.Kind.Synchronous
+    elif call_kind == group_types.Actor_call:
+        call_kind = Call.Kind.Actor
+    elif call_kind == group_types.Tail_call:
+        call_kind = Call.Kind.Tail
+    elif call_kind == group_types.Watchdog_call:
+        call_kind = Call.Kind.Watchdog
+    else:
+        raise Exception('{} cannot be used as a call expression'.format(
+            str(type(call_expr))[8:-2],
+        ))
+
     positional_args = list(filter(
         lambda each: type(each) is not group_types.Argument_bind, args))
     labeled_args = list(filter(
@@ -1494,19 +1508,6 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
     if state.has_slot(fn_name):
         to = state.slot_of(fn_name).to_string()
 
-    call_kind = type(call_expr)
-    if call_kind == group_types.Function_call:
-        call_kind = Call.Kind.Synchronous
-    elif call_kind == group_types.Actor_call:
-        call_kind = Call.Kind.Actor
-    elif call_kind == group_types.Tail_call:
-        call_kind = Call.Kind.Tail
-    elif call_kind == group_types.Watchdog_call:
-        call_kind = Call.Kind.Watchdog
-    else:
-        raise Exception('{} cannot be used as a call expression'.format(
-            str(type(call_expr))[8:-2],
-        ))
     body.append(Call(
         to = to,
         slot = slot,
