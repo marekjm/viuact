@@ -148,7 +148,7 @@ _viuact()
         switch)
             case $COMP_CWORD in
                 2)
-                    _viuact_add create if init ls rm show to
+                    _viuact_add create if init ls rm show to update
                     _viuact_add --help
                     ;;
                 *)
@@ -195,6 +195,10 @@ _viuact()
                                 # work here
                                 _viuact_add "$(viuact switch ls -s)"
                             fi
+                            ;;
+                        update)
+                            _viuact_add --verbose --dry-run
+                            _viuact_add_f viuact switch ls -s
                             ;;
                         *) ;;
                     esac;;

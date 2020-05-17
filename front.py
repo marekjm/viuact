@@ -439,6 +439,17 @@ def main(executable_name, args):
             sys.stderr.write("error: run 'switch init' first\n")
             exit(1)
 
+        SWITCH_EXECUTABLES = (
+            'viua-vm',
+            'viua-asm',
+            'viua-dis',
+        )
+        SWITCH_CORE_EXECUTABLES = (
+            'viuact-cc',
+            'viuact-opt',
+            'viuact-format',
+        )
+
         if switch_tool == 'create':
             switch_name = item_or(args, 2)
             if switch_name is None:
@@ -474,26 +485,15 @@ def main(executable_name, args):
             SWITCH_BIN_DIR = os.path.join(switch_path, 'bin')
             SWITCH_CORE_DIR = os.path.join(switch_path, 'lib/viuact-core')
 
-            SWITCH_EXECUTABLES = (
-                'viua-vm',
-                'viua-asm',
-                'viua-dis',
-            )
-            SWITCH_CORE_EXECUTABLES = (
-                'viuact-cc',
-                'viuact-opt',
-                'viuact-format',
-            )
-
             for each in SWITCH_EXECUTABLES:
-                os.link(
-                    os.path.join(BASE_BIN_DIR, each),
-                    os.path.join(SWITCH_BIN_DIR, each),
+                shutil.copyfile(
+                    src = os.path.join(BASE_BIN_DIR, each),
+                    dst = os.path.join(SWITCH_BIN_DIR, each),
                 )
             for each in SWITCH_CORE_EXECUTABLES:
-                os.link(
-                    os.path.join(BASE_CORE_DIR, each),
-                    os.path.join(SWITCH_CORE_DIR, each),
+                shutil.copyfile(
+                    src = os.path.join(BASE_CORE_DIR, each),
+                    dst = os.path.join(SWITCH_CORE_DIR, each),
                 )
 
             with open(os.path.join(switch_path, '.meta'), 'w') as ofstream:
@@ -667,6 +667,91 @@ def main(executable_name, args):
 
             if set_default:
                 Env_switch.set_default(switch_name)
+        elif switch_tool == 'update':
+            verbose_report = ('--verbose' in args)
+            dry_run = ('--dry-run' in args)
+
+            switch_name = item_or(args, (len(args) - 1))
+            if switch_name.startswith('--'):
+                switch_name = None
+
+            if switch_name is None:
+                sys.stderr.write('error: no switch name\n')
+                exit(1)
+            if not Env_switch.exists(switch_name):
+                sys.stderr.write(
+                    'error: switch does not exist: {}\n'.format(switch_name))
+                exit(1)
+
+            switch_path = Env_switch.path_of(switch_name)
+
+            BASE_BIN_DIR = os.path.expanduser('~/.local/bin')
+            BASE_CORE_DIR = os.path.expanduser('~/.local/lib/viuact-core')
+
+            SWITCH_BIN_DIR = os.path.join(switch_path, 'bin')
+            SWITCH_CORE_DIR = os.path.join(switch_path, 'lib/viuact-core')
+
+            def read_vm_version(prefix):
+                vm_version = os.popen('{}/viua-vm --version --verbose'.format(
+                    prefix), 'r').read()
+                try:
+                    basic, fingerprint = vm_version.splitlines()
+                except Exception:
+                    fmt = 'error: cannot read version from: {}/viua-vm\n'
+                    sys.stderr.write(fmt.format(prefix))
+                    fmt = 'note: returned string:\n{}\n'
+                    sys.stderr.write(fmt.format(vm_version))
+                    exit(1)
+
+                basic = basic.rsplit(maxsplit = 2)
+                basic = (basic[1], basic[2].replace('(', '').replace(')', ''),)
+                fingerprint = fingerprint.rsplit(maxsplit = 1)[1]
+
+                return (basic, fingerprint,)
+            def format_vm_version(vm_version, fingerprint_chars = None):
+                basic, fingerprint = vm_version
+                version, commit = basic
+
+                fingerprint_chars = (fingerprint_chars or 8)
+                return '{} {} {}...{}'.format(
+                    version,
+                    commit,
+                    fingerprint[:fingerprint_chars],
+                    fingerprint[-fingerprint_chars:],
+                )
+
+            old_vm_version = read_vm_version(SWITCH_BIN_DIR)
+            new_vm_version = read_vm_version(BASE_BIN_DIR)
+
+            if old_vm_version == new_vm_version:
+                sys.stderr.write('error: update not needed\n')
+                sys.stderr.write('note: switch VM: {}\n'.format(
+                    format_vm_version(old_vm_version, fingerprint_chars = 16),
+                ))
+                exit(0)
+
+            if verbose_report:
+                print('from-version:     {}'.format(old_vm_version[0][0]))
+                print('from-commit:      {}'.format(old_vm_version[0][1]))
+                print('from-fingerprint: {}'.format(old_vm_version[1]))
+                print('to-version:       {}'.format(new_vm_version[0][0]))
+                print('to-commit:        {}'.format(new_vm_version[0][1]))
+                print('to-fingerprint:   {}'.format(new_vm_version[1]))
+            else:
+                print('from: {}'.format(format_vm_version(old_vm_version)))
+                print('to:   {}'.format(format_vm_version(new_vm_version)))
+
+            if dry_run:
+                exit(0)
+
+            for each in SWITCH_EXECUTABLES:
+                os.unlink(
+                    os.path.join(SWITCH_BIN_DIR, each),
+                )
+                shutil.copy(
+                    src = os.path.join(BASE_BIN_DIR, each),
+                    dst = os.path.join(SWITCH_BIN_DIR, each),
+                )
         else:
             sys.stderr.write(
                 'error: unknown switch subcommand: {}\n'.format(switch_tool))
