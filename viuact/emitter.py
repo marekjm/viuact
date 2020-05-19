@@ -133,9 +133,9 @@ class Slot:
             self.register_set,
         )
 
-    def as_pointer(self):
+    def as_pointer(self, pointer = True):
         s = Slot(self.name, self.index, self.register_set)
-        s.is_pointer = True
+        s.is_pointer = pointer
         return s
 
 
@@ -1496,8 +1496,15 @@ def emit_call(body : list, call_expr, state : State, slot : Slot, meta):
 
     body.append(Verbatim('frame %{}'.format(len(args))))
     for i, each in enumerate(applied_args):
-        # FIXME if name is None (anonuymous slot) make move not copy
-        passer = (Move.make_move if each.is_anonymous() else Move.make_copy)
+        use_move = (each.is_anonymous() or (call_kind == Call.Kind.Tail))
+        if use_move and each.is_pointer:
+            dest = each.as_pointer(pointer = False)
+            body.append(Move.make_copy(
+                dest = dest,
+                source = each,
+            ))
+            each = dest
+        passer = (Move.make_move if use_move else Move.make_copy)
         body.append(passer(
             dest = Slot(None, i, ARGUMENTS_REGISTER_SET),
             source = each,
