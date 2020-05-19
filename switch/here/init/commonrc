@@ -1,0 +1,4 @@
+# vim:ft=sh:
+
+echo "You are now in build directory for switch '$VIUACT_SWITCH'."
+echo 'Type ^D to exit to your previous shell. Happy building!'

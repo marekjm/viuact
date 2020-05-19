@@ -461,6 +461,7 @@ def main(executable_name, args):
                 print('info: creating root switch directory: {}'.format(
                     switch_root))
                 os.makedirs(switch_root)
+
             switch_path = os.path.join(switch_root, switch_name)
             if os.path.isdir(switch_path):
                 sys.stderr.write('error: switch {} already exists, overwriting\n'.format(
@@ -470,11 +471,27 @@ def main(executable_name, args):
             os.makedirs(switch_path)
             print('new switch in: {}'.format(switch_path))
 
+            BUILD_DIR = 'var/viuact/build'
+            CONFIG_DIR = 'etc/viuact'
+
             SWITCH_DIRS = (
-                'bin',
-                'lib/viuact-core',
-                'lib/viua/std',
-                'lib/viuact/Std',
+                'bin',              # Executables
+                'etc',              # Configuration
+                'init',             # Viuact init files
+                'lib',              # Libraries
+                'lib/viuact-core',  # Core Viuact executables
+                'lib/viuact/Std',   # Standard Viuact libraries
+                'lib/viua/std',     # Standard Viua VM libraries
+                'man',              # man(1) pages
+                'run',              # Runtime state (PID and socket files, etc.)
+                'share',            # Resource files
+                'var',              # Variable and accumulated state
+                'var/cache',        # Cache
+                'var/log',          # Logs
+
+                BUILD_DIR,          # Build files produced during switch
+                                    # creation and package installation
+                CONFIG_DIR,         # Configuration for this switch
             )
             for each in SWITCH_DIRS:
                 os.makedirs(os.path.join(switch_path, each))
@@ -496,8 +513,59 @@ def main(executable_name, args):
                     dst = os.path.join(SWITCH_CORE_DIR, each),
                 )
 
-            with open(os.path.join(switch_path, '.meta'), 'w') as ofstream:
-                ofstream.write(''.join(map(lambda x: '{}: {}\n'.format(*x), {
+            BASE_TEMPLATE_INIT_DIR = os.path.expanduser(
+                '~/.local/viuact/switch/init/here')
+            SWITCH_INIT_DIR = os.path.join(switch_path, 'lib/viuact-core')
+            INIT_FILES = (
+                'commonrc',
+                '.zshrc',
+            )
+
+            SWITCH_BUILD_DIR = os.path.join(switch_path, BUILD_DIR)
+            os.chdir(SWITCH_BUILD_DIR)
+            if True:  # Build and install Viua VM
+                stage_dir = os.path.join(SWITCH_BUILD_DIR, 'viuavm')
+                os.makedirs(stage_dir)
+                os.chdir(stage_dir)
+
+                GIT_REPOSITORY = 'https://git.sr.ht/~maelkum/viuavm'
+                GIT_BRANCH = 'devel'
+                GIT_COMMIT = None
+                def run_git_clone(repository, branch = None, commit = None):
+                    cmd = 'git clone '
+                    if branch is not None:
+                        cmd += '--branch {}'.format(branch)
+
+                    if os.system('{} {} .'.format(cmd, repository)) != 0:
+                        fmt = 'error: command failed: {}\n'.format(cmd)
+                        sys.stderr.write(fmt.format(cmd))
+                        exit(1)
+
+                    if commit is None:
+                        return
+
+                    cmd = 'git checkout {}'.format(commit)
+                    if os.system(cmd) != 0:
+                        fmt = 'error: command failed: {}\n'.format(cmd)
+                        sys.stderr.write(fmt.write(cmd))
+                        exit(1)
+
+                run_git_clone(GIT_REPOSITORY, GIT_BRANCH, GIT_COMMIT)
+                if os.system('./scripts/compile') != 0:
+                    fmt = 'error: compilation of Viua VM failed\n'
+                    sys.stderr.write(fmt)
+                    exit(1)
+
+                install_cmd = 'make PREFIX={} install'.format(switch_path)
+                if os.system(install_cmd) != 0:
+                    fmt = 'error: installation of Viua VM failed\n'
+                    sys.stderr.write(fmt)
+                    exit(1)
+
+            SWITCH_CONFIG_DIR = os.path.join(switch_path, CONFIG_DIR)
+            with open(os.path.join(SWITCH_CONFIG_DIR, 'created.conf'), 'w') as ofstream:
+                ofstream.write('[creation]\n')
+                ofstream.write('\n'.join(map(lambda x: '    {} = {}'.format(*x), {
                     'date_created':
                         datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                     'switch_root': switch_root,
@@ -507,6 +575,7 @@ def main(executable_name, args):
                         viuact.__commit__,
                     ),
                 }.items())))
+                ofstream.write('\n')
         elif switch_tool == 'if':
             violent_exit = (item_or(args, 2) == '-e')
             switch_name = (
