@@ -197,7 +197,7 @@ _viuact()
                             fi
                             ;;
                         update)
-                            _viuact_add --verbose --dry-run
+                            _viuact_add --verbose --dry-run --force
                             _viuact_add_f viuact switch ls -s
                             ;;
                         *) ;;

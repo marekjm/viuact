@@ -670,6 +670,7 @@ def main(executable_name, args):
         elif switch_tool == 'update':
             verbose_report = ('--verbose' in args)
             dry_run = ('--dry-run' in args)
+            force = ('--force' in args)
 
             switch_name = item_or(args, (len(args) - 1))
             if switch_name.startswith('--'):
@@ -723,7 +724,7 @@ def main(executable_name, args):
             old_vm_version = read_vm_version(SWITCH_BIN_DIR)
             new_vm_version = read_vm_version(BASE_BIN_DIR)
 
-            if old_vm_version == new_vm_version:
+            if (old_vm_version == new_vm_version) and not force:
                 sys.stderr.write('error: update not needed\n')
                 sys.stderr.write('note: switch VM: {}\n'.format(
                     format_vm_version(old_vm_version, fingerprint_chars = 16),
