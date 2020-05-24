@@ -212,7 +212,7 @@ def parse_expression_impl(expr):
     elif leader_type is token_types.Field_assignment and type(expr) is list:
         return group_types.Field_assignment(
             operator = expr[0],
-            field = expr[1],
+            field = parse_expression(expr[1]),
             value = parse_expression(expr[2]),
         )
     elif leader_type is token_types.If:

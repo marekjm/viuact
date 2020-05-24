@@ -429,6 +429,7 @@ class Id(Group_type):
 
     def __init__(self, name):
         self.name = name
+        self.separator = '::'
 
     @staticmethod
     def resolve(id_expr):
@@ -453,13 +454,12 @@ class Id(Group_type):
         return path
 
     def to_string(self):
-        return '::'.join(map(
+        return self.separator.join(map(
             lambda each: (
                 str(each.token)
                 if type(each) in (token_types.Module_name, token_types.Name,)
                 else each.to_string()),
             Id.resolve(self.name)))
-            # lambda each: str(each.token), Id.resolve(self.name)))
 
     def to_content(self):
         return {
@@ -539,16 +539,8 @@ class Field_assignment(Group_type):
         self.value = value
 
     def to_string(self):
-        def safe_or_else(fn, default):
-            try:
-                return fn()
-            except Exception:
-                return default()
         return '{} := ...'.format(
-            ''.join(map(lambda each: safe_or_else(
-                lambda: each.to_string(),
-                lambda: '<problematic>',
-                ), self.field)),
+            self.field.to_string(),
         )
 
     def to_content(self):

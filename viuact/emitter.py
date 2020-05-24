@@ -2471,6 +2471,9 @@ def emit_match_expr(body : list, expr, state : State, slot : Slot = None, must_e
 def resolve_field_access(expr):
     base_expr, fields = None, []
 
+    if type(expr) is group_types.Id:
+        expr = expr.name
+
     if type(expr[1]) is list and type(expr[1][0]) is token_types.Dot:
         base_expr, fields = resolve_field_access(expr[1])
         fields.append(expr[2])
