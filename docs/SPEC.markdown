@@ -105,7 +105,8 @@ Expressions can be simple or compound. A simple expression is...
 - a function call (or an actor call)
 - an operator call (e.g. division, addition, or pointer dereference)
 - a conditional expression
-- an exception catch expression
+- a catch-expression
+- a throw-expression
 
 A compound expression is one or more expressions (simple or compound) enclosed
 in braces, for example:
@@ -346,6 +347,8 @@ sufficient for the basic tasks. The data types are separated into two groups:
 
 - simple data types (e.g. integer or float)
 - compound data types (i.e. vector and struct)
+- tag enums (enums with place for some data)
+- plain enums (symbolic representations of constants)
 
 Programmers can create their own data types using structs and vectors to add
 structre to the data, and enumerations to add tags.
@@ -545,7 +548,7 @@ More convoluted examples are also possible:
 
 ----------------------------------------
 
-## Enumerations
+## Enumerations (plain)
 
 Viuact supports enumerations as a means of assigning a symbolic meaning to some
 opaque value. Values for enumeration fields are automatically selected.
@@ -590,13 +593,38 @@ Enumeration fields are accessed using operator dot:
     (let r Permission.Read)
     (print r)                   ; prints 4
 
+----------------------------------------
+
+## Enumerations (tag)
+
+Tag enumerations are used to wrap other values with symbolic meaning. The most
+well-known example may be a `Maybe` enum:
+
+    (enum Maybe (
+        (Some _)
+        None
+    ))
+
+Each field of a tag enum may be empty or have a place for a value. Empty fields
+are specified exactly as fields of plain enums; tagging fields must be wrapped
+in parenthesis and have the `_` the second element (representing the "place" for
+a value to tag).
+
+Tag enumerations are especially convenient when paired with *match-expressions*.
+
 --------------------------------------------------------------------------------
 
 # Conditional expressions
 
-Viuact supports an *if-expression* as its only conditional expression. An if
-expression is enclosed in parentheses and begins with the `if` keyword. The
-keyword is the followed by *guard expression* and two *arms*: the first is
+Viuact has two kinds of conditional expressions: *if-expressions* and
+*match-expression*.
+
+----------------------------------------
+
+## Conditional expressions: `if`
+
+An *if-expression* is enclosed in parentheses and begins with the `if` keyword.
+The keyword is the followed by a *guard-expression* and two *arms*: the first is
 evaluated if the guard expression evaluates to truth, otherwise the second one
 is evaluated. All three expressions (guard and arms) may be arbitrarily complex.
 
@@ -626,6 +654,132 @@ If-expressions may be nested to make more complex decisions:
                     (if (<= n 5)
                         "Some."
                         "Many.")))))
+
+Both arms **MUST** evaluate to a value. However, if the value of the
+*if-expression* is not used they may evaluate to a *void* value. This is useful
+when checking for a condition to perform some action - when only the truth arm
+is actually used. To have the false arm return a void value use `_` as its
+value, like this:
+
+    (if (some_condition)
+        (some_action)   ; If 'some_condition' is true then perform some action.
+        _)              ; Otherwise, do nothing and give a void value.
+
+----------------------------------------
+
+## Conditional expressions: `match`
+
+A *match-expression* is enclosed in parentheses and begins with the `match`
+keyword. The keyword is followed by *check-expression*, and a list of arms
+enclosed in parentheses.
+
+Each arm is enclosed in parentheses and begins with the `with` keyword. The
+keyword is followed by either an enum field (if matching an enum), or an integer
+(if matching integers).
+
+--------------------
+
+### Match expressions over enums
+
+Example: perform action on match, don't return a useful value.
+
+    (match x (
+        (with Maybe.Some x' (print x'))
+        (with Maybe.None _)
+    ))
+
+Example: extract and return a value in match, return a default if no match.
+
+    (match x (
+        (with Maybe.Some x' x')
+        (with Maybe.None 0)
+    ))
+
+Viuact requires that all fields of an enum are considered by a
+*match-expression*. If that is not needed, a *catch-all arm* may be used:
+
+    (enum Example (
+        Foo
+        Bar
+        Baz
+    ))
+
+    (match x (
+        (with Example.Foo (print "It's a foo!"))
+        (with _ (print "It's something else."))
+    ))
+
+A catch-all arm is denoted by `_` being used as the enum field.
+
+--------------------
+
+### Match expressions over integers
+
+Example:
+
+    (match x (
+        (with 42 (print "It's the answer!"))
+        (with _ (print "It's not the answer."))
+    ))
+
+Since the set of valid integers is theoretically unbounded it cannot be verified
+at compile time. Thus, Viuact reqires that *match-expressions* over integers
+always include a *catch-all arm*.
+
+--------------------------------------------------------------------------------
+
+# Error handling
+
+A basic error handling mechanism used by Viuact is the exception system. An
+exception may be thrown (signalling an error condition), and caught (to try to
+service an error condition).
+
+An exception is composed of two things:
+
+- a tag: used in *catch-expressions* to specify which exceptions they handle and
+  attach a symbolic meaning to exceptions
+- a optional payload: an arbitrary value that may contain additional information
+  related to the exception
+
+----------------------------------------
+
+## Catching exceptions
+
+A *try-expression* is used to wrap another expression and see if it throws an
+exception. This "another expression" is called *guarded-expression*, and is
+followed by a non-empty list of *catch-expressions* used to handle different
+types of exceptions.
+
+Example:
+
+    (try (some_function_that_may_fail 0 -1 "foo") (
+        (catch Out_of_range 0)
+        (catch Total_failure 1)
+        (catch End_of_the_world 2)
+    ))
+
+To extract a payload from an exception put a name after its tag in a
+*catch-expression*:
+
+    (catch Out_of_range x {
+        (print (Std.String.concat "error: out of range: "
+            (Std.String.to_strign x)))
+        0
+    })
+
+Both *guarded-expression* and *catch-expression* may be arbitrarily complex.
+
+----------------------------------------
+
+## Throwing exceptions
+
+Example: throw an exception without a payload
+
+    (throw Example_error)
+
+Example: throw an exception with a payload
+
+    (throw Hell_is_frozen 666)
 
 --------------------------------------------------------------------------------
 
