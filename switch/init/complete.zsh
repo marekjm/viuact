@@ -93,12 +93,12 @@ _viuact()
         return 0
     fi
 
-    echo "COMP_CWORD := $COMP_CWORD" >> debug.txt
-    echo "COMP_CWORDS := $COMP_CWORDS" >> debug.txt
-    echo "cmd := $cmd" >> debug.txt
-    echo "subcmd := $subcmd" >> debug.txt
-    echo "cur := $cur" >> debug.txt
-    echo "prev := $prev" >> debug.txt
+    # echo "COMP_CWORD := $COMP_CWORD" >> debug.txt
+    # echo "COMP_CWORDS := $COMP_CWORDS" >> debug.txt
+    # echo "cmd := $cmd" >> debug.txt
+    # echo "subcmd := $subcmd" >> debug.txt
+    # echo "cur := $cur" >> debug.txt
+    # echo "prev := $prev" >> debug.txt
 
     case "$(_viuact_argtype $cmd $prev)" in
         FILE|FILENAME) compgen_opt+=(-o filenames -f);;
