@@ -1,4 +1,4 @@
-# Viuact
+# Viuact programming language
 
 High-level programming language for [Viua](https://viuavm.org) virtual machine.
 
@@ -11,7 +11,7 @@ the language include:
 - message passing as means of communication between actors 
 - module system
 
-----
+--------------------------------------------------------------------------------
 
 ## Hello, World!
 
@@ -19,19 +19,68 @@ This is how you write the canonical program:
 
     (let main () (print "Hello, World!"))
 
-Save this code to a file (`vim`), compile (`viuact-cc`), assemble and
-link (`viuact-opt`), and execute (`viua-vm`):
+Save this code to a file (`vim`), compile (`viuact cc`), assemble and
+link (`viuact opt`), and execute (`viua-vm`):
 
     $ vim hello.lisp
-    $ viuact-cc --mode exec hello.lisp
-    $ viuatc-opt build/_default/hello.asm
+    $ viuact cc --mode exec hello.lisp
+    $ viuatc opt build/_default/hello.asm
     $ viua-vm build/_default/hello.bc
     Hello, World!
     $
 
-----
+--------------------------------------------------------------------------------
 
-## Brief introduction
+## Installation
+
+Here's how to get Viuact installed on your machine:
+
+    $ git clone --branch devel https://git.sr.ht/~maelkum/viuact
+    $ cd viuact
+    $ make PREFIX=~/.local install
+
+Execute the following command to confirm Viuact compiler is installed correctly:
+
+    $ viuact --version
+
+If you do not have Viua VM installed on your system you can use `viuact(1)`
+tools to do it for you. Execute the following commands to create a semi-isolated
+environment with Viua VM installed:
+
+    $ viuact switch init
+    $ viuact switch create vm
+
+----------------------------------------
+
+### Activating the switch
+
+This will fetch the most recent Viua VM code, compile it, and install in "switch
+prefix". Then, you can set the switch as the default one:
+
+    $ viuact switch to --set vm
+
+Now, whenever you want to activate the switch to make use of Viuact and Viua VM
+installed in its environment use the following commands:
+
+    $ `viuact switch to vm`
+
+The backticks are imporant - they make your shell interpret the output. Remove
+them to see what the switch-to command does.
+
+----------------------------------------
+
+### Additional goodies for ZSH
+
+If you have ZSH as your shell, add this near the end of your `~/.zshrc`:
+
+    . ~/.local/viuact/switch/init/init.zsh \
+        >/dev/null 2>/dev/null || true
+
+This will enable command completion for `viuact(1)` tools.
+
+--------------------------------------------------------------------------------
+
+# Brief introduction
 
 Let-bindings are used to define functions and variables:
 
@@ -77,16 +126,16 @@ Conditional expressions are used to make decisions:
 Results of conditional expressions are values so "ifs" can be used everywhere an
 expression can be used, e.g. in let-bindings.
 
-----
+--------------------------------------------------------------------------------
 
 ## Full introduction
 
 A not-so-brief introduction to teh language is available in docs directory, see
 [the specification](./docs/SPEC.markdown).
 
-----
+--------------------------------------------------------------------------------
 
 # License
 
-Viuact compiler is Free Software.
+Viuact compiler (and Viuact source code examples) is Free Software.
 It is published under GNU GPL v3.
