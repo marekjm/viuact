@@ -14,6 +14,7 @@ LOCAL_REGISTER_SET = 'local'
 CLOSURE_LOCAL_REGISTER_SET = ''
 PARAMETERS_REGISTER_SET = 'parameters'
 ARGUMENTS_REGISTER_SET = 'arguments'
+VOID_REGISTER_SET = 'void'
 
 BUILTIN_FUNCTIONS = (
     'print',
@@ -64,6 +65,14 @@ class Slot:
         self.is_pointer = False
         self.is_pointer_explicit = False
         self.explicit_void = False
+
+    @staticmethod
+    def make_void():
+        return Slot(
+            name = IGNORE_VALUE,
+            index = None,
+            register_set = VOID_REGISTER_SET,
+        )
 
     def __eq__(self, other):
         if type(other) is not Slot:
