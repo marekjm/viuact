@@ -54,7 +54,7 @@ install:
 		$(CORE_DIR)/viuact-opt \
 		$(CORE_DIR)/viuact-format \
 		$(BIN_DIR)/viuact
-	@mkdir -p $(LIB_DIR)/viuact
+	@mkdir -p $(LIB_DIR)/viuact/Std
 	cp -Rv ./stdlib/Std/* $(LIB_DIR)/viuact/Std
 	@mkdir -p $(SWITCH_TEMPLATE_DIR)/init
 	cp -Rv switch/init/* $(SWITCH_TEMPLATE_DIR)/init/
