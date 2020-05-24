@@ -496,11 +496,6 @@ def main(executable_name, args):
             SWITCH_BIN_DIR = os.path.join(switch_path, 'bin')
             SWITCH_CORE_DIR = os.path.join(switch_path, 'lib/viuact-core')
 
-            for each in SWITCH_EXECUTABLES:
-                shutil.copyfile(
-                    src = os.path.join(BASE_BIN_DIR, each),
-                    dst = os.path.join(SWITCH_BIN_DIR, each),
-                )
             for each in SWITCH_CORE_EXECUTABLES:
                 shutil.copyfile(
                     src = os.path.join(BASE_CORE_DIR, each),
