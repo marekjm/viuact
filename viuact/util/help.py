@@ -231,7 +231,7 @@ def print_help(executable, suite, version, text, stream = None, column_count = N
     top_line = (
         '{man_exec}{man_pad_left}{man_title}{man_pad_right}{man_exec}\n\n')
     bottom_line = (
-        '\n{suite} {version}{bottom_pad}{man_exec}')
+        '\n{suite} {version}{bottom_pad}{man_exec}\n')
     stream.write(format_help(top_line))
     stream.write(format_help(text))
     stream.write(format_help(bottom_line))
