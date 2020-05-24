@@ -1194,7 +1194,7 @@ def emit_builtin_call(body : list, call_expr, state : State, slot : Slot):
             body = body,
             expr = args[1],
             state = state,
-            slot = None,
+            slot = state.get_slot(name = None, anonymous = True),
             must_emit = False,
             meta = None,
             toplevel = False,
