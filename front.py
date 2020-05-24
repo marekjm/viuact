@@ -137,22 +137,19 @@ HELP = '''{NAME}
     This is Free Software published under GNU GPL v3 license.
 '''
 
-HELP_SWITCH = '''{man_exec}{man_pad_left}{man_title}{man_pad_right}{man_exec}
-
-{NAME}
+HELP_SWITCH = '''{NAME}
     {executable} - Manage multiple language versions
 
 {SYNOPSIS}
-    {executable_ex} {cmd_ex} [{opt_ex}]... [{arg_ex}]
-
-    {exec_tool} --help
-    {exec_blank} create [{opt_ex}] {arg_ex}
-    {exec_blank} if     [{opt_ex}] {arg_ex}
+    {exec_tool} <%fg(man_const)tool%r> [%arg(option)...] [%arg(arg)]
+    {exec_blank} --help
+    {exec_blank} create [%arg(option)] %arg(name)
+    {exec_blank} if     [%arg(option)] $arg(name)
     {exec_blank} init
-    {exec_blank} ls     [{opt_ex}]
-    {exec_blank} rm     {arg_ex}
-    {exec_blank} show   [{opt_ex}...]
-    {exec_blank} to     [{opt_ex}...] [{arg_ex}]
+    {exec_blank} ls     [%arg(option)]
+    {exec_blank} rm     %arg(name)
+    {exec_blank} show   [%arg(option)]
+    {exec_blank} to     [%arg(option)...] [%arg(name)]
 
 {DESCRIPTION}
     %text
@@ -169,21 +166,21 @@ HELP_SWITCH = '''{man_exec}{man_pad_left}{man_title}{man_pad_right}{man_exec}
     %text
     If no command is given, the default is %fg(man_se)show%r.
 
-    %fg(man_se)create%r %fg(man_ex)name%r
-        Create new switch named %fg(man_ex)name%r.
+    %fg(man_se)create%r %arg(name)
+        Create new switch named %arg(name).
 
-    %fg(man_se)if%r %fg(man_ex)name%r
+    %fg(man_se)if%r %arg(name)
         %text
-        Check if %fg(man_ex)name%r is the active switch. Prints
-        %fg(bool)true%r to standard output if swith %fg(man_ex)name%r is
+        Check if %arg(name) is the active switch. Prints
+        %fg(bool)true%r to standard output if swith %arg(name) is
         active; %fg(bool)false%r otherwise. Always exit with 0 unless
-        %fg(man_ex)-e%r option is present on the command line.
+        %opt(-e) option is present on the command line.
 
-        %fg(man_ex)-e%r
+        %opt(-e)
             %text
             Instead of printing to standard output use exit code to signal the
             result of the operation. Exit with %fg(int)0%r if switch
-            %fg(man_ex)name%r is active; %fg(int)1%r otherwise.
+            %arg(name) is active; %fg(int)1%r otherwise.
 
     %fg(man_se)init%r
         %text
@@ -196,38 +193,38 @@ HELP_SWITCH = '''{man_exec}{man_pad_left}{man_title}{man_pad_right}{man_exec}
         displayed %fg(green)green%r. Default switch is prepended with = and its
         name is displayed %fg(red)red%r.
 
-        %fg(man_ex)-s%r
+        %opt(-s)
             Do not prepend markers to switch names and disable coloring.
 
-    %fg(man_se)rm%r %fg(man_ex)name%r
-        Remove switch named %fg(man_ex)name%r.
+    %fg(man_se)rm%r %arg(name)
+        Remove switch named %arg(name).
 
     %fg(man_se)show%r
         %text
-        Show active switch. If the %fg(man_ex)--default%r option is given then
-        show the default switch. The %fg(man_ex)--verbose%r option may be used
+        Show active switch. If the %opt(--default) option is given then
+        show the default switch. The %opt(--verbose) option may be used
         to get information about the active switch.
 
-        %fg(man_ex)--verbose%r
+        %opt(--verbose)
             %text
             Show information about the active switch instead of just its name.
 
-        %fg(man_ex)--default%r
+        %opt(--default)
             Use default switch instead of the active one.
 
-    %fg(man_se)to%r %fg(man_ex)name%r
+    %fg(man_se)to%r %arg(name)
         %text
-        Emit shell script required to activate a switch named %fg(man_ex)name%r.
-        Use `%fg(man_se)viuact switch to %fg(man_ex)foo%r` to activate a switch
-        named %fg(man_ex)foo%r. Use %fg(man_ex)--set%r option to also set the
+        Emit shell script required to activate a switch named %arg(name).
+        Use `%fg(man_se)viuact switch to %fg(man_var)foo%r` to activate a switch
+        named %fg(man_var)foo%r. Use %opt(--set) option to also set the
         switch as default.
 
-        %fg(man_ex)--set%r
+        %opt(--set)
             %text
-            Set the switch %fg(man_ex)name%r as default in addition to emitting
+            Set the switch %arg(name) as default in addition to emitting
             the activating commands.
 
-        %fg(man_ex)--default%r
+        %opt(--default)
             Activate the default switch.
 
 {OPTIONS}
@@ -240,12 +237,9 @@ HELP_SWITCH = '''{man_exec}{man_pad_left}{man_title}{man_pad_right}{man_exec}
     viuact-format(1)
 
 {COPYRIGHT}
-    Copyright (c) 2020 Marek Marecki
+    %copyright(2020) Marek Marecki
 
     This is Free Software published under GNU GPL v3 license.
-
-
-{suite} {version}{bottom_pad}{man_exec}
 '''
 
 
@@ -426,7 +420,7 @@ def main(executable_name, args):
         if '--help' in args:
             viuact.util.help.print_help(
                 executable = 'viuact-switch',
-                suite = SUITE,
+                suite = viuact.suite,
                 version = viuact.__version__,
                 text = HELP_SWITCH,
             )
