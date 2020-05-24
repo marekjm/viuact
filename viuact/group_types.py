@@ -565,7 +565,7 @@ class Pointer_dereference(Group_type):
         self.value = value
 
     def to_string(self):
-        return '^ {}'.format(self.value.to_string())
+        return '(^ {})'.format(self.value.to_string())
 
     def to_content(self):
         return {
