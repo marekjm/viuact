@@ -108,80 +108,68 @@ def compile_as_module(
         compilation_filesystem_root = compilation_filesystem_root,
     )
 
-    module_function_mapping = {}
-    module_contents = {}
+    module_name = main_module_name
 
-    for each in meta.modules:
-        module_function_mapping[each] = []
-        module_contents[each] = []
+    fns = [
+        fn['real_name']
+        for fn
+        in meta.functions.values()
+        if fn['from_module'] == module_name
+    ]
+    contents = []
+    for fn in fns:
+        result = list(filter(lambda x: x[0] == fn, lowered_function_bodies))
+        if result:
+            contents.append(result[0][1])
 
-    for each in meta.functions.values():
-        module_function_mapping[each['from_module']].append(each['real_name'])
-    for module_name, contained_functions in module_function_mapping.items():
-        for fn_name in set(contained_functions):
-            x = list(filter(lambda each: each[0] == fn_name, lowered_function_bodies))
-            # FIXME fn_name sometimes is not in lowered_function_bodies
-            # (and we would crash) because contained_functions also
-            # lists all functions that the module imports. So let's just
-            # 'continue' here and pretend it did not happen.
-            #
-            # Such functions should be filtered much earlier.
-            if not x:
-                continue
-            x = x[0][1]
-            module_contents[module_name].append(x)
+    module_path = module_name.split('::')
+    if len(module_path) > 1:
+        os.makedirs(os.path.join(output_directory, *module_path[:-1]), exist_ok = True)
 
-    for module_name, contents in module_contents.items():
-        if module_name != main_module_name:
-            continue
-        module_path = module_name.split('::')
-        if len(module_path) > 1:
-            os.makedirs(os.path.join(output_directory, *module_path[:-1]), exist_ok = True)
+    module_impl_path = os.path.join(*module_path) + '.asm'
+    logs.debug('generating definition for: {} (in {})'.format(module_name, module_impl_path))
+    with open(os.path.join(output_directory, module_impl_path), 'w') as ofstream:
+        if meta.signatures:
+            ofstream.write('\n'.join(map(
+                lambda each: '.signature: {}'.format(each),
+                meta.signatures,
+            )))
+            ofstream.write('\n\n')
+        ofstream.write(';\n; Function definitions of module {}\n;\n\n'.format(
+            module_name
+        ))
+        ofstream.write('\n\n'.join(contents))
 
-        module_impl_path = os.path.join(*module_path) + '.asm'
-        logs.debug('generating definition for: {} (in {})'.format(module_name, module_impl_path))
-        with open(os.path.join(output_directory, module_impl_path), 'w') as ofstream:
-            if meta.signatures:
-                ofstream.write('\n'.join(map(
-                    lambda each: '.signature: {}'.format(each),
-                    meta.signatures,
-                )))
-                ofstream.write('\n\n')
-            ofstream.write(';\n; Function definitions of module {}\n;\n\n'.format(
-                module_name
-            ))
-            ofstream.write('\n\n'.join(contents))
-
-        module_interface_path = os.path.join(*module_path) + '.i'
-        logs.debug('generating interface for:  {} (in {})'.format(module_name, module_interface_path))
-        fns = [
-            {
-                'arity': v['arity'],
-                'name': k,
-                'real_name': v['real_name'],
-                'from_module': v['from_module'],
-                'params': [ str(p.token) for p in v['params'] ],
-            }
-            for k, v
-            in meta.functions.items()
-            if v['from_module'] == module_name
-        ]
-        enums = [
-            {
-                'name': k,
-                **v
-            }
-            for k, v
-            in meta.enums.items()
-            if v['from_module'] == module_name
-        ]
-        with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
-            ofstream.write(json.dumps({
-                'foreign': False,
-                'real_name': module_name,
-                'fns': fns,
-                'enums': enums,
-            }, indent = 4))
+    module_interface_path = os.path.join(*module_path) + '.i'
+    logs.debug('generating interface for:  {} (in {})'.format(module_name, module_interface_path))
+    fns = [
+        {
+            'arity': v['arity'],
+            'name': k,
+            'real_name': v['real_name'],
+            'from_module': v['from_module'],
+            'params': [ str(p.token) for p in v['params'] ],
+        }
+        for k, v
+        in meta.functions.items()
+        if v['from_module'] == module_name
+    ]
+    enums = [
+        {
+            'name': k,
+            **v
+        }
+        for k, v
+        in meta.enums.items()
+        if v['from_module'] == module_name
+    ]
+    with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
+        ofstream.write(json.dumps({
+            'foreign': False,
+            'real_name': module_name,
+            'fns': fns,
+            'enums': enums,
+        }, indent = 4))
 
 def compile_as_executable(
         source_module_name,
