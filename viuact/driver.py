@@ -495,11 +495,21 @@ def assemble_and_link(main_source_file, main_output_file):
             continue
 
         imported_module_name = each['module_name']
+
         source_path = import_paths[imported_module_name]
         output_path = '{}.module'.format(os.path.splitext(source_path)[0])
+
+        is_binary_form = source_path.endswith('.module')
+
+        library_files_to_link.append(source_path if is_binary_form else output_path)
+
+        if is_binary_form:
+            # The module was found in binary form.
+            logs.debug('using binary: {}'.format(source_path))
+            continue
+
         logs.debug('assembling: {} -> {}'.format(source_path, output_path))
 
-        library_files_to_link.append(output_path)
 
         module_hash_path = '{}.hash'.format(os.path.splitext(source_path)[0])
         module_hash_previous = '0'
