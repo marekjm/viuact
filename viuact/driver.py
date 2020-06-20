@@ -250,8 +250,22 @@ def compile_as_executable(
             in sorted(meta.functions.keys())
             if meta.functions[k]['from_module'] == source_module_name
         ]
+        enums = [
+            {
+                'name': k,
+                **v
+            }
+            for k, v
+            in meta.enums.items()
+            if v['from_module'] == mod_name
+        ]
         with open(os.path.join(output_directory, module_interface_path), 'w') as ofstream:
-            ofstream.write(json.dumps({ 'fns': fns, }, indent = 4))
+            ofstream.write(json.dumps({
+                'foreign': False,
+                'real_name': mod_name,
+                'fns': fns,
+                'enums': enums,
+            }, indent = 4))
 
     with open(main_module_output_name, 'w') as ofstream:
         ffi_imports = list(filter(lambda each: each['foreign'], meta.imports))
