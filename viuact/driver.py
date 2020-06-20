@@ -108,16 +108,10 @@ def compile_as_module(
         compilation_filesystem_root = compilation_filesystem_root,
     )
 
-    all_modules = set([
-        each['from_module']
-        for each
-        in (list(meta.functions.values()) + list(meta.enums.values()))
-    ])
-
     module_function_mapping = {}
     module_contents = {}
 
-    for each in all_modules:
+    for each in meta.modules:
         module_function_mapping[each] = []
         module_contents[each] = []
 
@@ -209,38 +203,19 @@ def compile_as_executable(
         compilation_filesystem_root = compilation_filesystem_root,
     )
 
-    all_modules = set([
-        each['from_module']
-        for each
-        in meta.functions.values()
-    ])
+    for mod_name in meta.modules:
+        fns = [
+            fn['real_name']
+            for fn
+            in meta.functions.values()
+            if fn['from_module'] == mod_name
+        ]
+        contents = []
+        for fn in fns:
+            result = list(filter(lambda x: x[0] == fn, lowered_function_bodies))
+            if result:
+                contents.append(result[0][1])
 
-    module_function_mapping = {}
-    module_contents = {}
-
-    for each in all_modules:
-        module_function_mapping[each] = []
-        module_contents[each] = []
-    for each in meta.functions.values():
-        module_function_mapping[each['from_module']].append(each['real_name'])
-    for mod_name, contained_functions in module_function_mapping.items():
-        for fn_name in sorted(list(set(contained_functions))):
-            res = list(filter(lambda each: each[0] == fn_name, lowered_function_bodies))
-            if res:
-                module_contents[mod_name].append(
-                    res[0][1]
-                )
-
-    for mod_name, contents in module_contents.items():
-        if mod_name is None:
-            continue
-
-        # Module is a pure import.
-        # If its name is not in modules defined in this file do
-        # not emit files for it.
-        if mod_name not in meta.modules:
-            logs.debug('module {} is a pure import'.format(mod_name))
-            continue
 
         module_path = mod_name.split('::')
         if len(module_path) > 1:
@@ -254,7 +229,7 @@ def compile_as_executable(
                     '.signature: {}'.format(each)
                     for each
                     in sorted(meta.signatures)
-                    if each.split('/')[0] not in module_function_mapping[mod_name]
+                    if each.split('/')[0] not in fns
                 ]))
                 ofstream.write('\n\n')
             ofstream.write(';\n; Function definitions of module {}\n;\n\n'.format(

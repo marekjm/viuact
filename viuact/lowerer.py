@@ -59,6 +59,7 @@ class Visibility_information:
             'real_name': (real_name or name),
             'from_module': from_module,
             'params': params,
+            'imported': None,
         }
 
     def insert_function(self, name, value, bytecode_name : str = None):
@@ -67,6 +68,10 @@ class Visibility_information:
     def import_function(self, name, value):
         value['imported'] = value['from_module']
         self.insert_function(name, value)
+
+    def local_fns(self):
+        return list(filter(lambda each: each.get('imported') is None,
+            self.functions.values()))
 
     def real_name(self, name, token):
         if name not in self.functions:
