@@ -454,18 +454,18 @@ def assemble_and_link(main_source_file, main_output_file):
             found_ffi_binary_form = os.path.isfile(candidate_module_ffi_binary_path)
 
             if not each['foreign']:
-                logs.debug('    in {}{}'.format(module_source_path, (
-                    ' (found)' if found_source_form else ''
-                )))
-                if found_source_form:
-                    import_paths[imported_module_name] = candidate_module_source_path
-                    break
-
-                logs.debug('    in {}{}'.format(module_binary_path, (
+                logs.debug('    in {}{}'.format(candidate_module_binary_path, (
                     ' (found)' if found_binary_form else ''
                 )))
                 if found_binary_form:
                     import_paths[imported_module_name] = candidate_module_binary_path
+                    break
+
+                logs.debug('    in {}{}'.format(candidate_module_source_path, (
+                    ' (found)' if found_source_form else ''
+                )))
+                if found_source_form:
+                    import_paths[imported_module_name] = candidate_module_source_path
                     break
 
             if each['foreign']:
@@ -494,7 +494,7 @@ def assemble_and_link(main_source_file, main_output_file):
 
         imported_module_name = each['module_name']
         source_path = import_paths[imported_module_name]
-        output_path = '{}.out'.format(os.path.splitext(source_path)[0])
+        output_path = '{}.module'.format(os.path.splitext(source_path)[0])
         logs.debug('assembling: {} -> {}'.format(source_path, output_path))
 
         library_files_to_link.append(output_path)
