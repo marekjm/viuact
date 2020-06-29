@@ -3,8 +3,6 @@
 import os
 import sys
 
-import viuact
-from viuact import token_types, group_types, lexer, parser
 import viuact.util.help
 
 
@@ -480,8 +478,8 @@ def main(executable_name, args):
     with open(source_file_name, 'r') as ifstream:
         source_code = ifstream.read()
 
-    tokens = lexer.lex(source_code)
-    groups = parser.group(tokens)
+    tokens = viuact.lexer.lex(source_code)
+    groups = viuact.parser.group(tokens)
 
     indent_width = 4
     if '-s' in args:

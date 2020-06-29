@@ -3,8 +3,6 @@
 import os
 import sys
 
-import viuact
-import viuact.driver
 import viuact.util.help
 
 
@@ -59,11 +57,6 @@ def main(executable_name, args):
             text = HELP,
         )
         exit(0)
-
-    viuact.driver.assemble_and_link(
-        main_source_file = args[0],
-        main_output_file = (args[1] if len(args) >= 2 else None),
-    )
 
 
 main(sys.argv[0], sys.argv[1:])

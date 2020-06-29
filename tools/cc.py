@@ -3,10 +3,6 @@
 import os
 import sys
 
-import viuact
-import viuact.frontend
-import viuact.driver
-import viuact.env
 import viuact.util.help
 
 
@@ -138,7 +134,5 @@ def main(executable_name, args):
             text = HELP,
         )
         exit(0)
-
-    viuact.driver.compile_file(**viuact.frontend.cc(executable_name, args))
 
 main(sys.argv[0], sys.argv[1:])
