@@ -1,58 +1,6 @@
-import re
-
 import viuact.util.log
 import viuact.errors
-
-
-class Lexeme:
-    patterns = []
-
-    def __init__(self, token):
-        self._token = token
-
-    def __str__(self):
-        return str(self._token)
-
-    def t(self):
-        return type(self)
-
-    def tok(self):
-        return self._token
-
-class Left_paren(Lexeme):
-    pattern = re.compile('\(')
-
-class Right_paren(Lexeme):
-    pattern = re.compile('\)')
-
-class Left_curly(Lexeme):
-    pattern = re.compile('\{')
-
-class Right_curly(Lexeme):
-    pattern = re.compile('\}')
-
-class Let(Lexeme):
-    pattern = re.compile(r'\blet\b')
-
-class Name(Lexeme):
-    pattern = re.compile(r'\b[a-z][a-zA-Z0-9_]*\'?\b')
-
-class Integer(Lexeme):
-    pattern = re.compile(r'-?\b(0|[1-9][0-9]*|0x[a-f0-9]+|0o[0-7]+|0b[01]+)\b')
-
-class String(Lexeme):
-    pattern = None
-
-Lexeme.patterns = [
-    Left_paren,
-    Right_paren,
-    Left_curly,
-    Right_curly,
-    Let,
-    Name,
-    Integer,
-    String,
-]
+import viuact.lexemes
 
 
 class Token:
@@ -90,6 +38,23 @@ def lex(text):
             i += 1
             continue
 
+        if text[i] == ';':
+            n = i + text.find('\n', i)
+
+            s = text[i:n]
+
+            tokens.append(viuact.lexemes.Comment(token = Token(
+                pos = (position_line, position_char,),
+                text = s,
+            )))
+
+            position_line += 1
+            position_char = 0
+            position_offset = n + 1
+            i = n + 1
+
+            continue
+
         match_found = False
 
         if text[i] == '"':
@@ -101,14 +66,15 @@ def lex(text):
 
                     s = text[i:n + 1]
 
+                    tokens.append(viuact.lexemes.String(token = Token(
+                        pos = (position_line, position_char,),
+                        text = s,
+                    )))
+
                     position_char = n + 1
                     position_offset = n + 1
                     i = n + 1
 
-                    tokens.append(String(token = Token(
-                        pos = (position_line, position_char,),
-                        text = s,
-                    )))
                     break
                 if text[n] == '\\':
                     escaped = not escaped
@@ -119,7 +85,7 @@ def lex(text):
         if match_found:
             continue
 
-        for lex_t in Lexeme.patterns:
+        for lex_t in viuact.lexemes.Lexeme.patterns:
             if lex_t.pattern is None:
                 continue
             res = lex_t.pattern.match(text[i:])
@@ -149,7 +115,7 @@ def lex(text):
 
 def to_data(tokens):
     type_to_tag = {}
-    for i, each in enumerate(Lexeme.patterns):
+    for i, each in enumerate(viuact.lexemes.Lexeme.patterns):
         type_to_tag[each] = i
 
     data = []

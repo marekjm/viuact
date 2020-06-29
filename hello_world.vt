@@ -1,3 +1,5 @@
+; This is a oneline comment.
+
 (let main () {
     (print "Hello, World!")
     0
