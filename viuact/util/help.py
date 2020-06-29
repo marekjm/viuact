@@ -7,6 +7,8 @@ try:
 except ImportError:
     colored = None
 
+import viuact.util.colors
+
 
 FG = re.compile(r'%fg\(([a-z][a-z_]+(?:_[1-4][ab]?)?)\)')
 ATTR_RESET = re.compile(r'%r\b')
@@ -20,14 +22,7 @@ COPYRIGHT = re.compile(r'%copyright\((\d+(?:-\d+)?(?:, \d+(?:-\d+)?)*)\)')
 MAX_COLUMN_COUNT = 78
 
 
-def colorise(color, s):
-    if (colored is None) or (color is None):
-        return s
-    return '{}{}{}'.format(
-        colored.fg(color),
-        s,
-        colored.attr('reset'),
-    )
+colorise = viuact.util.colors.colorise
 
 def clear(s):
     s = re.sub(FG, '', s)

@@ -153,9 +153,10 @@ CORE_DIR = os.environ.get('VIUACT_CORE_DIR', DEFAULT_CORE_DIR)
 def get_core_exec_path(executable):
     is_development = (CORE_DIR == '.')
     return os.path.join(os.path.expanduser(CORE_DIR), {
-        'cc': ('cc.py' if is_development else 'viuact-cc'),
-        'fmt': ('format.py' if is_development else 'viuact-format'),
-        'opt': ('opt.py' if is_development else 'viuact-opt'),
+        'cc': ('tools/cc.py' if is_development else 'viuact-cc'),
+        'fmt': ('tools/format.py' if is_development else 'viuact-format'),
+        'opt': ('tools/opt.py' if is_development else 'viuact-opt'),
+        'switch': ('tools/switch.py' if is_development else 'viuact-switch'),
     }.get(executable))
 
 def main(executable_name, args):

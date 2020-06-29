@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
+import json
 import os
 import sys
 
 import viuact.util.help
+import viuact.util.log
+import viuact.errors
+import viuact.lexer
 
 
 HELP = '''{NAME}
@@ -26,14 +30,17 @@ HELP = '''{NAME}
     %opt(--version)
         Display version information.
 
-    %opt(--mode) %fg(arg)module%r | %fg(arg)exec%r
-        %text
-        Set compilation mode. Use %fg(arg)exec%r for modules that should
-        produce executables; use %fg(arg)module%r for libraries.
-
     %opt(--env)
         %text
         Display information about the environment that the compiler will use.
+
+    %opt(-t), %opt(--tokenise)
+        %text
+        Stop after tokenisation and output JSON dump to standard output.
+
+    %opt(-p), %opt(--parse)
+        %text
+        Stop after parsing and output JSON dump to standard output.
 
 {EXAMPLES}
     %text
@@ -134,5 +141,47 @@ def main(executable_name, args):
             text = HELP,
         )
         exit(0)
+
+    source_file_arg_index = 0
+    stop_after_tokenisation = False
+    stop_after_parsing = False
+    if args[source_file_arg_index] in ('-t', '--tokenise', '-p', '--parse',):
+        stop_after_tokenisation = (
+            args[source_file_arg_index] in ('-t', '--tokenise',))
+        stop_after_parsing = (
+            args[source_file_arg_index] in ('-p', '--parse',))
+        source_file_arg_index = 1
+
+    source_file = args[source_file_arg_index]
+    if not os.path.isfile(source_file):
+        viuact.util.log.error('not a file: {}'.format(
+            viuact.util.colors.colorise_repr('white', source_file)))
+        exit(1)
+
+    source_text = ''
+    with open(source_file, 'r') as ifstream:
+        source_text = ifstream.read()
+
+
+    ############################################################################
+    # LEXICAL AND SYNTACTICAL ANALYSIS
+    #   a.k.a. lexing and parsing
+    try:
+        tokens = viuact.lexer.lex(source_text)
+        if stop_after_tokenisation:
+            print(json.dumps(viuact.lexer.to_data(tokens), indent = 4))
+            exit(0)
+
+        forms = viuact.parser.parse(tokens)
+        if stop_after_parsing:
+            print(json.dumps(viuact.parser.to_data(forms), indent = 4))
+            exit(0)
+    except viuact.errors.Error as e:
+        viuact.util.log.error(
+            s = e.what(),
+            path = source_file,
+            pos = e.at(human = True),
+        )
+        exit(1)
 
 main(sys.argv[0], sys.argv[1:])
