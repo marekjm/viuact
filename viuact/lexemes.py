@@ -1,6 +1,18 @@
 import re
 
 
+class Token:
+    def __init__(self, pos, text):
+        self._position = pos
+        self._text = text
+
+    def __str__(self):
+        return self._text
+
+    def at(self):
+        return self._position
+
+
 class Lexeme:
     patterns = []
 

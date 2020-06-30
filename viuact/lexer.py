@@ -3,18 +3,6 @@ import viuact.errors
 import viuact.lexemes
 
 
-class Token:
-    def __init__(self, pos, text):
-        self._position = pos
-        self._text = text
-
-    def __str__(self):
-        return self._text
-
-    def at(self):
-        return self._position
-
-
 def lex(text):
     tokens = []
 
@@ -43,7 +31,7 @@ def lex(text):
 
             s = text[i:n]
 
-            tokens.append(viuact.lexemes.Comment(token = Token(
+            tokens.append(viuact.lexemes.Comment(token = viuact.lexemes.Token(
                 pos = (position_line, position_char,),
                 text = s,
             )))
@@ -66,9 +54,10 @@ def lex(text):
 
                     s = text[i:n + 1]
 
-                    tokens.append(viuact.lexemes.String(token = Token(
-                        pos = (position_line, position_char,),
-                        text = s,
+                    tokens.append(viuact.lexemes.String(
+                        token = viuact.lexemes.Token(
+                            pos = (position_line, position_char,),
+                            text = s,
                     )))
 
                     position_char = n + 1
@@ -92,7 +81,7 @@ def lex(text):
             if res is not None:
                 s = res.group(0)
 
-                tokens.append(lex_t(token = Token(
+                tokens.append(lex_t(token = viuact.lexemes.Token(
                     pos = (position_line, position_char,),
                     text = s,
                 )))
