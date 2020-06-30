@@ -182,6 +182,12 @@ def main(executable_name, args):
             path = source_file,
             pos = e.at(human = True),
         )
+        for each in e.notes():
+            viuact.util.log.note(
+                s = each,
+                path = source_file,
+                pos = e.at(human = True),
+            )
         exit(1)
 
 main(sys.argv[0], sys.argv[1:])

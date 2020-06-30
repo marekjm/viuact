@@ -3,6 +3,7 @@ class Error(Exception):
         self.line = pos[0]
         self.character = pos[1]
         self._fallout = []
+        self._notes = []
 
     def at(self, human = False):
         return (self.line + int(human), self.character + int(human),)
@@ -13,6 +14,13 @@ class Error(Exception):
 
     def what(self):
         return ' '.join(str(type(self))[8:-2].split('.')[-1].lower().split('_'))
+
+    def notes(self):
+        return self._notes
+
+    def note(self, s):
+        self._notes.append(s)
+        return self
 
 
 class Lexer_error(Error):
