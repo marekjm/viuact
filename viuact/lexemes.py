@@ -5,6 +5,10 @@ class Lexeme:
     patterns = []
 
     def __init__(self, token):
+        if type(token) is not Token:
+            raise TypeError(
+                'token is not of type \'viuact.lexemes.Token\': {}'.format(
+                    str(type(token))[8:-2],))
         self._token = token
 
     def __str__(self):
