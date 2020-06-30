@@ -23,6 +23,15 @@ class Error(Exception):
         return self
 
 
+class Info(Error):
+    def __init__(self, pos, m):
+        super().__init__(pos)
+        self.bad = m
+
+    def what(self):
+        return self.bad
+
+
 class Lexer_error(Error):
     pass
 
