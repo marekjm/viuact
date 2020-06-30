@@ -53,6 +53,9 @@ class Let(Lexeme):
 class Name(Lexeme):
     pattern = re.compile(r'\b[a-z][a-zA-Z0-9_]*\'?\b')
 
+class Labelled_name(Lexeme):
+    pattern = re.compile(r'~[a-z][a-zA-Z0-9_]*\'?\b')
+
 class Integer(Lexeme):
     pattern = re.compile(r'-?\b(0|[1-9][0-9]*|0x[a-f0-9]+|0o[0-7]+|0b[01]+)\b')
 
@@ -66,6 +69,7 @@ Lexeme.patterns = [
     Left_curly,
     Right_curly,
     Let,
+    Labelled_name,
     Name,
     Integer,
     String,
