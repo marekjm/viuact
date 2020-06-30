@@ -8,6 +8,7 @@ import viuact.util.help
 import viuact.util.log
 import viuact.errors
 import viuact.lexer
+import viuact.parser
 
 
 HELP = '''{NAME}

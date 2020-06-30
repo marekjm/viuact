@@ -42,3 +42,18 @@ class Unexpected_character(Lexer_error):
 
     def what(self):
         return '{}: {}'.format(super().what(), repr(self.bad))
+
+
+class Parser_error(Error):
+    pass
+
+class Unexpected_token(Lexer_error):
+    def __init__(self, pos, s):
+        super().__init__(pos)
+        self.bad = s
+
+    def what(self):
+        return '{}: {}'.format(super().what(), repr(self.bad))
+
+class Unbalanced_braces(Lexer_error):
+    pass
