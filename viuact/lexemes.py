@@ -74,3 +74,13 @@ Lexeme.patterns = [
     Integer,
     String,
 ]
+
+
+class Phantom(Lexeme):
+    pass
+
+class Paren_tag(Phantom):
+    pass
+
+class Curly_tag(Phantom):
+    pass
