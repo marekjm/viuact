@@ -9,6 +9,7 @@ import viuact.util.log
 import viuact.errors
 import viuact.lexer
 import viuact.parser
+import viuact.core
 
 
 HELP = '''{NAME}
@@ -177,6 +178,37 @@ def main(executable_name, args):
         if stop_after_parsing:
             print(json.dumps(viuact.parser.to_data(forms), indent = 2))
             exit(0)
+
+        module_name = viuact.core.EXEC_MODULE
+        output_directory = 'build/_default'
+
+        source_file = os.path.normpath(source_file)
+
+        DEFAULT_SOURCE_ROOT = '.'
+        source_root = os.path.normpath(
+            args[source_file_arg_index + 1]
+            if len(args) > (source_file_arg_index + 1) else
+            DEFAULT_SOURCE_ROOT
+        )
+        if (not os.path.isabs(source_file)) and source_root == DEFAULT_SOURCE_ROOT:
+            source_file = os.path.join(DEFAULT_SOURCE_ROOT, source_file)
+
+        if not source_file.startswith(source_root):
+            raise viuact.errors.Fail(
+                (0, 0,), 'source file not in source root'
+            ).note(
+                'source file: {}'.format(source_file)
+            ).note(
+                'source root: {}'.format(source_root)
+            )
+
+        viuact.core.cc(
+            source_root,
+            source_file,
+            module_name,
+            forms,
+            output_directory,
+        )
     except viuact.errors.Error as e:
         viuact.util.log.error(
             s = e.what(),
