@@ -21,8 +21,9 @@ class G:
         return G.resolve_token(g).at()
 
 class Group(G):
-    def __init__(self, value):
+    def __init__(self, value, tag):
         self._value = value
+        self._tag = tag
 
     def __len__(self):
         return len(self.val())
@@ -38,6 +39,9 @@ class Group(G):
 
     def lead(self):
         return self.val()[0]
+
+    def tag(self):
+        return self._tag
 
 class Element(G):
     def __init__(self, value):
@@ -61,13 +65,18 @@ class Element(G):
 
 def group_one(tokens, i, g):
     sentinel = g[0]
+    tag = None
     if sentinel.t() is viuact.lexemes.Left_paren:
         sentinel = viuact.lexemes.Right_paren
-        # g = [Element(viuact.lexemes.Paren_tag(token = tokens[i - 1].tok()))]
+        tag = viuact.lexemes.Paren_tag(token = tokens[i - 1].tok())
+        # g = [Element(tag)]
         g = []
     elif sentinel.t() is viuact.lexemes.Left_curly:
         sentinel = viuact.lexemes.Right_curly
-        g = [Element(viuact.lexemes.Curly_tag(token = tokens[i - 1].tok()))]
+        tag = viuact.lexemes.Curly_tag(token = tokens[i - 1].tok())
+        g = [Element(tag)]
+    else:
+        raise viuact.errors.Invalid_sentinel(tokens[i - 1].at(), str(sentinel))
 
     while i < len(tokens):
         each = tokens[i]
@@ -86,7 +95,7 @@ def group_one(tokens, i, g):
 
         g.append(Element(each))
 
-    return i, Group(g)
+    return i, Group(g, tag)
 
 def group(tokens):
     groups = []
@@ -99,6 +108,65 @@ def group(tokens):
     return groups
 
 
+def parse_compound_expr(group):
+    expressions = []
+
+    for each in group[1:]:
+        expressions.append(parse_expr(each))
+
+    return viuact.forms.Compound_expr(expressions)
+
+def parse_fn_call(group):
+    kind = viuact.forms.Fn_call.Kind.Call
+    offset = 0
+    call_kind_toks = (
+        viuact.lexemes.Tail,
+    )
+    if type(group[0]) is Element and group.lead().t() in call_kind_toks:
+        offset = 1
+        raise viuact.errors.Unexpected_token(G.resolve_position(group[0]),
+            'call kinds are not implemented yet')
+
+    name = group[0 + offset]
+    if type(name) is Group:
+        raise viuact.errors.Fail(G.resolve_position(name),
+            'module paths are not implemented')
+    elif type(name) is Element:
+        name = parse_expr(name)
+    else:
+        raise viuact.errors.Unexpected_token(G.resolve_position(name),
+            'expected function name, or a call-kind marker')
+
+    args = []
+    for each in group[1 + offset:]:
+        args.append(each)
+
+    return viuact.forms.Fn_call(
+        to = name,
+        arguments = args,
+        kind = viuact.forms.Fn_call.Kind.Call,
+    )
+
+def parse_simple_expr(elem):
+    if elem.t() is viuact.lexemes.Integer:
+        return viuact.forms.Primitive_literal(value = elem.val())
+    if elem.t() is viuact.lexemes.Name:
+        return viuact.forms.Name_ref(name = elem.val())
+    viuact.util.log.fixme('failed to parse simple expression: {} {}'.format(
+        elem.lead().__class__.__name__, elem.lead()))
+    raise None  # parse simple expressions
+
+def parse_expr(group):
+    if type(group) is Group:
+        if type(group.tag()) is viuact.lexemes.Curly_tag:
+            return parse_compound_expr(group)
+        elif type(group.tag()) is viuact.lexemes.Paren_tag:
+            return parse_fn_call(group)
+        else:
+            raise None
+    else:
+        return parse_simple_expr(group)
+
 def parse_fn_parameter(group):
     if type(group) is Element:
         name = group.val()
@@ -110,9 +178,11 @@ def parse_fn_parameter(group):
 
         return viuact.forms.Named_parameter(name)
 
+    viuact.util.log.fixme(
+        'defaulted parameters are not implemented', '<viuact>')
     raise viuact.errors.Unexpected_token(
-        pos = group.lead().lead().tok().at(),
-        s = str(group.lead().lead()),
+        pos = group.tag().tok().at(),
+        s = str(group.tag()),
     ).note('expected a defaulted parameter')
 
 def parse_fn(group):
@@ -133,6 +203,8 @@ def parse_fn(group):
                 m = 'when parsing parameter {} of function {}'.format(
                     i, str(name.val()))))
 
+    expression = parse_expr(group[3])
+
     return viuact.forms.Fn(
         name = name.val(),
         parameters = parameters,
@@ -146,7 +218,6 @@ def parse_impl(groups):
         if g.lead().t() is viuact.lexemes.Let and len(g) == 3:
             print('a let binding')
         elif g.lead().t() is viuact.lexemes.Let and len(g) == 4:
-            print('a let function')
             forms.append(parse_fn(g))
 
     return forms
@@ -154,16 +225,13 @@ def parse_impl(groups):
 def parse(tokens):
     no_comments = strip_comments(tokens)
     groups = group(no_comments)
-    print('groups:', len(groups))
-    for i, each in enumerate(groups):
-        print(i, '---- >8 ----')
-        for x in each:
-            print('   ', x)
-        print('---- 8< ----')
     return parse_impl(groups)
 
 
 def to_data(forms):
-    return forms
-    # data = []
-    # return { 'forms': data, }
+    data = []
+
+    for each in forms:
+        data.append(viuact.sl.data_of_form(each, None))
+
+    return { 'forms': data, }

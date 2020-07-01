@@ -1,6 +1,7 @@
 import viuact.util.log
 import viuact.errors
 import viuact.lexemes
+import viuact.sl
 
 
 def lex(text):
@@ -109,12 +110,6 @@ def to_data(tokens):
 
     data = []
     for each in tokens:
-        data.append({
-            'tag': type_to_tag[each.t()],
-            'value': {
-                'position': each.tok().at(),
-                'text': str(each),
-            },
-        })
+        data.append(viuact.sl.data_of_lexeme(each, type_to_tag))
 
     return { 'tokens': data, }

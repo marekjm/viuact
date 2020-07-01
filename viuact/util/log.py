@@ -14,6 +14,7 @@ def make_prefix(kind, path, pos):
     kinds = {
         'error': 'red',
         'note': 'cyan',
+        'fixme': 'yellow',
     }
 
     prefix = ''
@@ -42,5 +43,11 @@ def error(s, path = None, pos = None):
 def note(s, path = None, pos = None):
     sys.stderr.write('{}: {}\n'.format(
         make_prefix('note', path, pos),
+        s,
+    ))
+
+def fixme(s, path = None, pos = None):
+    sys.stderr.write('{}: {}\n'.format(
+        make_prefix('fixme', path, pos),
         s,
     ))

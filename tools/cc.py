@@ -170,12 +170,12 @@ def main(executable_name, args):
     try:
         tokens = viuact.lexer.lex(source_text)
         if stop_after_tokenisation:
-            print(json.dumps(viuact.lexer.to_data(tokens), indent = 4))
+            print(json.dumps(viuact.lexer.to_data(tokens), indent = 2))
             exit(0)
 
         forms = viuact.parser.parse(tokens)
         if stop_after_parsing:
-            print(json.dumps(viuact.parser.to_data(forms), indent = 4))
+            print(json.dumps(viuact.parser.to_data(forms), indent = 2))
             exit(0)
     except viuact.errors.Error as e:
         viuact.util.log.error(

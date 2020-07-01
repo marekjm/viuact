@@ -32,6 +32,15 @@ class Info(Error):
         return self.bad
 
 
+class Fail(Error):
+    def __init__(self, pos, m):
+        super().__init__(pos)
+        self.bad = m
+
+    def what(self):
+        return self.bad
+
+
 class Lexer_error(Error):
     pass
 
@@ -57,3 +66,11 @@ class Unexpected_token(Lexer_error):
 
 class Unbalanced_braces(Lexer_error):
     pass
+
+class Invalid_sentinel(Lexer_error):
+    def __init__(self, pos, s):
+        super().__init__(pos)
+        self.bad = s
+
+    def what(self):
+        return '{}: {}'.format(super().what(), repr(self.bad))

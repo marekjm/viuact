@@ -50,6 +50,9 @@ class Right_curly(Lexeme):
 class Let(Lexeme):
     pattern = re.compile(r'\blet\b')
 
+class Tail(Lexeme):
+    pattern = re.compile(r'\btailcall\b')
+
 class Name(Lexeme):
     pattern = re.compile(r'\b[a-z][a-zA-Z0-9_]*\'?\b')
 
