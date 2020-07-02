@@ -84,6 +84,17 @@ class Name_ref(Form):
     def name(self):
         return self._name
 
+class Let_binding(Form):
+    def __init__(self, name, value):
+        self._name = name   # lexeme
+        self._value = value # form
+
+    def name(self):
+        return self._name
+
+    def val(self):
+        return self._value
+
 
 Form.forms = [
     Fn,
@@ -93,4 +104,5 @@ Form.forms = [
     Compound_expr,
     Fn_call,
     Primitive_literal,
+    Let_binding,
 ]

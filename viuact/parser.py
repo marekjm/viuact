@@ -161,14 +161,29 @@ def parse_simple_expr(elem):
         typeof(elem.lead()), elem.lead()))
     raise None  # parse simple expressions
 
+def parse_let_binding(group):
+    name = group[1].val()
+    if type(name) is not viuact.lexemes.Name:
+        raise viuact.errors.Unexpected_token(
+            name.tok().at(),
+            str(name),
+        ).note('expected name')
+    return viuact.forms.Let_binding(
+        name = name,
+        value = parse_expr(group[2]),
+    )
+
 def parse_expr(group):
     if type(group) is Group:
         if type(group.tag()) is viuact.lexemes.Curly_tag:
             return parse_compound_expr(group)
-        elif type(group.tag()) is viuact.lexemes.Paren_tag:
-            return parse_fn_call(group)
-        else:
+        if not (type(group.tag()) is viuact.lexemes.Paren_tag):
             raise None
+        if group.lead().t() is viuact.lexemes.Let and len(group.val()) == 3:
+            return parse_let_binding(group)
+        if group.lead().t() is viuact.lexemes.Let and len(group.val()) == 4:
+            return parse_fn(group)
+        return parse_fn_call(group)
     else:
         return parse_simple_expr(group)
 

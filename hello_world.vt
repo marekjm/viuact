@@ -7,6 +7,10 @@
 
 (let main () {
     (log "Hello, World!")
+
+    (let x "What's up?")
+    (print x)
+
     (log "Good bye, World!")
     0
 })

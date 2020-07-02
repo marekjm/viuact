@@ -456,17 +456,44 @@ def emit_primitive_literal(mod, body, st, result, expr):
         typeof(lit)))
     raise None
 
+def emit_let_binding(mod, body, st, binding):
+    name = binding.name()
+    body.append(Verbatim('; let {} = ...'.format(str(name))))
+    with st.scoped() as sc:
+        slot = emit_expr(
+            mod = mod,
+            body = body,
+            st = sc,
+            # Don't use an additional scope here as let-bindings should introduce
+            # new variables into the current scope.
+            result = st.get_slot(
+                name = str(name),
+                register_set = Register_set.LOCAL,
+            ),
+            expr = binding.val(),
+        )
+    body.append(Verbatim(''))
+    return slot
+
 def emit_compound_expr(mod, body, st, result, expr):
     for i, each in enumerate(expr.body()):
         last = (i == (len(expr.body()) - 1))
-        with st.scoped() as sc:
-            emit_expr(
+        if type(each) is viuact.forms.Let_binding:
+            emit_let_binding(
                 mod = mod,
                 body = body,
-                st = sc,
-                result = (result if last else Slot.make_void()),
-                expr = each,
+                st = st,
+                binding = each,
             )
+        else:
+            with st.scoped() as sc:
+                emit_expr(
+                    mod = mod,
+                    body = body,
+                    st = sc,
+                    result = (result if last else Slot.make_void()),
+                    expr = each,
+                )
 
     return result
 
@@ -503,6 +530,19 @@ def emit_expr(mod, body, st, result, expr):
                     str(expr.name()),
                 ))
         return st.slot_of(str(expr.name()))
+    if type(expr) is viuact.forms.Let_binding:
+        if not result.is_void():
+            viuact.util.log.warning(
+                'slot will be unused after name-ref emission: {} = {}'.format(
+                    result.to_string(),
+                    str(expr.name()),
+                ))
+        return emit_let_binding(
+            mod = mod,
+            body = body,
+            st = st,
+            binding = expr,
+        )
     viuact.util.log.fixme('failed to emit expression: {}'.format(
         typeof(expr)))
     raise None
