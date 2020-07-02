@@ -7,5 +7,6 @@
 
 (let main () {
     (log "Hello, World!")
+    (log "Good bye, World!")
     0
 })

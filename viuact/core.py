@@ -103,6 +103,16 @@ class Slot:
             self.register_set.value,
         )
 
+class Scope:
+    def __init__(self, state):
+        self.state = state
+
+    def __enter__(self):
+        return self.state
+
+    def __exit__(self, *args):
+        self.state.erase()
+
 class State:
     def __init__(self, upper = None, parent = None):
         self._upper = upper     # Used for closures.
@@ -113,6 +123,7 @@ class State:
         }
         self._named_slots = {}
         self._allocated_slots = []
+        self._freed_slots = []
 
         if parent is not None:
             for k, v in self._parent._next_slot_index.items():
@@ -126,10 +137,38 @@ class State:
         self._parent._next_slot_index[register_set] = max(n, p)
         self._parent.push_pressure(register_set)
 
+    def push_deallocations(self):
+        if self._parent is None:
+            return
+        self._parent._freed_slots.extend(self._freed_slots)
+        self._parent.push_deallocations()
+        self._freed_slots.clear()
+
+    def deallocate_slot(self, slot):
+        self._allocated_slots.remove((slot.index, slot.register_set,))
+        self._freed_slots.append(slot)
+        viuact.util.log.note('  freed slot: {}'.format(slot.to_string()))
+        return self
+
+    def find_free_slot(self, register_set):
+        for each in self._freed_slots:
+            if each.register_set == register_set:
+                viuact.util.log.note('reusing slot {}'.format(each.to_string()))
+                self._freed_slots.remove(each)
+                return each
+        if self._parent is not None:
+            return self._parent.find_free_slot(register_set)
+        return None
+
     def allocate_slot(self, register_set):
-        i = self._next_slot_index[register_set]
-        self._next_slot_index[register_set] += 1
-        self.push_pressure(register_set)
+        found_freed = self.find_free_slot(register_set)
+        i = None
+        if found_freed is None:
+            i = self._next_slot_index[register_set]
+            self._next_slot_index[register_set] += 1
+            self.push_pressure(register_set)
+        else:
+            i = found_freed.index
         self._allocated_slots.append( (i, register_set,) )
         return i
 
@@ -164,7 +203,21 @@ class State:
         return self._next_slot_index[register_set]
 
     def scoped(self):
-        return State(parent = self)
+        s = State(parent = self)
+        viuact.util.log.note('created scope: {}'.format(s))
+        return Scope(s)
+
+    def erase(self):
+        viuact.util.log.note('erasing scope {} with {} slot(s)...'.format(
+            self, len(self._allocated_slots)))
+        for each in self._allocated_slots:
+            i, r = each
+            self.deallocate_slot(Slot(
+                name = None,
+                index = i,
+                register_set = r,
+            ))
+        self.push_deallocations()
 
 
 class Fn_cc:
@@ -290,17 +343,17 @@ def emit_builtin_call(mod, body, st, result, form):
                 expected = 1,
                 got = len(form.arguments()),
             )
-        slot = emit_expr(
-            mod = mod,
-            body = body,
-            st = st.scoped(),
-            result = result,
-            expr = form.arguments()[0],
-        )
-
-        body.append(Verbatim('print {}'.format(
-            slot.to_string(),
-        )))
+        with st.scoped() as sc:
+            slot = emit_expr(
+                mod = mod,
+                body = body,
+                st = sc,
+                result = result,
+                expr = form.arguments()[0],
+            )
+            body.append(Verbatim('print {}'.format(
+                slot.to_string(),
+            )))
 
         return slot
 
@@ -316,21 +369,23 @@ def emit_fn_call(mod, body, st, result, form):
     body.append(Verbatim('frame %{} arguments'.format(len(form.arguments()))))
 
     for i, arg in enumerate(form.arguments()):
-        slot = emit_expr(
-            mod = mod,
-            body = body,
-            st = st.scoped(),
-            result = st.get_slot(name = None),
-            expr = arg,
-        )
-        body.append(Move.make_move(
-            source = slot,
-            dest = Slot(
-                name = None,
-                index = i,
-                register_set = Register_set.ARGUMENTS,
-            ),
-        ))
+        body.append(Verbatim('; for argument {}'.format(i)))
+        with st.scoped() as sc:
+            slot = emit_expr(
+                mod = mod,
+                body = body,
+                st = sc,
+                result = st.get_slot(name = None),
+                expr = arg,
+            )
+            body.append(Move.make_move(
+                source = slot,
+                dest = Slot(
+                    name = None,
+                    index = i,
+                    register_set = Register_set.ARGUMENTS,
+                ),
+            ))
 
     body.append(Call(
         to = called_fn_name,
@@ -364,13 +419,14 @@ def emit_primitive_literal(mod, body, st, result, expr):
 def emit_compound_expr(mod, body, st, result, expr):
     for i, each in enumerate(expr.body()):
         last = (i == (len(expr.body()) - 1))
-        emit_expr(
-            mod = mod,
-            body = body,
-            st = st.scoped(),
-            result = (result if last else Slot.make_void()),
-            expr = each,
-        )
+        with st.scoped() as sc:
+            emit_expr(
+                mod = mod,
+                body = body,
+                st = sc,
+                result = (result if last else Slot.make_void()),
+                expr = each,
+            )
 
     return result
 
