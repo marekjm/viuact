@@ -337,6 +337,7 @@ def emit_fn_call(mod, body, st, result, form):
         slot = result,
         kind = Call.Kind.Synchronous,
     ))
+    body.append(Verbatim(''))
 
     return result
 
@@ -447,6 +448,7 @@ def cc_fn(mod, fn):
         expr = fn.body(),
     )
 
+    main_fn.body.insert(0, Verbatim(''))
     main_fn.body.insert(0, Verbatim('allocate_registers %{} local'.format(
         # st.static_pressure(),
         st.actual_pressure(Register_set.LOCAL),
