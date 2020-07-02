@@ -147,7 +147,7 @@ class State:
     def deallocate_slot(self, slot):
         self._allocated_slots.remove((slot.index, slot.register_set,))
         self._freed_slots.append(slot)
-        viuact.util.log.note('  freed slot: {}'.format(slot.to_string()))
+        # viuact.util.log.note('  freed slot: {}'.format(slot.to_string()))
         return self
 
     def find_free_slot(self, register_set):
@@ -204,12 +204,12 @@ class State:
 
     def scoped(self):
         s = State(parent = self)
-        viuact.util.log.note('created scope: {}'.format(s))
+        # viuact.util.log.note('created scope: {}'.format(s))
         return Scope(s)
 
     def erase(self):
-        viuact.util.log.note('erasing scope {} with {} slot(s)...'.format(
-            self, len(self._allocated_slots)))
+        # viuact.util.log.note('erasing scope {} with {} slot(s)...'.format(
+        #     self, len(self._allocated_slots)))
         for each in self._allocated_slots:
             i, r = each
             self.deallocate_slot(Slot(
