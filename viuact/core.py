@@ -30,14 +30,27 @@ class Module_info:
         n = '{}/{}'.format(name, len(parameters))
         self._functions[n] = {
             'local': True,
-            'from': (None, None,),
+            'from': (None, None,),  # module name, containing file
             'parameters': parameters,
+            'base_name': str(name),
+            'arity': len(parameters),
         }
         viuact.util.log.print('module info [{}]: visible local fn {}'.format(
             self._name,
             n,
         ))
         return self
+
+    def fns(self, local = None, imported = None):
+        res = []
+        for k, v in self._functions.items():
+            if (local is None) or (local is True and v['local']):
+                res.append((k, v,))
+                continue
+            if (imported is None) or (imported is True and not v['local']):
+                res.append((k, v,))
+                continue
+        return res
 
 
 class Register_set(enum.Enum):
@@ -361,10 +374,37 @@ def emit_fn_call(mod, body, st, result, form):
     if str(form.to().name()) in BUILTIN_FUNCTIONS:
         return emit_builtin_call(mod, body, st, result, form)
 
+    base_name = str(form.to().name().tok())
     called_fn_name = '{name}/{arity}'.format(
-        name = form.to().name().tok(),
+        name = base_name,
         arity = len(form.arguments()),
     )
+
+    candidates = list(filter(
+        lambda each: each[1]['base_name'] == base_name,
+        mod.fns(),
+    ))
+    if not candidates:
+        raise viuact.errors.Unknown_function(
+            form.to().name().tok().at(),
+            called_fn_name,
+        )
+
+    signature = (lambda x: (x[0] if x else None))(list(filter(
+        lambda each: each[1]['arity'] == len(form.arguments()),
+        candidates
+    )))
+    if signature is None:
+        e = viuact.errors.Invalid_arity(
+            form.to().name().tok().at(),
+            called_fn_name,
+        )
+        for each in candidates:
+            e.note('candidate: {}({})'.format(
+                each[1]['base_name'],
+                ' '.join(map(lambda p: str(p.name()), each[1]['parameters'])),
+            ))
+        raise e
 
     body.append(Verbatim('frame %{} arguments'.format(len(form.arguments()))))
 

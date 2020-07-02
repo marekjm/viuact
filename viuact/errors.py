@@ -86,3 +86,19 @@ class Source_cannot_be_void(Emitter_error):
 
     def what(self):
         return '{} for {}'.format(super().what(), self.bad)
+
+class Invalid_arity(Emitter_error):
+    def __init__(self, pos, s):
+        super().__init__(pos)
+        self.bad = s
+
+    def what(self):
+        return '{} of function {}'.format(super().what(), self.bad)
+
+class Unknown_function(Emitter_error):
+    def __init__(self, pos, s):
+        super().__init__(pos)
+        self.bad = s
+
+    def what(self):
+        return '{}: {}'.format(super().what(), self.bad)
