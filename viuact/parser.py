@@ -7,6 +7,9 @@ def strip_comments(tokens):
     return list(filter(
         lambda each: each.t() is not viuact.lexemes.Comment, tokens))
 
+def typeof(value):
+    return str(type(value))[8:-2]
+
 
 class G:
     @staticmethod
@@ -139,7 +142,7 @@ def parse_fn_call(group):
 
     args = []
     for each in group[1 + offset:]:
-        args.append(each)
+        args.append(parse_expr(each))
 
     return viuact.forms.Fn_call(
         to = name,
@@ -150,10 +153,12 @@ def parse_fn_call(group):
 def parse_simple_expr(elem):
     if elem.t() is viuact.lexemes.Integer:
         return viuact.forms.Primitive_literal(value = elem.val())
+    if elem.t() is viuact.lexemes.String:
+        return viuact.forms.Primitive_literal(value = elem.val())
     if elem.t() is viuact.lexemes.Name:
         return viuact.forms.Name_ref(name = elem.val())
     viuact.util.log.fixme('failed to parse simple expression: {} {}'.format(
-        elem.lead().__class__.__name__, elem.lead()))
+        typeof(elem.lead()), elem.lead()))
     raise None  # parse simple expressions
 
 def parse_expr(group):

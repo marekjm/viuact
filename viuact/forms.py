@@ -67,6 +67,9 @@ class Fn_call(Form):
     def to(self):
         return self._to
 
+    def arguments(self):
+        return self._arguments
+
 class Primitive_literal(Form):
     def __init__(self, value):
         self._value = value  # lexeme

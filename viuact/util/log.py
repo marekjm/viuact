@@ -13,6 +13,7 @@ def make_prefix(kind, path, pos):
 
     kinds = {
         'error': 'red',
+        'warning': 'orange_red_1',
         'note': 'cyan',
         'fixme': 'yellow',
     }
@@ -26,11 +27,12 @@ def make_prefix(kind, path, pos):
             *pos,
         )
 
-    colored_kind = viuact.util.colors.colorise(kinds[kind], kind)
-    if prefix:
-        prefix = '{}: {}'.format(prefix, colored_kind)
-    else:
-        prefix = colored_kind
+    if kind is not None:
+        colored_kind = viuact.util.colors.colorise(kinds[kind], kind)
+        if prefix:
+            prefix = '{}: {}'.format(prefix, colored_kind)
+        else:
+            prefix = colored_kind
 
     return prefix
 
@@ -50,4 +52,18 @@ def fixme(s, path = None, pos = None):
     sys.stderr.write('{}: {}\n'.format(
         make_prefix('fixme', path, pos),
         s,
+    ))
+
+def warning(s, path = None, pos = None):
+    sys.stderr.write('{}: {}\n'.format(
+        make_prefix('warning', path, pos),
+        s,
+    ))
+
+def print(s, path = None, pos = None):
+    p = make_prefix(None, path, pos)
+    sys.stderr.write('{}\n'.format(
+        '{}: {}'.format(p, s)
+        if p else
+        '{}'.format(s)
     ))

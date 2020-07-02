@@ -1,6 +1,11 @@
 ; This is a oneline comment.
 
+(let log (x) {
+    (print x)
+    0
+})
+
 (let main () {
-    (print "Hello, World!")
+    (log "Hello, World!")
     0
 })
