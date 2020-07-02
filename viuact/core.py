@@ -407,6 +407,34 @@ def emit_fn_call(mod, body, st, result, form):
             ))
         raise e
 
+    if True:
+        parameters = signature[1]['parameters']
+        arguments = form.arguments()
+
+        need_labelled = list(filter(
+            lambda a: type(a) is viuact.forms.Labelled_parameter, parameters))
+        need_positional = list(filter(
+            lambda a: type(a) is viuact.forms.Named_parameter, parameters))
+
+        got_labelled = list(filter(
+            lambda a: type(a) is viuact.forms.Argument_bind, arguments))
+        got_positional = list(filter(
+            lambda a: type(a) is not viuact.forms.Argument_bind, arguments))
+
+        if len(got_positional) < len(need_positional):
+            raise viuact.errors.Missing_positional_argument(
+                form.to().name().tok().at(),
+                called_fn_name,
+                need_positional[len(got_positional)],
+            )
+
+        if len(got_labelled) < len(need_labelled):
+            raise viuact.errors.Missing_labelled_argument(
+                form.to().name().tok().at(),
+                called_fn_name,
+                need_labelled[len(got_labelled)],
+            )
+
     body.append(Verbatim('frame %{} arguments'.format(len(form.arguments()))))
 
     for i, arg in enumerate(form.arguments()):
@@ -568,7 +596,7 @@ def cc_fn(mod, fn):
         source = Slot.make_anonymous(i, Register_set.PARAMETERS)
         label = (
             str(each)[1:]
-            if type(each) is viuact.lexemes.Labelled_name else
+            if type(each) is viuact.forms.Labelled_parameter else
             str(each)
         )
         dest = st.get_slot(label)

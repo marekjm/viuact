@@ -5,11 +5,17 @@
     0
 })
 
+(let logl (~x) {
+    (print x)
+    0
+})
+
 (let main () {
     (log "Hello, World!")
 
     (let x "What's up?")
     (print x)
+    (logl x)
 
     (log "Good bye, World!")
     0

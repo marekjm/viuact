@@ -102,3 +102,18 @@ class Unknown_function(Emitter_error):
 
     def what(self):
         return '{}: {}'.format(super().what(), self.bad)
+
+class Missing_argument(Emitter_error):
+    def __init__(self, pos, fn, arg):
+        super().__init__(pos)
+        self.fn = fn
+        self.arg = arg
+
+    def what(self):
+        return '{} for function {}: {}'.format(super().what(), self.fn, self.arg)
+
+class Missing_positional_argument(Missing_argument):
+    pass
+
+class Missing_labelled_argument(Missing_argument):
+    pass

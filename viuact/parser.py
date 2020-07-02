@@ -196,7 +196,10 @@ def parse_fn_parameter(group):
                 s = str(name),
             ).note('expected a name or a labelled name')
 
-        return viuact.forms.Named_parameter(name)
+        if name.t() is viuact.lexemes.Name:
+            return viuact.forms.Named_parameter(name)
+        else:
+            return viuact.forms.Labelled_parameter(name)
 
     viuact.util.log.fixme(
         'defaulted parameters are not implemented', '<viuact>')

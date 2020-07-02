@@ -44,6 +44,17 @@ class Defaulted_parameter(Fn_parameter):
     def val(self):
         return self._value
 
+class Argument_bind(Form):
+    def __init__(self, name, value):
+        self._name = name   # lexeme
+        self._value = value # form
+
+    def name(self):
+        return self._name
+
+    def val(self):
+        return self._value
+
 class Compound_expr(Form):
     def __init__(self, expressions):
         self._expressions = expressions  # [form]
@@ -101,6 +112,7 @@ Form.forms = [
     Named_parameter,
     Labelled_parameter,
     Defaulted_parameter,
+    Argument_bind,
     Compound_expr,
     Fn_call,
     Primitive_literal,
