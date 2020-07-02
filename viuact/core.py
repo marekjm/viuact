@@ -367,6 +367,7 @@ def emit_builtin_call(mod, body, st, result, form):
             body.append(Verbatim('print {}'.format(
                 slot.to_string(),
             )))
+            body.append(Verbatim(''))
 
         return slot
 
