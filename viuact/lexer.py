@@ -28,7 +28,7 @@ def lex(text):
             continue
 
         if text[i] == ';':
-            n = i + text.find('\n', i)
+            n = text.find('\n', i + 1)
 
             s = text[i:n]
 
