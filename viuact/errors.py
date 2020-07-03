@@ -65,7 +65,15 @@ class Unexpected_token(Lexer_error):
         return '{}: {}'.format(super().what(), repr(self.bad))
 
 class Unbalanced_braces(Lexer_error):
-    pass
+    def __init__(self, pos, s = None):
+        super().__init__(pos)
+        self.bad = s
+
+    def what(self):
+        s = super().what()
+        if self.bad is not None:
+            s = '{}: unexpected {}'.format(s, repr(str(self.bad)))
+        return s
 
 class Invalid_sentinel(Lexer_error):
     def __init__(self, pos, s):

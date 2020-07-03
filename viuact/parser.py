@@ -66,34 +66,75 @@ class Element(G):
         return self.val().t()
 
 
-def group_one(tokens, i, g):
-    sentinel = g[0]
+class Sentinels:
+    def __init__(self):
+        self._sentinels = []
+        self._counter = 0
+        self._popped = None
+
+    def __iter__(self):
+        return iter(self._sentinels)
+
+    def push(self, sent):
+        self._sentinels.append(sent)
+        self._counter += 1
+        return self
+
+    def pop(self, at):
+        print = lambda *args: sys.stderr.write('{}\n'.format(' '.join(
+            map(str, args))))
+
+        self._sentinels.pop()
+        self._popped = at
+        self._counter -= 1
+        if len(self._sentinels) != self._counter:
+            raise None
+        return self
+
+    def empty(self):
+        return (len(self._sentinels) == 0)
+
+    def popped(self):
+        return self._popped
+
+    def top(self):
+        return self._sentinels[-1]
+
+def group_one(tokens, i, delim, sentinels):
+    sentinel = delim
     tag = None
+    g = []
     if sentinel.t() is viuact.lexemes.Left_paren:
         sentinel = viuact.lexemes.Right_paren
         tag = viuact.lexemes.Paren_tag(token = tokens[i - 1].tok())
         # g = [Element(tag)]
-        g = []
     elif sentinel.t() is viuact.lexemes.Left_curly:
         sentinel = viuact.lexemes.Right_curly
         tag = viuact.lexemes.Curly_tag(token = tokens[i - 1].tok())
         g = [Element(tag)]
     else:
-        raise viuact.errors.Invalid_sentinel(tokens[i - 1].at(), str(sentinel))
+        raise viuact.errors.Invalid_sentinel(tokens[i - 1].tok().at(), str(sentinel))
+    sentinels.push(sentinel)
 
     while i < len(tokens):
         each = tokens[i]
         if each.t() in (viuact.lexemes.Left_paren, viuact.lexemes.Left_curly,):
-            i, gp = group_one(tokens, i + 1, [each])
+            i, gp = group_one(tokens, i + 1, each, sentinels)
             g.append(gp)
             continue
 
         if each.t() in (
             viuact.lexemes.Right_paren, viuact.lexemes.Right_curly,) and each.t() is not sentinel:
-            raise viuact.errors.Unbalanced_braces(pos = each.tok().at())
+            raise viuact.errors.Unbalanced_braces(
+                each.tok().at(),
+                each,
+            ).note('expected {}'.format(repr(
+                '}' if sentinels.top() is viuact.lexemes.Right_curly else ')'
+            )))
 
         i += 1
         if each.t() is sentinel:
+            sentinels.pop(each)
             break
 
         g.append(Element(each))
@@ -105,7 +146,15 @@ def group(tokens):
 
     i = 0
     while i < len(tokens):
-        i, g = group_one(tokens, i + 1, [ tokens[i], ])
+        s = Sentinels()
+        i, g = group_one(tokens, i + 1, tokens[i], s)
+        if not s.empty():
+            raise viuact.errors.Unbalanced_braces(
+                s.popped().tok().at(),
+                s.popped(),
+            ).note('expected {}'.format(repr(
+                '}' if sentinels.top() is viuact.lexemes.Right_curly else ')'
+            )))
         groups.append(g)
 
     return groups
