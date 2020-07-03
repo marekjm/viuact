@@ -474,6 +474,9 @@ def emit_fn_call(mod, body, st, result, form):
                     register_set = Register_set.ARGUMENTS,
                 ),
             ))
+            # FIXME Maybe mark the slot as moved in some way to aid with error
+            # reporting?
+            sc.deallocate_slot(slot)
 
     body.append(Call(
         to = called_fn_name,
