@@ -160,12 +160,14 @@ class State:
     def deallocate_slot(self, slot):
         try:
             self._allocated_slots.remove((slot.index, slot.register_set,))
+            if slot.name in self._named_slots:
+                del self._named_slots[slot.name]
+            self._freed_slots.append(slot)
         except ValueError:
             if self._parent:
                 self._parent.deallocate_slot(slot)
             else:
                 raise
-        self._freed_slots.append(slot)
         # viuact.util.log.note('  freed slot: {}'.format(slot.to_string()))
         return self
 
