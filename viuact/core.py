@@ -221,7 +221,26 @@ class State:
             return self._parent.slot_of(name)
 
     def actual_pressure(self, register_set):
-        return self._next_slot_index[register_set]
+        n = self._next_slot_index[register_set]
+        a = self._allocated_slots
+        f = list(filter(
+            lambda i: i.register_set == register_set, self._freed_slots))
+
+        a = (max(list(map(lambda x: x[0], a))) if a else None)
+        f = (max(list(map(lambda x: x.index, f))) if f else None)
+
+        # print('pressure.n:', n)
+        # print('pressure.a:', a)
+        # print('pressure.f:', f)
+
+        pressure = n
+        if a is not None:
+            pressure = (a + 1)
+        if f is not None:
+            pressure = f
+
+        # print('pressure.pr:', pressure)
+        return pressure
 
     def scoped(self):
         s = State(parent = self)
