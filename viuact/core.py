@@ -158,7 +158,13 @@ class State:
         self._freed_slots.clear()
 
     def deallocate_slot(self, slot):
-        self._allocated_slots.remove((slot.index, slot.register_set,))
+        try:
+            self._allocated_slots.remove((slot.index, slot.register_set,))
+        except ValueError:
+            if self._parent:
+                self._parent.deallocate_slot(slot)
+            else:
+                raise
         self._freed_slots.append(slot)
         # viuact.util.log.note('  freed slot: {}'.format(slot.to_string()))
         return self
@@ -571,6 +577,7 @@ def emit_expr(mod, body, st, result, expr):
                     result.to_string(),
                     str(expr.name()),
                 ))
+            st.deallocate_slot(result)
         return st.slot_of(str(expr.name()))
     if type(expr) is viuact.forms.Let_binding:
         if not result.is_void():
