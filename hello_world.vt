@@ -15,7 +15,7 @@
 
     (let x "What's up?")
     (print x)
-    (logl x)
+    (logl (~x x))
 
     (log "Good bye, World!")
     0

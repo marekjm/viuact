@@ -407,19 +407,28 @@ def emit_fn_call(mod, body, st, result, form):
             ))
         raise e
 
+    args = []
     if True:
         parameters = signature[1]['parameters']
         arguments = form.arguments()
 
         need_labelled = list(filter(
-            lambda a: type(a) is viuact.forms.Labelled_parameter, parameters))
+            lambda a: type(a) is viuact.forms.Labelled_parameter,
+            parameters))
         need_positional = list(filter(
             lambda a: type(a) is viuact.forms.Named_parameter, parameters))
 
-        got_labelled = list(filter(
-            lambda a: type(a) is viuact.forms.Argument_bind, arguments))
+        got_labelled = dict(
+            map(lambda a: ( str(a.name()), a.val(), ),
+            filter(lambda a: type(a) is viuact.forms.Argument_bind,
+            arguments)))
         got_positional = list(filter(
             lambda a: type(a) is not viuact.forms.Argument_bind, arguments))
+
+        # print('positional:', need_positional, '=>', got_positional)
+        # print('labelled:',
+        #     list(map(lambda a: str(a.name()), need_labelled)),
+        #     '=>', got_labelled)
 
         if len(got_positional) < len(need_positional):
             raise viuact.errors.Missing_positional_argument(
@@ -427,17 +436,21 @@ def emit_fn_call(mod, body, st, result, form):
                 called_fn_name,
                 need_positional[len(got_positional)],
             )
+        for l in need_labelled:
+            if str(l.name()) not in got_labelled:
+                raise viuact.errors.Missing_labelled_argument(
+                    form.to().name().tok().at(),
+                    called_fn_name,
+                    l,
+                )
 
-        if len(got_labelled) < len(need_labelled):
-            raise viuact.errors.Missing_labelled_argument(
-                form.to().name().tok().at(),
-                called_fn_name,
-                need_labelled[len(got_labelled)],
-            )
+        args = got_positional[:]
+        for a in need_labelled:
+            args.append(got_labelled[str(a.name())])
 
     body.append(Verbatim('frame %{} arguments'.format(len(form.arguments()))))
 
-    for i, arg in enumerate(form.arguments()):
+    for i, arg in enumerate(args):
         body.append(Verbatim('; for argument {}'.format(i)))
         with st.scoped() as sc:
             slot = emit_expr(

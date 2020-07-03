@@ -173,6 +173,12 @@ def parse_let_binding(group):
         value = parse_expr(group[2]),
     )
 
+def parse_argument_bind(group):
+    return viuact.forms.Argument_bind(
+        name = group[0].val(),
+        value = parse_expr(group[1]),
+    )
+
 def parse_expr(group):
     if type(group) is Group:
         if type(group.tag()) is viuact.lexemes.Curly_tag:
@@ -183,6 +189,8 @@ def parse_expr(group):
             return parse_let_binding(group)
         if group.lead().t() is viuact.lexemes.Let and len(group.val()) == 4:
             return parse_fn(group)
+        if group.lead().t() is viuact.lexemes.Labelled_name:
+            return parse_argument_bind(group)
         return parse_fn_call(group)
     else:
         return parse_simple_expr(group)
