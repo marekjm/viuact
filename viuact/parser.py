@@ -191,7 +191,17 @@ def parse_fn_call(group):
 
     args = []
     for each in group[1 + offset:]:
-        args.append(parse_expr(each))
+        if type(each) is Element and each.t() is viuact.lexemes.Labelled_name:
+            tok = viuact.lexemes.Token(
+                pos = (each.val().tok().at()[0], each.val().tok().at()[1] + 1),
+                text = str(each.val().tok())[1:],
+            )
+            args.append(viuact.forms.Argument_bind(
+                name = each.val(),
+                value = viuact.forms.Name_ref(name = viuact.lexemes.Name(tok)),
+            ))
+        else:
+            args.append(parse_expr(each))
 
     return viuact.forms.Fn_call(
         to = name,

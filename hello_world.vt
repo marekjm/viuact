@@ -13,9 +13,15 @@
 (let main () {
     (log "Hello, World!")
 
+    (let y "Pun intended!")
+    (logl (~x y))   ; bind different name
+
     (let x "What's up?")
     (print x)
-    (logl (~x x))
+    (logl (~x x))   ; bind the same name explicitly
+
+    (let x "Same old.")
+    (logl ~x)       ; use label punning
 
     (log "Good bye, World!")
     0
