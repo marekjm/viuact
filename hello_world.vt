@@ -21,6 +21,7 @@
     (logl (~x x))   ; bind the same name explicitly
 
     (let x "Same old.")
+    (print x)
     (logl ~x)       ; use label punning
 
     (log "Good bye, World!")
