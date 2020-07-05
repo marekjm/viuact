@@ -388,7 +388,7 @@ def emit_builtin_call(mod, body, st, result, form):
                 mod = mod,
                 body = body,
                 st = sc,
-                result = result,
+                result = (sc.get_slot(None) if result.is_void() else result),
                 expr = form.arguments()[0],
             )
             body.append(Verbatim('print {}'.format(
