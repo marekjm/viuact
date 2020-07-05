@@ -606,7 +606,7 @@ def emit_expr(mod, body, st, result, expr):
     if type(expr) is viuact.forms.Let_binding:
         if not result.is_void():
             viuact.util.log.warning(
-                'slot will be unused after name-ref emission: {} = {}'.format(
+                'slot will be unused after let-binding emission: {} = {}'.format(
                     result.to_string(),
                     str(expr.name()),
                 ))
