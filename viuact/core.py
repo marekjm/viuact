@@ -158,6 +158,9 @@ class State:
         self._freed_slots.clear()
 
     def deallocate_slot(self, slot):
+        if slot.is_void():
+            return
+
         try:
             self._allocated_slots.remove((slot.index, slot.register_set,))
             if slot.name in self._named_slots:
