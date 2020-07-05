@@ -137,6 +137,7 @@ class State:
         self._named_slots = {}
         self._allocated_slots = []
         self._freed_slots = []
+        self._cancelled_slots = []
 
         if parent is not None:
             for k, v in self._parent._next_slot_index.items():
@@ -153,9 +154,14 @@ class State:
     def push_deallocations(self):
         if self._parent is None:
             return
+
+        self._parent._cancelled_slots.extend(self._cancelled_slots)
+        self._cancelled_slots.clear()
+
         self._parent._freed_slots.extend(self._freed_slots)
-        self._parent.push_deallocations()
         self._freed_slots.clear()
+
+        self._parent.push_deallocations()
 
     def deallocate_slot(self, slot):
         if slot.is_void():
@@ -179,10 +185,36 @@ class State:
         # viuact.util.log.note('  freed slot: {}'.format(slot.to_string()))
         return self
 
+    def cancel_slot(self, slot):
+        if slot.is_void():
+            return
+
+        viuact.util.log.note('cancel: {} [top = {}]'.format(
+            slot.to_string(),
+            self._next_slot_index[slot.register_set],
+        ))
+
+        try:
+            self._allocated_slots.remove((slot.index, slot.register_set,))
+            if slot.name in self._named_slots:
+                del self._named_slots[slot.name]
+            self._cancelled_slots.append(slot)
+        except ValueError:
+            if self._parent:
+                self._parent.cancel_slot(slot)
+            else:
+                raise
+        return self
+
     def find_free_slot(self, register_set):
+        for each in self._cancelled_slots:
+            if each.register_set == register_set:
+                viuact.util.log.note('reusing cancelled slot {}'.format(each.to_string()))
+                self._cancelled_slots.remove(each)
+                return each
         for each in self._freed_slots:
             if each.register_set == register_set:
-                viuact.util.log.note('reusing slot {}'.format(each.to_string()))
+                viuact.util.log.note('reusing dealloced slot {}'.format(each.to_string()))
                 self._freed_slots.remove(each)
                 return each
         if self._parent is not None:
@@ -632,7 +664,7 @@ def emit_expr(mod, body, st, result, expr):
                     result.to_string(),
                     str(expr.name()),
                 ))
-            st.deallocate_slot(result)
+            st.cancel_slot(result)
         return st.slot_of(str(expr.name()))
     if type(expr) is viuact.forms.Let_binding:
         if not result.is_void():
