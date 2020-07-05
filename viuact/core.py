@@ -161,6 +161,11 @@ class State:
         if slot.is_void():
             return
 
+        viuact.util.log.note('dealloc: {} [top = {}]'.format(
+            slot.to_string(),
+            self._next_slot_index[slot.register_set],
+        ))
+
         try:
             self._allocated_slots.remove((slot.index, slot.register_set,))
             if slot.name in self._named_slots:
@@ -229,12 +234,15 @@ class State:
         f = list(filter(
             lambda i: i.register_set == register_set, self._freed_slots))
 
+        viuact.util.log.raw('a:', a)
+        viuact.util.log.raw('f:', list(map(lambda x: x.index, f)))
+
         a = (max(list(map(lambda x: x[0], a))) if a else None)
         f = (max(list(map(lambda x: x.index, f))) if f else None)
 
-        # print('pressure.n:', n)
-        # print('pressure.a:', a)
-        # print('pressure.f:', f)
+        viuact.util.log.raw('pressure.n:', n)
+        viuact.util.log.raw('pressure.a:', a)
+        viuact.util.log.raw('pressure.f:', f)
 
         pressure = n
         if a is not None:
