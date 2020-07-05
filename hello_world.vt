@@ -21,8 +21,18 @@
     (logl (~x x))   ; bind the same name explicitly
 
     (let x "Same old.")
+    (let z "Something new.")
     (print x)
+    (print z)
     (logl ~x)       ; use label punning
+
+    (let n {
+        ;(let s "Nested!")
+        ;(print s)
+        (print "Nested!")
+        41
+    })
+    (print n)
 
     (log "Good bye, World!")
     0
