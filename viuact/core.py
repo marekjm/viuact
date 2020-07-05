@@ -244,13 +244,33 @@ class State:
         viuact.util.log.raw('pressure.a:', a)
         viuact.util.log.raw('pressure.f:', f)
 
-        pressure = n
         if a is not None:
-            pressure = (a + 1)
+            a = (a + 1)
         if f is not None:
-            pressure = f
+            f = (f + 1)
 
-        # print('pressure.pr:', pressure)
+        # By default, use the pressure from the next slot as this is exactly the
+        # number we should use in the most pessimistic case.
+        pressure = n
+
+        # However, if we have information about allocations let's just use the
+        # maximum index of allocated slots. This will be more accurate and we
+        # will not waste registers.
+        if a is not None:
+            pressure = a
+
+        # To get an even better value for the actual pressure, let's consult the
+        # deallocated registers (if any). If a register was deallocated it must
+        # have been used at some point so its index should be taken into
+        # account.
+        #
+        # BEWARE, though! Instead of blindly overwriting the pressure value we
+        # should take a max() from freed and allocated indexes. It is possible
+        # that the slot with the maximum index was not deallocated until the end
+        # of the function.
+        if f is not None:
+            pressure = max(f, (a or 0))
+
         return pressure
 
     def scoped(self):
