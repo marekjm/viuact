@@ -3,6 +3,9 @@ import sys
 import viuact.util.colors
 
 
+def raw(*args):
+    sys.stderr.write('{}\n'.format(' '.join(map(str, args))))
+
 def make_prefix(kind, path, pos):
     if path is not None and type(path) is not str:
         raise Exception('invalid path: {}: {}'.format(
