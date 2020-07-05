@@ -106,6 +106,24 @@ class Let_binding(Form):
     def val(self):
         return self._value
 
+class If(Form):
+    def __init__(self, guard, if_true, if_false):
+        self._guard = guard         # form
+        self._if_true = if_true     # form
+        self._if_false = if_false   # form
+
+    def guard(self):
+        return self._guard
+
+    def arm(self, value):
+        return (self._if_true if value else self._if_false)
+
+    def arm_true(self):
+        return self.arm(True)
+
+    def arm_false(self):
+        return self.arm(False)
+
 
 Form.forms = [
     Fn,

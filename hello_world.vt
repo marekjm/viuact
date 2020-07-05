@@ -35,5 +35,8 @@
     (print n)
 
     (log "Good bye, World!")
+
+    (print (if 0 (print "OK.") (print "Not OK.")))
+
     0
 })

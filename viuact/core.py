@@ -1,4 +1,5 @@
 import enum
+import hashlib
 import os
 
 import viuact.util.log
@@ -127,7 +128,11 @@ class Scope:
         self.state.erase()
 
 class State:
-    def __init__(self, upper = None, parent = None):
+    def __init__(self, fn, upper = None, parent = None):
+        self._fn = fn           # Name of the function for which this state was
+                                # created.
+        self._special = 0       # General purpose counter for special events.
+
         self._upper = upper     # Used for closures.
         self._parent = parent   # Parent scope, e.g. for function call
                                 # arguments.
@@ -303,16 +308,16 @@ class State:
         if f is not None:
             pressure = max(f, (a or 0))
 
+        viuact.util.log.raw('pressure.x:', pressure)
+
         return pressure
 
     def scoped(self):
-        s = State(parent = self)
+        s = State(fn = self.fn(), parent = self)
         # viuact.util.log.note('created scope: {}'.format(s))
         return Scope(s)
 
     def erase(self):
-        # viuact.util.log.note('erasing scope {} with {} slot(s)...'.format(
-        #     self, len(self._allocated_slots)))
         for each in self._allocated_slots:
             i, r = each
             self.deallocate_slot(Slot(
@@ -321,6 +326,14 @@ class State:
                 register_set = r,
             ))
         self.push_deallocations()
+
+    def fn(self):
+        return self._fn
+
+    def special(self):
+        n = self._special
+        self._special += 1
+        return n
 
 
 class Fn_cc:
@@ -632,6 +645,67 @@ def emit_compound_expr(mod, body, st, result, expr):
 
     return result
 
+def emit_if(mod, body, st, result, expr):
+    guard_slot = st.get_slot(name = None)
+    viuact.util.log.raw('if: guard_slot = {}'.format(guard_slot.to_string()))
+
+    with st.scoped() as sc:
+        emit_expr(
+            mod = mod,
+            body = body,
+            st = sc,
+            result = guard_slot,
+            expr = expr.guard(),
+        )
+
+    label_core = hashlib.sha1('{}+{}+{}'.format(
+        mod.name(),
+        st.fn(),
+        st.special(),
+    ).encode('utf-8')).hexdigest()
+    label_true = 'if_true_' + label_core
+    label_false = 'if_false_' + label_core
+    label_end = 'if_end_' + label_core
+
+    body.append(Verbatim('if {} {} {}'.format(
+        guard_slot.to_string(),
+        label_true,
+        label_false,
+    )))
+    st.deallocate_slot(guard_slot)
+
+    body.append(Verbatim(''))
+    body.append(Verbatim('.mark: {}'.format(label_true)))
+    with st.scoped() as sc:
+        emit_expr(
+            mod = mod,
+            body = body,
+            st = sc,
+            result = result,
+            expr = expr.arm_true(),
+        )
+        body.append(Verbatim('jump {}'.format(label_end)))
+
+    body.append(Verbatim(''))
+    body.append(Verbatim('.mark: {}'.format(label_false)))
+    with st.scoped() as sc:
+        emit_expr(
+            mod = mod,
+            body = body,
+            st = sc,
+            result = result,
+            expr = expr.arm_false(),
+        )
+
+    body.append(Verbatim(''))
+    body.append(Verbatim('.mark: {}'.format(label_end)))
+
+    viuact.util.log.raw('---- 8< ----')
+    st.actual_pressure(Register_set.LOCAL)
+    viuact.util.log.raw('---- >8 ----')
+
+    return result
+
 def emit_expr(mod, body, st, result, expr):
     if type(expr) is viuact.forms.Fn_call:
         return emit_fn_call(
@@ -679,6 +753,14 @@ def emit_expr(mod, body, st, result, expr):
             st = st,
             binding = expr,
         )
+    if type(expr) is viuact.forms.If:
+        return emit_if(
+            mod = mod,
+            body = body,
+            st = st,
+            result = result,
+            expr = expr,
+        )
     viuact.util.log.fixme('failed to emit expression: {}'.format(
         typeof(expr)))
     raise None
@@ -695,7 +777,7 @@ def cc_fn(mod, fn):
         if mod.name() != EXEC_MODULE else
         '{}/{}'.format(fn.name(), len(fn.parameters())))
 
-    st = State()
+    st = State(fn = main_fn_name)
     main_fn = Fn_cc(main_fn_name)
     out = CC_out(main_fn)
 

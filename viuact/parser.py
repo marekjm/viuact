@@ -250,6 +250,12 @@ def parse_expr(group):
             return parse_fn(group)
         if group.lead().t() is viuact.lexemes.Labelled_name:
             return parse_argument_bind(group)
+        if group.lead().t() is viuact.lexemes.If:
+            return viuact.forms.If(
+                guard = parse_expr(group[1]),
+                if_true = parse_expr(group[2]),
+                if_false = parse_expr(group[3]),
+            )
         return parse_fn_call(group)
     else:
         return parse_simple_expr(group)

@@ -50,6 +50,9 @@ class Right_curly(Lexeme):
 class Let(Lexeme):
     pattern = re.compile(r'\blet\b')
 
+class If(Lexeme):
+    pattern = re.compile(r'\bif\b')
+
 class Tail(Lexeme):
     pattern = re.compile(r'\btailcall\b')
 
@@ -72,6 +75,7 @@ Lexeme.patterns = [
     Left_curly,
     Right_curly,
     Let,
+    If,
     Labelled_name,
     Name,
     Integer,
