@@ -50,8 +50,14 @@ class Right_curly(Lexeme):
 class Let(Lexeme):
     pattern = re.compile(r'\blet\b')
 
+class Val(Lexeme):
+    pattern = re.compile(r'\bval\b')
+
 class If(Lexeme):
     pattern = re.compile(r'\bif\b')
+
+class Enum(Lexeme):
+    pattern = re.compile(r'\benum\b')
 
 class Tail(Lexeme):
     pattern = re.compile(r'\btailcall\b')
@@ -61,6 +67,12 @@ class Name(Lexeme):
 
 class Labelled_name(Lexeme):
     pattern = re.compile(r'~[a-z][a-zA-Z0-9_]*\'?\b')
+
+class Template_parameter(Lexeme):
+    pattern = re.compile(r'\'[a-z][a-zA-Z0-9_]*\b')
+
+class Mod_name(Lexeme):
+    pattern = re.compile(r'[A-Z][a-zA-Z0-9_]*\b')
 
 class Integer(Lexeme):
     pattern = re.compile(r'-?\b(0|[1-9][0-9]*|0x[a-f0-9]+|0o[0-7]+|0b[01]+)\b')
@@ -75,8 +87,12 @@ Lexeme.patterns = [
     Left_curly,
     Right_curly,
     Let,
+    Val,
     If,
+    Enum,
     Labelled_name,
+    Template_parameter,
+    Mod_name,
     Name,
     Integer,
     String,

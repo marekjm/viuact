@@ -124,6 +124,36 @@ class If(Form):
     def arm_false(self):
         return self.arm(False)
 
+class Val_fn_spec(Form):
+    def __init__(self, name, template_parameters, parameter_types, return_type):
+        self._name = name
+        self._template_parameters = template_parameters
+        self._parameter_types = parameter_types
+        self._return_type = return_type
+
+    def name(self):
+        return self._name
+
+    def template_parameters(self):
+        return self._template_parameters
+
+    def parameter_types(self):
+        return self._parameter_types
+
+    def return_type(self):
+        return self._return_type
+
+class Type_name(Form):
+    def __init__(self, name, template_parameters):
+        self._name = name
+        self._template_parameters = template_parameters
+
+    def name(self):
+        return self._name
+
+    def parameters(self):
+        return self._template_parameters
+
 
 Form.forms = [
     Fn,
