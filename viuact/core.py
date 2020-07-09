@@ -325,6 +325,10 @@ class State:
             return self._parent.find_free_slot(register_set)
         return None
 
+    def insert_allocated(self, slot):
+        self._allocated_slots.append( (slot.index, slot.register_set,) )
+        return self
+
     def allocate_slot(self, register_set):
         found_freed = self.find_free_slot(register_set)
         i = None
@@ -895,11 +899,13 @@ def cc_fn(mod, fn):
             dest = dest,
         ))
 
+    result_slot = Slot(None, 0, Register_set.LOCAL)
+    st.insert_allocated(result_slot)
     result = emit_expr(
         mod = mod,
         body = main_fn,
         st = st,
-        result = Slot(None, 0, Register_set.LOCAL),
+        result = result_slot,
         expr = fn.body(),
     )
 
