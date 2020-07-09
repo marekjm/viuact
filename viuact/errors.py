@@ -160,3 +160,21 @@ class Bad_returned_type(Type_error):
             decl = self.declared,
             ret = self.returned,
         )
+
+class Bad_argument_type(Type_error):
+    def __init__(self, pos, fn, i, declared, actual):
+        super().__init__(pos)
+        self.fn = fn
+        self.index = i
+        self.declared = declared
+        self.actual = actual
+
+    def what(self):
+        fmt = '{w} of parameter {i} in call to {fn}: declared {decl} != actal {act}'
+        return fmt.format(
+            w = super().what(),
+            i = self.index,
+            fn = self.fn,
+            decl = self.declared,
+            act = self.actual,
+        )

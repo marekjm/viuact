@@ -4,9 +4,18 @@ import enum
 class Form:
     forms = []
 
+    def __init__(self, ft):
+        # First token is used to report approximate position of the form inside
+        # source file in case it is involved in an error.
+        self._first_token = ft
+
+    def first_token(self):
+        return self._first_token
+
 
 class Fn(Form):
     def __init__(self, name, parameters, expression):
+        super().__init__(name.tok())
         self._name = name               # lexeme
         self._parameters = parameters   # [form]
         self._expression = expression   # form
@@ -22,6 +31,7 @@ class Fn(Form):
 
 class Fn_parameter(Form):
     def __init__(self, name):
+        super().__init__(name.tok())
         self._name = name   # lexeme
 
     def __str__(self):
@@ -38,6 +48,7 @@ class Labelled_parameter(Fn_parameter):
 
 class Defaulted_parameter(Fn_parameter):
     def __init__(self, name, value):
+        super().__init__(name.tok())
         self._name = name   # lexeme
         self._value = value # form
 
@@ -46,6 +57,7 @@ class Defaulted_parameter(Fn_parameter):
 
 class Argument_bind(Form):
     def __init__(self, name, value):
+        super().__init__(name.tok())
         self._name = name   # lexeme
         self._value = value # form
 
@@ -71,6 +83,7 @@ class Fn_call(Form):
         Watchdog = 4
 
     def __init__(self, to, arguments, kind):
+        super().__init__(to.first_token())
         self._to = to                   # G
         self._arguments = arguments     # [form]
         self._kind = kind               # Kind
@@ -83,6 +96,7 @@ class Fn_call(Form):
 
 class Primitive_literal(Form):
     def __init__(self, value):
+        super().__init__(value.tok())
         self._value = value  # lexeme
 
     def value(self):
@@ -90,6 +104,7 @@ class Primitive_literal(Form):
 
 class Name_ref(Form):
     def __init__(self, name):
+        super().__init__(name.tok())
         self._name = name  # lexeme
 
     def name(self):
@@ -97,6 +112,7 @@ class Name_ref(Form):
 
 class Let_binding(Form):
     def __init__(self, name, value):
+        super().__init__(name.tok())
         self._name = name   # lexeme
         self._value = value # form
 
@@ -108,6 +124,7 @@ class Let_binding(Form):
 
 class If(Form):
     def __init__(self, guard, if_true, if_false):
+        super().__init__(guard.first_token())
         self._guard = guard         # form
         self._if_true = if_true     # form
         self._if_false = if_false   # form
@@ -126,6 +143,7 @@ class If(Form):
 
 class Val_fn_spec(Form):
     def __init__(self, name, template_parameters, parameter_types, return_type):
+        super().__init__(name.tok())
         self._name = name                                # lexeme
         self._template_parameters = template_parameters  # [form]
         self._parameter_types = parameter_types          # [form]
@@ -145,6 +163,7 @@ class Val_fn_spec(Form):
 
 class Type_name(Form):
     def __init__(self, name, template_parameters):
+        super().__init__(name.tok())
         self._name = name
         self._template_parameters = template_parameters
 

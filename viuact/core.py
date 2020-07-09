@@ -687,7 +687,6 @@ def emit_fn_call(mod, body, st, result, form):
         called_fn_name,
         type_signature,
     ))
-    st.type_of(result, type_signature['return'])
 
     args = []
     if True:
@@ -750,9 +749,29 @@ def emit_fn_call(mod, body, st, result, form):
                     register_set = Register_set.ARGUMENTS,
                 ),
             ))
+
+            param_t = type_signature['parameters'][i]
+            arg_t = st.type_of(slot)
+            viuact.util.log.raw('call to {}: [{}] p{{ {} }} -> a{{ {} }}'.format(
+                called_fn_name,
+                i,
+                param_t,
+                arg_t,
+            ))
+            if param_t != arg_t:
+                raise viuact.errors.Bad_argument_type(
+                    arg.first_token().at(),
+                    called_fn_name,
+                    i,
+                    param_t,
+                    arg_t,
+                )
+
             # FIXME Maybe mark the slot as moved in some way to aid with error
             # reporting?
             sc.deallocate_slot(slot)
+
+    st.type_of(result, type_signature['return'])
 
     body.append(Call(
         to = called_fn_name,
