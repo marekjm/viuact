@@ -271,10 +271,10 @@ class State:
         if slot.is_void():
             return
 
-        viuact.util.log.note('dealloc: {} [top = {}]'.format(
-            slot.to_string(),
-            self._next_slot_index[slot.register_set],
-        ))
+        # viuact.util.log.note('dealloc: {} [top = {}]'.format(
+        #     slot.to_string(),
+        #     self._next_slot_index[slot.register_set],
+        # ))
 
         try:
             self._allocated_slots.remove((slot.index, slot.register_set,))
@@ -293,10 +293,10 @@ class State:
         if slot.is_void():
             return
 
-        viuact.util.log.note('cancel: {} [top = {}]'.format(
-            slot.to_string(),
-            self._next_slot_index[slot.register_set],
-        ))
+        # viuact.util.log.note('cancel: {} [top = {}]'.format(
+        #     slot.to_string(),
+        #     self._next_slot_index[slot.register_set],
+        # ))
 
         try:
             self._allocated_slots.remove((slot.index, slot.register_set,))
@@ -313,12 +313,12 @@ class State:
     def find_free_slot(self, register_set):
         for each in self._cancelled_slots:
             if each.register_set == register_set:
-                viuact.util.log.note('reusing cancelled slot {}'.format(each.to_string()))
+                # viuact.util.log.note('reusing cancelled slot {}'.format(each.to_string()))
                 self._cancelled_slots.remove(each)
                 return each
         for each in self._freed_slots:
             if each.register_set == register_set:
-                viuact.util.log.note('reusing dealloced slot {}'.format(each.to_string()))
+                # viuact.util.log.note('reusing dealloced slot {}'.format(each.to_string()))
                 self._freed_slots.remove(each)
                 return each
         if self._parent is not None:
@@ -370,15 +370,15 @@ class State:
         f = list(filter(
             lambda i: i.register_set == register_set, self._freed_slots))
 
-        viuact.util.log.raw('a:', a)
-        viuact.util.log.raw('f:', list(map(lambda x: x.index, f)))
+        # viuact.util.log.raw('a:', a)
+        # viuact.util.log.raw('f:', list(map(lambda x: x.index, f)))
 
         a = (max(list(map(lambda x: x[0], a))) if a else None)
         f = (max(list(map(lambda x: x.index, f))) if f else None)
 
-        viuact.util.log.raw('pressure.n:', n)
-        viuact.util.log.raw('pressure.a:', a)
-        viuact.util.log.raw('pressure.f:', f)
+        # viuact.util.log.raw('pressure.n:', n)
+        # viuact.util.log.raw('pressure.a:', a)
+        # viuact.util.log.raw('pressure.f:', f)
 
         if a is not None:
             a = (a + 1)
@@ -407,7 +407,7 @@ class State:
         if f is not None:
             pressure = max(f, (a or 0))
 
-        viuact.util.log.raw('pressure.x:', pressure)
+        # viuact.util.log.raw('pressure.x:', pressure)
 
         return pressure
 
@@ -799,9 +799,9 @@ def emit_if(mod, body, st, result, expr):
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(label_end)))
 
-    viuact.util.log.raw('---- 8< ----')
+    # viuact.util.log.raw('---- 8< ----')
     st.actual_pressure(Register_set.LOCAL)
-    viuact.util.log.raw('---- >8 ----')
+    # viuact.util.log.raw('---- >8 ----')
 
     return result
 
@@ -832,11 +832,11 @@ def emit_expr(mod, body, st, result, expr):
         )
     if type(expr) is viuact.forms.Name_ref:
         if not result.is_void():
-            viuact.util.log.warning(
-                'slot will be unused after name-ref emission: {} = {}'.format(
-                    result.to_string(),
-                    str(expr.name()),
-                ))
+            # viuact.util.log.warning(
+            #     'slot will be unused after name-ref emission: {} = {}'.format(
+            #         result.to_string(),
+            #         str(expr.name()),
+            #     ))
             st.cancel_slot(result)
         return st.slot_of(str(expr.name()))
     if type(expr) is viuact.forms.Let_binding:
