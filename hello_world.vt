@@ -1,15 +1,24 @@
 ; This is a oneline comment.
 
+
+(val ('a) log ('a) i8)
 (let log (x) {
     (print x)
     0
 })
 
+(val ('a) logl ('a) i8)
 (let logl (~x) {
     (print x)
     0
 })
 
+(enum ('a) option (
+    (Some 'a)
+    None
+))
+
+(val () main () i8)
 (let main () {
     (log "Hello, World!")
 

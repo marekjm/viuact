@@ -1,0 +1,12 @@
+(val elo (i8) i8)
+(let elo (x) x)
+
+(val ziom (string) string)
+(let ziom (x) x)
+
+(val main () i8)
+(let main () {
+    (let s (ziom "Hello, World!"))
+    (print s)
+    s
+})
