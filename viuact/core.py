@@ -443,9 +443,12 @@ class State:
 
     def _set_type_of(self, slot, t):
         if type(slot) is not Slot:
-            raise None
+            raise TypeError('cannot get type of non-slot {}: {}'.format(
+                typeof(slot),
+                slot,
+            ))
         if slot.is_void():
-            raise None
+            raise TypeError('cannot get type of void slot')
         key = slot.to_string()
         if (slot.index, slot.register_set,) not in self._allocated_slots:
             viuact.util.log.raw('{} not in scope: {}'.format(key,
@@ -457,9 +460,12 @@ class State:
 
     def _get_type_of(self, slot):
         if type(slot) is not Slot:
-            raise None
+            raise TypeError('cannot get type of non-slot {}: {}'.format(
+                typeof(slot),
+                slot,
+            ))
         if slot.is_void():
-            raise None
+            raise TypeError('cannot get type of void slot')
         key = slot.to_string()
         if (slot.index, slot.register_set,) not in self._allocated_slots:
             viuact.util.log.raw('{} not in scope: {}'.format(key,
