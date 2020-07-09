@@ -307,14 +307,82 @@ def parse_fn(group):
         expression = expression,
     )
 
+def parse_type(group):
+    if type(group) is Element:
+        return viuact.forms.Type_name(
+            name = group.val(),
+            template_parameters = [],
+        )
+    if type(group) is Group and len(group) == 2:
+        return viuact.forms.Type_name(
+            name = group[1].val(),
+            template_parameters = [parse_type(each) for each in group[0]],
+        )
+    raise None
+
+def parse_val_fn(group):
+    offset = (0 if len(group) == 4 else 1)
+    template_parameters = (group[offset + 0] if offset else [])
+    name = group[offset + 1]
+    parameter_list = group[offset + 2]
+    return_type = group[offset + 3]
+
+    fmt = 'type of {}: ({}) -> {}'
+    if template_parameters:
+        fmt += ' [with {}]'
+    viuact.util.log.note(fmt.format(
+        str(name.val()),
+        ', '.join(map(lambda a: str(a.val()), parameter_list)),
+        str(return_type.val()),
+        ', '.join(map(lambda a: str(a.val()), template_parameters)),
+    ))
+
+    return viuact.forms.Val_fn_spec(
+        name = name,
+        template_parameters = template_parameters,
+        parameter_types = list(map(parse_type, parameter_list)),
+        return_type = parse_type(return_type),
+    )
+
+def parse_val_var(group):
+    template_params = []
+    name = None
+    parameter_list = None
+    return_type = None
+    raise None
+
+def parse_val(group):
+    is_var = 4
+    is_fn = 5
+
+    # The first element is not a list of type parameters so let's reduce the
+    # length requirements.
+    if type(group[1]) is Element:
+        is_var -= 1
+        is_fn -= 1
+
+    if len(group) == is_var:
+        return parse_val_var(group)
+    if len(group) == is_fn:
+        return parse_val_fn(group)
+    raise None
+
+def parse_enum(group):
+    pass
+
 def parse_impl(groups):
     forms = []
 
     for g in groups:
-        if g.lead().t() is viuact.lexemes.Let and len(g) == 3:
-            print('a let binding')
-        elif g.lead().t() is viuact.lexemes.Let and len(g) == 4:
+        if g.lead().t() is viuact.lexemes.Let and len(g) == 4:
             forms.append(parse_fn(g))
+        elif g.lead().t() is viuact.lexemes.Val:
+            forms.append(parse_val(g))
+        elif g.lead().t() is viuact.lexemes.Enum:
+            forms.append(parse_enum(g))
+        else:
+            tok = g.lead().val().tok()
+            raise viuact.errors.Unexpected_token(tok.at(), str(tok))
 
     return forms
 

@@ -96,12 +96,20 @@ class Module_info:
         self._source_file = source_file
 
         self._functions = {}
+        self._function_signatures = {}
 
     def name(self):
         return self._name
 
     def make_fn(self, name, parameters):
         n = '{}/{}'.format(name, len(parameters))
+        if n not in self._function_signatures:
+            viuact.util.log.raw(n, list(self._function_signatures.keys()))
+            raise viuact.errors.No_signature_for_function(
+                pos = name.tok().at(),
+                fn = n,
+            )
+
         self._functions[n] = {
             'local': True,
             'from': (None, None,),  # module name, containing file
@@ -114,6 +122,24 @@ class Module_info:
             n,
         ))
         return self
+
+    def make_fn_signature(self, name, parameters, return_type, template_parameters):
+        n = '{}/{}'.format(str(name.val()), len(parameters))
+        self._function_signatures[n] = {
+            'parameters': parameters,
+            'base_name': str(name),
+            'arity': len(parameters),
+            'return': return_type,
+            'template_parameters': template_parameters,
+        }
+        viuact.util.log.print('module info [{}]: local fn sig {}'.format(
+            self._name,
+            n,
+        ))
+        return self
+
+    def signature(self, fn_name):
+        return self._function_signatures[fn_name]
 
     def fns(self, local = None, imported = None):
         res = []
@@ -845,10 +871,12 @@ def cc_fn(mod, fn):
         len(fn.parameters()),
     ))
 
+    fn_name = '{}/{}'.format(fn.name(), len(fn.parameters()))
     main_fn_name = (
-        '{}::{}/{}'.format(mod.name(), fn.name(), len(fn.parameters()))
+        '{}::{}/{}'.format(mod.name(), fn_name)
         if mod.name() != EXEC_MODULE else
-        '{}/{}'.format(fn.name(), len(fn.parameters())))
+        fn_name)
+    signature = mod.signature(fn_name)
 
     st = State(fn = main_fn_name)
     main_fn = Fn_cc(main_fn_name)
