@@ -17,6 +17,79 @@ def typeof(value):
     return str(type(value))[8:-2]
 
 
+class Type:
+    class t:
+        def __init__(self, name, parameters = ()):
+            self._name = name               # str
+            self._parameters = parameters   # [Type]
+
+        def __eq__(self, other):
+            if type(other) is not Type.t:
+                raise TypeError('cannot compare type with {}'.format(typeof(other)))
+            n = (str(self.name()) == str(other.name()))
+            p = (self.parameters() == other.parameters())
+            return (n and p)
+
+        def __str__(self):
+            if self._parameters:
+                return '(({}) {})'.format(
+                    ' '.join(map(str, self.parameters())),
+                    str(self.name()),
+                )
+            else:
+                return str(self.name())
+
+        def name(self):
+            return self._name
+
+        def parameters(self):
+            return self._parameters
+
+        def polymorphic(self):
+            n = self.name().starstwith("'")
+            p = any(map(lambda x: x.polymorhpic(), self.parameters()))
+            return (n or p)
+
+        def merge(self, other):
+            raise None
+
+    class i8(t):
+        def __init__(self):
+            super().__init__('i8')
+
+    class i16(t):
+        def __init__(self):
+            super().__init__('i16')
+
+    class i32(t):
+        def __init__(self):
+            super().__init__('i32')
+
+    class i64(t):
+        def __init__(self):
+            super().__init__('i64')
+
+    class u8(t):
+        def __init__(self):
+            super().__init__('u8')
+
+    class u16(t):
+        def __init__(self):
+            super().__init__('u16')
+
+    class u32(t):
+        def __init__(self):
+            super().__init__('u32')
+
+    class u64(t):
+        def __init__(self):
+            super().__init__('u64')
+
+    class string(t):
+        def __init__(self):
+            super().__init__('string')
+
+
 class Module_info:
     def __init__(self, name, source_file):
         self._name = name
