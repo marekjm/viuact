@@ -339,7 +339,7 @@ def parse_val_fn(group):
 
     return viuact.forms.Val_fn_spec(
         name = name.val(),
-        template_parameters = template_parameters,
+        template_parameters = list(map(parse_type, template_parameters)),
         parameter_types = list(map(parse_type, parameter_list)),
         return_type = parse_type(return_type),
     )
