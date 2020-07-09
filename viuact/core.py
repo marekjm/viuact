@@ -243,6 +243,8 @@ class State:
         self._freed_slots = []
         self._cancelled_slots = []
 
+        self._types = {}
+
         if parent is not None:
             for k, v in self._parent._next_slot_index.items():
                 self._next_slot_index[k] = v
@@ -280,6 +282,7 @@ class State:
             self._allocated_slots.remove((slot.index, slot.register_set,))
             if slot.name in self._named_slots:
                 del self._named_slots[slot.name]
+            self.remove_type(slot)
             self._freed_slots.append(slot)
         except ValueError:
             if self._parent:
@@ -437,6 +440,62 @@ class State:
         n = self._special
         self._special += 1
         return n
+
+    def _set_type_of(self, slot, t):
+        if type(slot) is not Slot:
+            raise None
+        if slot.is_void():
+            raise None
+        key = slot.to_string()
+        if (slot.index, slot.register_set,) not in self._allocated_slots:
+            viuact.util.log.raw('{} not in scope: {}'.format(key,
+                str(self._allocated_slots)))
+            raise KeyError(slot.to_string())
+        viuact.util.log.raw('type-of: {} <- {}'.format(key, t))
+        self._types[key] = t
+        return t
+
+    def _get_type_of(self, slot):
+        if type(slot) is not Slot:
+            raise None
+        if slot.is_void():
+            raise None
+        key = slot.to_string()
+        if (slot.index, slot.register_set,) not in self._allocated_slots:
+            viuact.util.log.raw('{} not in scope: {}'.format(key,
+                str(self._allocated_slots)))
+            raise KeyError(slot.to_string())
+        viuact.util.log.raw('{} {}'.format(key, list(map(str, self._types.keys()))))
+        t = self._types[key]
+        viuact.util.log.raw('type-of: {} -> {}'.format(key, t))
+        return t
+
+    def type_of(self, slot, t = None):
+        try:
+            if t is None:
+                return self._get_type_of(slot)
+            else:
+                return self._set_type_of(slot, t)
+        except KeyError:
+            if self._parent:
+                return self._parent.type_of(slot, t)
+            else:
+                raise
+
+    def remove_type(self, slot):
+        if type(slot) is str:
+            del self._types[slot]
+        elif type(slot) is Slot:
+            if slot.is_void():
+                raise None
+            key = None
+            if slot.is_anonymous():
+                key = slot.to_string()
+            else:
+                key = slot.name
+            del self._types[key]
+        else:
+            raise None
 
 
 class Fn_cc:
@@ -613,6 +672,17 @@ def emit_fn_call(mod, body, st, result, form):
             ))
         raise e
 
+    viuact.util.log.raw('call to {}: signature = {}'.format(
+        called_fn_name,
+        signature,
+    ))
+    type_signature = mod.signature(called_fn_name)
+    viuact.util.log.raw('call to {}: type sig =  {}'.format(
+        called_fn_name,
+        type_signature,
+    ))
+    st.type_of(result, type_signature['return'])
+
     args = []
     if True:
         parameters = signature[1]['parameters']
@@ -695,6 +765,7 @@ def emit_primitive_literal(mod, body, st, result, expr):
             slot = result,
             value = str(lit),
         ))
+        st.type_of(result, Type.string())
         return result
     if type(lit) == viuact.lexemes.Integer:
         body.append(Ctor(
@@ -702,6 +773,7 @@ def emit_primitive_literal(mod, body, st, result, expr):
             slot = result,
             value = str(lit),
         ))
+        st.type_of(result, Type.i8())
         return result
     viuact.util.log.fixme('failed to emit primitive literal: {}'.format(
         typeof(lit)))
@@ -894,6 +966,7 @@ def cc_fn(mod, fn):
             str(each)
         )
         dest = st.get_slot(label)
+        st.type_of(dest, signature['parameters'][i])
         main_fn.append(Move.make_move(
             source = source,
             dest = dest,
@@ -909,6 +982,16 @@ def cc_fn(mod, fn):
         expr = fn.body(),
     )
 
+    if signature['return'] != st.type_of(result):
+        raise viuact.errors.Bad_returned_type(
+            (0, 0,),  # FIXME add position
+            # signature['return'],
+            fn_name,
+            signature['return'],
+            st.type_of(result),
+        )
+        raise 0
+
     main_fn.body.insert(0, Verbatim(''))
     main_fn.body.insert(0, Verbatim('allocate_registers %{} local'.format(
         # st.static_pressure(),
@@ -917,6 +1000,17 @@ def cc_fn(mod, fn):
     main_fn.append(Verbatim('return'))
 
     return out
+
+def cc_type(mod, form):
+    # FIXME Add checks if used types were defined before.
+    # FIXME Add checks for used template parameters - if they are defined by the
+    # val expression.
+    t = Type.t(
+        name = str(form.name()),
+        parameters = tuple([cc_type(mod, each) for each in form.parameters()]),
+    )
+    viuact.util.log.raw('cc.type: {}'.format(t))
+    return t
 
 
 def cc(source_root, source_file, module_name, forms, output_directory):
@@ -930,6 +1024,15 @@ def cc(source_root, source_file, module_name, forms, output_directory):
     ))
 
     mod = Module_info(module_name, source_file)
+
+    for each in filter(lambda x: type(x) is viuact.forms.Val_fn_spec, forms):
+        mod.make_fn_signature(
+            name = each.name(),
+            parameters = [cc_type(mod, t) for t in each.parameter_types()],
+            return_type = cc_type(mod, each.return_type()),
+            template_parameters = [
+                cc_type(mod, t) for t in each.template_parameters()],
+        )
 
     for each in forms:
         if type(each) is not viuact.forms.Fn:
