@@ -133,3 +133,30 @@ class No_signature_for_function(Emitter_error):
 
     def what(self):
         return '{} {}'.format(super().what(), self.fn)
+
+class Type_error(Emitter_error):
+    pass
+
+class Type_mismatch(Type_error):
+    def __init__(self, pos, a, b):
+        super().__init__(pos)
+        self.a = a
+        self.b = b
+
+    def what(self):
+        return '{}: {} != {}'.format(super().what(), self.a, self.b)
+
+class Bad_returned_type(Type_error):
+    def __init__(self, pos, fn, declared, returned):
+        super().__init__(pos)
+        self.fn = fn
+        self.declared = declared
+        self.returned = returned
+
+    def what(self):
+        return '{w} from {fn}: returned {ret} != declared {decl}'.format(
+            w = super().what(),
+            fn = self.fn,
+            decl = self.declared,
+            ret = self.returned,
+        )
