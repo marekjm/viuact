@@ -801,8 +801,9 @@ def emit_let_binding(mod, body, st, binding):
 def emit_compound_expr(mod, body, st, result, expr):
     for i, each in enumerate(expr.body()):
         last = (i == (len(expr.body()) - 1))
+        slot = None
         if type(each) is viuact.forms.Let_binding:
-            emit_let_binding(
+            slot = emit_let_binding(
                 mod = mod,
                 body = body,
                 st = st,
@@ -810,13 +811,15 @@ def emit_compound_expr(mod, body, st, result, expr):
             )
         else:
             with st.scoped() as sc:
-                emit_expr(
+                slot = emit_expr(
                     mod = mod,
                     body = body,
                     st = sc,
                     result = (result if last else Slot.make_void()),
                     expr = each,
                 )
+        if last:
+            result = slot
 
     return result
 
