@@ -126,10 +126,10 @@ class If(Form):
 
 class Val_fn_spec(Form):
     def __init__(self, name, template_parameters, parameter_types, return_type):
-        self._name = name
-        self._template_parameters = template_parameters
-        self._parameter_types = parameter_types
-        self._return_type = return_type
+        self._name = name                                # lexeme
+        self._template_parameters = template_parameters  # [form]
+        self._parameter_types = parameter_types          # [form]
+        self._return_type = return_type                  # form
 
     def name(self):
         return self._name

@@ -124,7 +124,7 @@ class Module_info:
         return self
 
     def make_fn_signature(self, name, parameters, return_type, template_parameters):
-        n = '{}/{}'.format(str(name.val()), len(parameters))
+        n = '{}/{}'.format(str(name), len(parameters))
         self._function_signatures[n] = {
             'parameters': parameters,
             'base_name': str(name),
