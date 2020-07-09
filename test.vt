@@ -4,9 +4,11 @@
 (val ziom (string) string)
 (let ziom (x) x)
 
+(val ('a) whaaat ('a) 'a)
+(let whaaat (x) x)
+
 (val main () i8)
 (let main () {
-    (let s (ziom "Hello, World!"))
-    (print s)
+    (let s (whaaat 0))
     s
 })

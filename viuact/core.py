@@ -46,12 +46,33 @@ class Type:
             return self._parameters
 
         def polymorphic(self):
-            n = self.name().starstwith("'")
+            n = self.name().startswith("'")
             p = any(map(lambda x: x.polymorhpic(), self.parameters()))
             return (n or p)
 
         def merge(self, other):
             raise None
+
+        def match(self, other, template_parameters):
+            tp = template_parameters
+
+            if self.polymorphic() and tp[self.name()] is None:
+                tp[self.name()] = other
+                return True, tp
+
+            if self.polymorphic() and tp[self.name()] is not None:
+                return tp[self.name()].match(other, template_parameters)
+
+            if self.name() != other.name():
+                return False, tp
+
+            for i, pair in zip(self.parameters(), other.parameters()):
+                a, b = pair
+                ok, _ = a.match(b, tp)
+                if not ok:
+                    return False, tp
+
+            return True, tp
 
     class i8(t):
         def __init__(self):
@@ -731,6 +752,8 @@ def emit_fn_call(mod, body, st, result, form):
 
     body.append(Verbatim('frame %{} arguments'.format(len(form.arguments()))))
 
+    template_parameters = { x.name() : None for x in
+            type_signature['template_parameters'] }
     for i, arg in enumerate(args):
         body.append(Verbatim('; for argument {}'.format(i)))
         with st.scoped() as sc:
@@ -758,7 +781,9 @@ def emit_fn_call(mod, body, st, result, form):
                 param_t,
                 arg_t,
             ))
-            if param_t != arg_t:
+
+            m, template_parameters = param_t.match(arg_t, template_parameters)
+            if not m:
                 raise viuact.errors.Bad_argument_type(
                     arg.first_token().at(),
                     called_fn_name,
@@ -771,7 +796,10 @@ def emit_fn_call(mod, body, st, result, form):
             # reporting?
             sc.deallocate_slot(slot)
 
-    st.type_of(result, type_signature['return'])
+    return_t = type_signature['return']
+    if return_t.polymorphic():
+        return_t = template_parameters[return_t.name()]
+    st.type_of(result, return_t)
 
     body.append(Call(
         to = called_fn_name,
