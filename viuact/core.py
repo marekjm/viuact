@@ -1067,6 +1067,11 @@ def cc_fn(mod, fn):
         result = result_slot,
         expr = fn.body(),
     )
+    if result != result_slot:
+        main_fn.append(Move.make_move(
+            dest = result_slot,
+            source = result,
+        ))
 
     if signature['return'] != st.type_of(result):
         raise viuact.errors.Bad_returned_type(
