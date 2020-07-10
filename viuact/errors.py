@@ -191,6 +191,20 @@ class Bad_argument_type(Type_error):
             act = self.actual,
         )
 
+class If_arms_return_different_types(Type_error):
+    def __init__(self, pos, true_arm_t, false_arm_t):
+        super().__init__(pos)
+        self.true_arm_t = true_arm_t    # Type.t
+        self.false_arm_t = false_arm_t  # Type.t
+
+    def what(self):
+        fmt = '{w}: {t} and {f}'
+        return fmt.format(
+            w = super().what(),
+            t = self.true_arm_t,
+            f = self.false_arm_t,
+        )
+
 
 ################################################################################
 # Errors that occur if the compiler as a bug.
