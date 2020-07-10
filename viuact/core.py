@@ -408,6 +408,17 @@ class State:
 
         return slot
 
+    def get_anonymous_slot(self, register_set = Register_set.DEFAULT):
+        self.assert_active()
+
+        slot = Slot(
+            None,
+            self.allocate_slot(register_set),
+            register_set,
+        )
+
+        return slot
+
     def slot_of(self, name):
         try:
             return self._named_slots[name]
