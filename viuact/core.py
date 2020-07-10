@@ -904,8 +904,6 @@ def emit_compound_expr(mod, body, st, result, expr):
 
 def emit_if(mod, body, st, result, expr):
     guard_slot = st.get_slot(name = None)
-    viuact.util.log.raw('if: guard_slot = {}'.format(guard_slot.to_string()))
-
     with st.scoped() as sc:
         guard_slot = emit_expr(
             mod = mod,
