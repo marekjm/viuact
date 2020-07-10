@@ -316,6 +316,10 @@ class State:
             return
 
         try:
+            if slot in self._freed_slots:
+                raise viuact.errors.Double_deallocation(slot)
+            if slot in self._cancelled_slots:
+                raise viuact.errors.Deallocation_of_cancelled(slot)
             self._allocated_slots.remove((slot.index, slot.register_set,))
             if slot.name in self._named_slots:
                 del self._named_slots[slot.name]
@@ -334,6 +338,10 @@ class State:
             return
 
         try:
+            if slot in self._cancelled_slots:
+                raise viuact.errors.Double_cancel(slot)
+            if slot in self._freed_slots:
+                raise viuact.errors.Cancel_of_deallocated(slot)
             self._allocated_slots.remove((slot.index, slot.register_set,))
             if slot.name in self._named_slots:
                 del self._named_slots[slot.name]

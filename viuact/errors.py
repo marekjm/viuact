@@ -201,3 +201,31 @@ class Internal_compiler_error(Exception):
 
 class Mutation_of_inactive_state(Internal_compiler_error):
     pass
+
+class Double_deallocation(Internal_compiler_error):
+    def __init__(self, slot):
+        self.slot = slot
+
+    def __str__(self):
+        return '{} of slot {}'.format(self.what(), self.slot.to_string())
+
+class Double_cancel(Internal_compiler_error):
+    def __init__(self, slot):
+        self.slot = slot
+
+    def __str__(self):
+        return '{} of slot {}'.format(self.what(), self.slot.to_string())
+
+class Cancel_of_deallocated(Internal_compiler_error):
+    def __init__(self, slot):
+        self.slot = slot
+
+    def __str__(self):
+        return '{} of slot {}'.format(self.what(), self.slot.to_string())
+
+class Deallocation_of_cancelled(Internal_compiler_error):
+    def __init__(self, slot):
+        self.slot = slot
+
+    def __str__(self):
+        return '{} of slot {}'.format(self.what(), self.slot.to_string())
