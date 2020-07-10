@@ -128,7 +128,6 @@ class Module_info:
     def make_fn(self, name, parameters):
         n = '{}/{}'.format(name, len(parameters))
         if n not in self._function_signatures:
-            viuact.util.log.raw(n, list(self._function_signatures.keys()))
             raise viuact.errors.No_signature_for_function(
                 pos = name.tok().at(),
                 fn = n,
@@ -316,11 +315,6 @@ class State:
         if slot.is_void():
             return
 
-        # viuact.util.log.note('dealloc: {} [top = {}]'.format(
-        #     slot.to_string(),
-        #     self._next_slot_index[slot.register_set],
-        # ))
-
         try:
             self._allocated_slots.remove((slot.index, slot.register_set,))
             if slot.name in self._named_slots:
@@ -332,18 +326,12 @@ class State:
                 self._parent.as_active(State.deallocate_slot, slot)
             else:
                 raise
-        # viuact.util.log.note('  freed slot: {}'.format(slot.to_string()))
         return self
 
     def cancel_slot(self, slot):
         self.assert_active()
         if slot.is_void():
             return
-
-        # viuact.util.log.note('cancel: {} [top = {}]'.format(
-        #     slot.to_string(),
-        #     self._next_slot_index[slot.register_set],
-        # ))
 
         try:
             self._allocated_slots.remove((slot.index, slot.register_set,))
@@ -360,12 +348,10 @@ class State:
     def find_free_slot(self, register_set):
         for each in self._cancelled_slots:
             if each.register_set == register_set:
-                # viuact.util.log.note('reusing cancelled slot {}'.format(each.to_string()))
                 self._cancelled_slots.remove(each)
                 return each
         for each in self._freed_slots:
             if each.register_set == register_set:
-                # viuact.util.log.note('reusing dealloced slot {}'.format(each.to_string()))
                 self._freed_slots.remove(each)
                 return each
         if self._parent is not None:
@@ -405,7 +391,6 @@ class State:
 
         # Use None as name to create anonymous slots.
         if name is not None:
-            # viuact.util.log.print('defined slot: {} = {}'.format(slot.to_string(), name))
             self._named_slots[name] = slot
 
         return slot
@@ -424,15 +409,8 @@ class State:
         f = list(filter(
             lambda i: i.register_set == register_set, self._freed_slots))
 
-        # viuact.util.log.raw('a:', a)
-        # viuact.util.log.raw('f:', list(map(lambda x: x.index, f)))
-
         a = (max(list(map(lambda x: x[0], a))) if a else None)
         f = (max(list(map(lambda x: x.index, f))) if f else None)
-
-        # viuact.util.log.raw('pressure.n:', n)
-        # viuact.util.log.raw('pressure.a:', a)
-        # viuact.util.log.raw('pressure.f:', f)
 
         if a is not None:
             a = (a + 1)
@@ -460,8 +438,6 @@ class State:
         # of the function.
         if f is not None:
             pressure = max(f, (a or 0))
-
-        # viuact.util.log.raw('pressure.x:', pressure)
 
         return pressure
 
@@ -499,10 +475,8 @@ class State:
             raise TypeError('cannot get type of void slot')
         key = slot.to_string()
         if (slot.index, slot.register_set,) not in self._allocated_slots:
-            viuact.util.log.raw('{} not in scope: {}'.format(key,
-                str(self._allocated_slots)))
             raise KeyError(slot.to_string())
-        viuact.util.log.raw('type-of: {} <- {}'.format(key, t))
+        # viuact.util.log.raw('type-of: {} <- {}'.format(key, t))
         self._types[key] = t
         return t
 
@@ -516,12 +490,9 @@ class State:
             raise TypeError('cannot get type of void slot')
         key = slot.to_string()
         if (slot.index, slot.register_set,) not in self._allocated_slots:
-            viuact.util.log.raw('{} not in scope: {}'.format(key,
-                str(self._allocated_slots)))
             raise KeyError(slot.to_string())
-        viuact.util.log.raw('{} {}'.format(key, list(map(str, self._types.keys()))))
         t = self._types[key]
-        viuact.util.log.raw('type-of: {} -> {}'.format(key, t))
+        # viuact.util.log.raw('type-of: {} -> {}'.format(key, t))
         return t
 
     def type_of(self, slot, t = None):
@@ -961,9 +932,7 @@ def emit_if(mod, body, st, result, expr):
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(label_end)))
 
-    # viuact.util.log.raw('---- 8< ----')
     st.actual_pressure(Register_set.LOCAL)
-    # viuact.util.log.raw('---- >8 ----')
 
     return result
 
@@ -994,20 +963,11 @@ def emit_expr(mod, body, st, result, expr):
         )
     if type(expr) is viuact.forms.Name_ref:
         if not result.is_void():
-            # viuact.util.log.warning(
-            #     'slot will be unused after name-ref emission: {} = {}'.format(
-            #         result.to_string(),
-            #         str(expr.name()),
-            #     ))
             st.cancel_slot(result)
         return st.slot_of(str(expr.name()))
     if type(expr) is viuact.forms.Let_binding:
         if not result.is_void():
-            viuact.util.log.warning(
-                'slot will be unused after let-binding emission: {} = {}'.format(
-                    result.to_string(),
-                    str(expr.name()),
-                ))
+            pass
         return emit_let_binding(
             mod = mod,
             body = body,
@@ -1095,7 +1055,6 @@ def cc_type(mod, form):
         name = str(form.name()),
         parameters = tuple([cc_type(mod, each) for each in form.parameters()]),
     )
-    viuact.util.log.raw('cc.type: {}'.format(t))
     return t
 
 
