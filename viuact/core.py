@@ -246,6 +246,7 @@ class Scope:
 
     def __exit__(self, *args):
         self.state.erase()
+        self.state._parent._active = True
 
 class State:
     def __init__(self, fn, upper = None, parent = None):
@@ -266,9 +267,26 @@ class State:
 
         self._types = {}
 
+        # State is active it represents the innermost scope of the currently
+        # compiled function. Only active state may be mutated, i.e. it is an
+        # error to allocate, deallocate, cancel, etc. slots in an inactive
+        # state.
+        self._active = True
+
         if parent is not None:
             for k, v in self._parent._next_slot_index.items():
                 self._next_slot_index[k] = v
+
+    def assert_active(self, wanted = True):
+        if (self._active != wanted):
+            raise viuact.errors.Mutation_of_inactive_state()
+
+    def as_active(self, fn, *args, **kwargs):
+        a = self._active
+        self._active = True
+        result = fn(self, *args, **kwargs)
+        self._active = a
+        return result
 
     def push_pressure(self, register_set):
         if self._parent is None:
@@ -291,6 +309,7 @@ class State:
         self._parent.push_deallocations()
 
     def deallocate_slot(self, slot):
+        self.assert_active()
         if slot.is_void():
             return
 
@@ -307,13 +326,14 @@ class State:
             self._freed_slots.append(slot)
         except ValueError:
             if self._parent:
-                self._parent.deallocate_slot(slot)
+                self._parent.as_active(State.deallocate_slot, slot)
             else:
                 raise
         # viuact.util.log.note('  freed slot: {}'.format(slot.to_string()))
         return self
 
     def cancel_slot(self, slot):
+        self.assert_active()
         if slot.is_void():
             return
 
@@ -329,7 +349,7 @@ class State:
             self._cancelled_slots.append(slot)
         except ValueError:
             if self._parent:
-                self._parent.cancel_slot(slot)
+                self._parent.as_active(State.cancel_slot, slot)
             else:
                 raise
         return self
@@ -350,10 +370,12 @@ class State:
         return None
 
     def insert_allocated(self, slot):
+        self.assert_active()
         self._allocated_slots.append( (slot.index, slot.register_set,) )
         return self
 
     def allocate_slot(self, register_set):
+        self.assert_active()
         found_freed = self.find_free_slot(register_set)
         i = None
         if found_freed is None:
@@ -366,6 +388,7 @@ class State:
         return i
 
     def get_slot(self, name, register_set = Register_set.DEFAULT):
+        self.assert_active()
         if name is not None and type(name) is not str:
             raise TypeError('cannot use {} to name a slot'.format(
                 typeof(name),
@@ -440,11 +463,12 @@ class State:
         return pressure
 
     def scoped(self):
+        self._active = False
         s = State(fn = self.fn(), parent = self)
-        # viuact.util.log.note('created scope: {}'.format(s))
         return Scope(s)
 
     def erase(self):
+        self.assert_active()
         for each in self._allocated_slots:
             i, r = each
             self.deallocate_slot(Slot(
@@ -510,6 +534,7 @@ class State:
                 raise
 
     def remove_type(self, slot):
+        self.assert_active()
         if type(slot) is str:
             del self._types[slot]
         elif type(slot) is Slot:
@@ -756,12 +781,13 @@ def emit_fn_call(mod, body, st, result, form):
             type_signature['template_parameters'] }
     for i, arg in enumerate(args):
         body.append(Verbatim('; for argument {}'.format(i)))
+        slot = st.get_slot(name = None)
         with st.scoped() as sc:
             slot = emit_expr(
                 mod = mod,
                 body = body,
                 st = sc,
-                result = st.get_slot(name = None),
+                result = slot,
                 expr = arg,
             )
             body.append(Move.make_move(
@@ -835,6 +861,10 @@ def emit_primitive_literal(mod, body, st, result, expr):
 def emit_let_binding(mod, body, st, binding):
     name = binding.name()
     body.append(Verbatim('; let {} = ...'.format(str(name))))
+    slot = st.get_slot(
+        name = str(name),
+        register_set = Register_set.LOCAL,
+    )
     with st.scoped() as sc:
         slot = emit_expr(
             mod = mod,
@@ -842,10 +872,7 @@ def emit_let_binding(mod, body, st, binding):
             st = sc,
             # Don't use an additional scope here as let-bindings should introduce
             # new variables into the current scope.
-            result = st.get_slot(
-                name = str(name),
-                register_set = Register_set.LOCAL,
-            ),
+            result = slot,
             expr = binding.val(),
         )
     body.append(Verbatim(''))

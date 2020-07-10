@@ -1,3 +1,6 @@
+################################################################################
+# Base classes for user errors, i.e. errors triggered by invalid user code.
+#
 class Error(Exception):
     def __init__(self, pos):
         self.line = pos[0]
@@ -41,6 +44,9 @@ class Fail(Error):
         return self.bad
 
 
+################################################################################
+# Errors that occur during lexical analysis.
+#
 class Lexer_error(Error):
     pass
 
@@ -53,6 +59,9 @@ class Unexpected_character(Lexer_error):
         return '{}: {}'.format(super().what(), repr(self.bad))
 
 
+################################################################################
+# Errors that occur during syntactical analysis.
+#
 class Parser_error(Error):
     pass
 
@@ -84,6 +93,9 @@ class Invalid_sentinel(Lexer_error):
         return '{}: {}'.format(super().what(), repr(self.bad))
 
 
+################################################################################
+# Errors that occur during code emission.
+#
 class Emitter_error(Error):
     pass
 
@@ -178,3 +190,14 @@ class Bad_argument_type(Type_error):
             decl = self.declared,
             act = self.actual,
         )
+
+
+################################################################################
+# Errors that occur if the compiler as a bug.
+#
+class Internal_compiler_error(Exception):
+    def what(self):
+        return ' '.join(str(type(self))[8:-2].split('.')[-1].lower().split('_'))
+
+class Mutation_of_inactive_state(Internal_compiler_error):
+    pass
