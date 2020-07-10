@@ -10,5 +10,7 @@
 (val main () i8)
 (let main () {
     (let s (whaaat 0))
+    (let x (if 0 42 "Hello, World!"))
+    ; (print x)
     s
 })
