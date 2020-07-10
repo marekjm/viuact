@@ -332,6 +332,11 @@ class State:
                 raise
         return self
 
+    def deallocate_slot_if_anonymous(self, slot):
+        if slot.is_anonymous():
+            self.deallocate_slot(slot)
+        return self
+
     def cancel_slot(self, slot):
         self.assert_active()
         if slot.is_void():
@@ -890,7 +895,7 @@ def emit_if(mod, body, st, result, expr):
     viuact.util.log.raw('if: guard_slot = {}'.format(guard_slot.to_string()))
 
     with st.scoped() as sc:
-        emit_expr(
+        guard_slot = emit_expr(
             mod = mod,
             body = body,
             st = sc,
@@ -912,7 +917,7 @@ def emit_if(mod, body, st, result, expr):
         label_true,
         label_false,
     )))
-    st.deallocate_slot(guard_slot)
+    st.deallocate_slot_if_anonymous(guard_slot)
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(label_true)))
