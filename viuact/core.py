@@ -251,10 +251,10 @@ class Scope:
         self.state._parent._active = True
 
 class State:
-    def __init__(self, fn, upper = None, parent = None):
+    def __init__(self, fn, upper = None, parent = None, special = 0):
         self._fn = fn           # Name of the function for which this state was
                                 # created.
-        self._special = 0       # General purpose counter for special events.
+        self._special = special # General purpose counter for special events.
 
         self._upper = upper     # Used for closures.
         self._parent = parent   # Parent scope, e.g. for function call
@@ -456,7 +456,7 @@ class State:
 
     def scoped(self):
         self._active = False
-        s = State(fn = self.fn(), parent = self)
+        s = State(fn = self.fn(), parent = self, special = self._special)
         return Scope(s)
 
     def erase(self):
@@ -469,6 +469,7 @@ class State:
                 register_set = r,
             ))
         self.push_deallocations()
+        self._parent._special = self._special
 
     def fn(self):
         return self._fn
@@ -903,11 +904,12 @@ def emit_if(mod, body, st, result, expr):
             expr = expr.guard(),
         )
 
-    label_core = hashlib.sha1('{}+{}+{}'.format(
+    label_base = '{}+{}+{}'.format(
         mod.name(),
         st.fn(),
         st.special(),
-    ).encode('utf-8')).hexdigest()
+    )
+    label_core = hashlib.sha1(label_base.encode('utf-8')).hexdigest()
     label_true = 'if_true_' + label_core
     label_false = 'if_false_' + label_core
     label_end = 'if_end_' + label_core
