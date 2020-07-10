@@ -940,11 +940,12 @@ def emit_if(mod, body, st, result, expr):
             mod = mod,
             body = body,
             st = sc,
-            result = result,
+            result = (sc.get_anonymous_slot() if result.is_void() else result),
             expr = expr.arm_true(),
         )
         body.append(Verbatim('jump {}'.format(label_end)))
-        true_arm_t = sc.type_of(slot)
+        if not slot.is_void():
+            true_arm_t = sc.type_of(slot)
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(label_false)))
@@ -954,12 +955,13 @@ def emit_if(mod, body, st, result, expr):
             mod = mod,
             body = body,
             st = sc,
-            result = result,
+            result = (sc.get_anonymous_slot() if result.is_void() else result),
             expr = expr.arm_false(),
         )
-        false_arm_t = sc.type_of(slot)
+        if not slot.is_void():
+            false_arm_t = sc.type_of(slot)
 
-    if true_arm_t != false_arm_t:
+    if (not result.is_void()) and (true_arm_t != false_arm_t):
         # FIXME viuact.forms.If should record first token pointing to the if
         raise viuact.errors.If_arms_return_different_types(
             expr.first_token().at(),
