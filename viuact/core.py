@@ -967,7 +967,7 @@ def emit_expr(mod, body, st, result, expr):
         return st.slot_of(str(expr.name()))
     if type(expr) is viuact.forms.Let_binding:
         if not result.is_void():
-            pass
+            st.cancel_slot(result)
         return emit_let_binding(
             mod = mod,
             body = body,
