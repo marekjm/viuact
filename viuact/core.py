@@ -24,7 +24,7 @@ class Type:
             self._parameters = parameters   # [Type]
 
         def __eq__(self, other):
-            if type(other) is not Type.t:
+            if not isinstance(other, Type.t):
                 raise TypeError('cannot compare type with {}'.format(typeof(other)))
             n = (str(self.name()) == str(other.name()))
             p = (self.parameters() == other.parameters())
