@@ -348,7 +348,7 @@ class State:
     def cancel_slot(self, slot):
         self.assert_active()
         if slot.is_void():
-            return
+            return self
 
         try:
             if slot in self._cancelled_slots:
