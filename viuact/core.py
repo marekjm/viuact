@@ -266,6 +266,7 @@ class State:
         self._allocated_slots = []
         self._freed_slots = []
         self._cancelled_slots = []
+        self._permanent_slots = set()
 
         self._types = {}
 
@@ -337,6 +338,13 @@ class State:
             self.deallocate_slot(slot)
         return self
 
+    def mark_permanent(self, slot):
+        self.assert_active()
+        self._permanent_slots.add(slot.to_string())
+
+    def is_permanent(self, slot):
+        return (slot.to_string() in self._permanent_slots)
+
     def cancel_slot(self, slot):
         self.assert_active()
         if slot.is_void():
@@ -347,6 +355,8 @@ class State:
                 raise viuact.errors.Double_cancel(slot)
             if slot in self._freed_slots:
                 raise viuact.errors.Cancel_of_deallocated(slot)
+            if self.is_permanent(slot):
+                return self
             self._allocated_slots.remove((slot.index, slot.register_set,))
             if slot.name in self._named_slots:
                 del self._named_slots[slot.name]
@@ -1058,13 +1068,18 @@ def cc_fn(mod, fn):
 
     result_slot = Slot(None, 0, Register_set.LOCAL)
     st.insert_allocated(result_slot)
-    result = emit_expr(
-        mod = mod,
-        body = main_fn,
-        st = st,
-        result = result_slot,
-        expr = fn.body(),
-    )
+    st.mark_permanent(result_slot)
+    try:
+        result = emit_expr(
+            mod = mod,
+            body = main_fn,
+            st = st,
+            result = result_slot,
+            expr = fn.body(),
+        )
+    except Exception:
+        viuact.util.log.error('during compilation of {}'.format(main_fn_name))
+        raise
     if result != result_slot:
         main_fn.append(Move.make_move(
             dest = result_slot,
