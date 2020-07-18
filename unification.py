@@ -175,7 +175,21 @@ class State:
             elif (v is not None) and v == a:
                 pass
             else:
-                self._template_parameters[str(other)] = a
+                if str(other).startswith("'_~"):
+                    self._template_parameters[str(other)] = a
+                    tp = {}
+                    for k, v in self._template_parameters.items():
+                        if k == str(other):
+                            continue
+                        if v is None:
+                            tp[k] = v
+                        elif v == other:
+                            tp[k] = a
+                        else:
+                            tp[k] = v
+                    self._template_parameters = tp
+                else:
+                    self._template_parameters[str(other)] = a
             return (a, other,)
 
         if a.name() != other.name():
@@ -297,10 +311,6 @@ class State:
 st = State(template_parameters = (
     "'a",
 ))
-# st.unify_types(
-#     Type.t("'a"),
-#     Type.i8(),
-# )
 st.store('a', Type.t('map', (
     Type.t("'key"),
     Type.t("'value"),
@@ -312,7 +322,7 @@ st.unify_types(
 )
 st.dump()
 st.unify_types(
-    Type.t("'_~0"),
     Type.i8(),
+    Type.t("'_~0"),
 )
 st.dump()
