@@ -48,34 +48,16 @@ class Type:
         def parameters(self):
             return self._parameters
 
+        def polymorphic_base(self):
+            return self.name().startswith("'")
+
         def polymorphic(self):
-            n = self.name().startswith("'")
-            p = any(map(lambda x: x.polymorhpic(), self.parameters()))
-            return (n or p)
+            p = any(map(lambda x: x.polymorphic(), self.parameters()))
+            return (self.polymorphic_base() or p)
 
-        def merge(self, other):
-            raise None
-
-        def match(self, other, template_parameters):
-            tp = template_parameters
-
-            if self.polymorphic() and tp[self.name()] is None:
-                tp[self.name()] = other
-                return True, tp
-
-            if self.polymorphic() and tp[self.name()] is not None:
-                return tp[self.name()].match(other, template_parameters)
-
-            if self.name() != other.name():
-                return False, tp
-
-            for i, pair in zip(self.parameters(), other.parameters()):
-                a, b = pair
-                ok, _ = a.match(b, tp)
-                if not ok:
-                    return False, tp
-
-            return True, tp
+    class void(t):
+        def __init__(self):
+            super().__init__('void')
 
     class i8(t):
         def __init__(self):
@@ -176,6 +158,194 @@ class Module_info:
         return res
 
 
+class Type_state:
+    class Type_error(Exception):
+        pass
+
+    class Cannot_unify(Type_error):
+        pass
+
+    def __init__(self, template_parameters = ()):
+        self._template_parameters = {
+            k : None for k in template_parameters
+        }
+        self._slots = {}
+
+    def validate_type(self, t):
+        return t
+
+    def _unify_base(self, a, other):
+        if a.polymorphic_base() and not other.polymorphic_base():
+            v = self._template_parameters[str(a)]
+            if (v is not None) and v != other:
+                raise Type_state.Cannot_unify(a, other)
+            elif (v is not None) and v == other:
+                pass
+            else:
+                self._template_parameters[str(a)] = other
+            return a
+        return None
+
+    def _unify_with_a(self, a, other):
+        if a.polymorphic_base() and not other.polymorphic_base():
+            viuact.util.log.raw('{} {} {}'.format(a, str(a),
+                self._template_parameters))
+            v = self._template_parameters[str(a)]
+            if (v is not None) and v != other:
+                raise Type_state.Cannot_unify(a, other)
+            elif (v is not None) and v == other:
+                pass
+            else:
+                self._template_parameters[str(a)] = other
+            return a
+        elif (not a.polymorphic_base()) and other.polymorphic_base():
+            v = self._template_parameters[str(other)]
+            if (v is not None) and v != a:
+                raise Type_state.Cannot_unify(a, other)
+            elif (v is not None) and v == a:
+                pass
+            else:
+                if str(other).startswith("'_~"):
+                    self._template_parameters[str(other)] = a
+                    tp = {}
+                    for k, v in self._template_parameters.items():
+                        if k == str(other):
+                            continue
+                        if v is None:
+                            tp[k] = v
+                        elif v == other:
+                            tp[k] = a
+                        else:
+                            tp[k] = v
+                    self._template_parameters = tp
+                else:
+                    self._template_parameters[str(other)] = a
+            return a
+
+        if a.name() != other.name():
+            raise Type_state.Cannot_unify(a, other)
+
+        for of_a, of_other in zip(a.qualified_parameters(),
+                other.qualified_parameters()):
+            self.unify_types(of_a, of_other)
+
+        return a
+
+    def unify_types(self, a, b):
+        print('unifying: {} == {}'.format(a, b))
+
+        if a == b:
+            return a
+        if (not a.polymorphic()) and (not b.polymorphic()):
+            raise Type_state.Cannot_unify(a, b)  # two different non-polymorphic types
+        if a.polymorphic_base() and b.polymorphic_base():
+            ax = self._template_parameters[a.name()]
+            bx = self._template_parameters[b.name()]
+            if (ax is None) and (bx is not None):
+                self._template_parameters[a.name()] = bx
+            elif (ax is not None) and (bx is None):
+                self._template_parameters[b.name()] = ax
+            else:
+                # Two different core-polymorphic are unified by producing a new
+                # type variable, and binding them to it. In simpler words:
+                #   - can 'a be unified with 'b?
+                #   - assume that the code is correct, and they can be unified
+                #   - create new type variable: '_
+                #   - set 'a as evaluating to '_
+                #   - set 'b as evaluating to '_
+                #   - set '_ as evaluating to as-yet unknown type
+                placeholders = list(filter(lambda _: _.startswith("'_~"),
+                        self._template_parameters.keys()))
+                pt = 0
+                if placeholders:
+                    pt = max(map(lambda _: int(_.rsplit('~', 1)[1]),
+                        placeholders)) + 1
+                pt = Type.t(name = "'_~{}".format(pt))
+                self._template_parameters[str(pt)] = None
+                self._template_parameters[str(a)] = pt
+                self._template_parameters[str(b)] = pt
+                return pt
+            return a
+
+        try:
+            return self._unify_with_a(a, b)
+        except Type_state.Cannot_unify:
+            raise Type_state.Cannot_unify(a, b)
+
+    def register_type_parameter(self, p):
+        if p.polymorphic_base():
+            n = 0
+            candidate = '{}~{}'.format(str(p), n)
+            if candidate in self._template_parameters:
+                pat = '{}~'.format(str(p))
+                n = map(lambda x: int(x.rsplit('~', 1)[1]),
+                    filter(lambda x: x.startswith(pat),
+                    self._template_parameters.keys()))
+                if not n:
+                    n = 0
+                else:
+                    n = max(n) + 1
+                candidate = '{}~{}'.format(str(p), n)
+            self._template_parameters[candidate] = None
+            return Type.t('{}~{}'.format(str(p), n))
+        elif p.polymorphic():
+            return self.store_type_parameters(p)
+        else:
+            # No reason to process a type that is not polymorphic.
+            return p
+
+    def store_type_parameters(self, t):
+        ps = []
+        for each in t.parameters():
+            ps.append(self.register_type_parameter(each))
+        return Type.t(name = t.name(), parameters = tuple(ps))
+
+    def store(self, slot, t):
+        if t.polymorphic():
+            t = self.store_type_parameters(t)
+        self._slots[slot] = t
+
+    def load(self, slot):
+        return self._slots[slot]
+
+    def erase(self, slot):
+        del self._slots[slot]
+
+    def _stringify_type(self, t):
+        s = ''
+
+        if t.polymorphic_base():
+            tx = self._template_parameters[str(t)]
+            if tx is None:
+                tx = str(t)
+            else:
+                tx = self._stringify_type(tx)
+            s = '{}'.format(tx)
+        elif t.polymorphic():
+            ps = []
+            for each in t.parameters():
+                ps.append(self._stringify_type(each))
+            s = '(({}) {})'.format(
+                ' '.join(ps),
+                t.name(),
+            )
+        else:
+            s = str(t)
+
+        return s
+
+    def dump(self):
+        viuact.util.log.raw('template parameters:')
+        for k, v in self._template_parameters.items():
+            viuact.util.log.raw('  {} => {}'.format(k, v))
+        viuact.util.log.raw('slots:')
+        for k, v in self._slots.items():
+            s = '  {} => {}'.format(k, v)
+            if v.polymorphic():
+                s += ' [{}]'.format(self._stringify_type(v))
+            viuact.util.log.raw(s)
+
+
 class Register_set(enum.Enum):
     LOCAL = 'local'
     PARAMETERS = 'parameters'
@@ -251,7 +421,8 @@ class Scope:
         self.state._parent._active = True
 
 class State:
-    def __init__(self, fn, upper = None, parent = None, special = 0):
+    def __init__(self, fn, upper = None, parent = None, special = 0, types =
+            None):
         self._fn = fn           # Name of the function for which this state was
                                 # created.
         self._special = special # General purpose counter for special events.
@@ -268,7 +439,7 @@ class State:
         self._cancelled_slots = []
         self._permanent_slots = set()
 
-        self._types = {}
+        self._types = (Type_state() if types is None else types)
 
         # State is active it represents the innermost scope of the currently
         # compiled function. Only active state may be mutated, i.e. it is an
@@ -384,6 +555,7 @@ class State:
     def insert_allocated(self, slot):
         self.assert_active()
         self._allocated_slots.append( (slot.index, slot.register_set,) )
+        viuact.util.log.raw('inserted: {}'.format(slot.to_string()))
         return self
 
     def allocate_slot(self, register_set):
@@ -477,7 +649,12 @@ class State:
 
     def scoped(self):
         self._active = False
-        s = State(fn = self.fn(), parent = self, special = self._special)
+        s = State(
+            fn = self.fn(),
+            parent = self,
+            special = self._special,
+            types = self._types,
+        )
         return Scope(s)
 
     def erase(self):
@@ -510,9 +687,10 @@ class State:
             raise TypeError('cannot get type of void slot')
         key = slot.to_string()
         if (slot.index, slot.register_set,) not in self._allocated_slots:
+            viuact.util.log.raw(self._allocated_slots)
             raise KeyError(slot.to_string())
         # viuact.util.log.raw('type-of: {} <- {}'.format(key, t))
-        self._types[key] = t
+        self._types.store(key, t)
         return t
 
     def _get_type_of(self, slot):
@@ -526,7 +704,7 @@ class State:
         key = slot.to_string()
         if (slot.index, slot.register_set,) not in self._allocated_slots:
             raise KeyError(slot.to_string())
-        t = self._types[key]
+        t = self._types.load(key)
         # viuact.util.log.raw('type-of: {} -> {}'.format(key, t))
         return t
 
@@ -554,9 +732,18 @@ class State:
                 key = slot.to_string()
             else:
                 key = slot.name
-            del self._types[key]
+            self._types.erase(key)
         else:
             raise None
+
+    def unify_types(self, a, b):
+        return self._types.unify_types(a, b)
+
+    def store(self, key, t):
+        return self._types.store(key, t)
+
+    def register_type_parameter(self, p):
+        return self._types.register_type_parameter(p)
 
 
 class Fn_cc:
@@ -690,6 +877,7 @@ def emit_builtin_call(mod, body, st, result, form):
                 result = (sc.get_slot(None) if result.is_void() else result),
                 expr = form.arguments()[0],
             )
+            # st.store(slot.to_string(), Type.void())
             body.append(Verbatim('print {}'.format(
                 slot.to_string(),
             )))
@@ -786,8 +974,16 @@ def emit_fn_call(mod, body, st, result, form):
 
     body.append(Verbatim('frame %{} arguments'.format(len(form.arguments()))))
 
-    template_parameters = { x.name() : None for x in
-            type_signature['template_parameters'] }
+    parameter_types = []
+    tmp = {}
+    for each in type_signature['template_parameters']:
+        tmp[each.name()] = st.register_type_parameter(each)
+    for each in type_signature['parameters']:
+        if each.name() not in tmp:
+            parameter_types.append(each)
+        else:
+            parameter_types.append(tmp[each.name()])
+
     for i, arg in enumerate(args):
         body.append(Verbatim('; for argument {}'.format(i)))
         slot = st.get_slot(name = None)
@@ -808,7 +1004,7 @@ def emit_fn_call(mod, body, st, result, form):
                 ),
             ))
 
-            param_t = type_signature['parameters'][i]
+            param_t = parameter_types[i]
             arg_t = st.type_of(slot)
             viuact.util.log.raw('call to {}: [{}] p{{ {} }} -> a{{ {} }}'.format(
                 called_fn_name,
@@ -817,8 +1013,9 @@ def emit_fn_call(mod, body, st, result, form):
                 arg_t,
             ))
 
-            m, template_parameters = param_t.match(arg_t, template_parameters)
-            if not m:
+            try:
+                st.unify_types(param_t, arg_t)
+            except Type_state.Cannot_unify:
                 raise viuact.errors.Bad_argument_type(
                     arg.first_token().at(),
                     called_fn_name,
@@ -833,7 +1030,7 @@ def emit_fn_call(mod, body, st, result, form):
 
     return_t = type_signature['return']
     if return_t.polymorphic():
-        return_t = template_parameters[return_t.name()]
+        return_t = tmp[return_t.name()]
     st.type_of(result, return_t)
 
     body.append(Call(
@@ -909,7 +1106,6 @@ def emit_compound_expr(mod, body, st, result, expr):
                 )
         if last:
             result = slot
-
     return result
 
 def emit_if(mod, body, st, result, expr):
@@ -969,13 +1165,17 @@ def emit_if(mod, body, st, result, expr):
         if not slot.is_void():
             false_arm_t = sc.type_of(slot)
 
-    if (not result.is_void()) and (true_arm_t != false_arm_t):
-        # FIXME viuact.forms.If should record first token pointing to the if
-        raise viuact.errors.If_arms_return_different_types(
-            expr.first_token().at(),
-            true_arm_t,
-            false_arm_t,
-        )
+    if not Slot.is_void(result):
+        st.unify_types(true_arm_t, false_arm_t)
+    # sig = mod.signature(st.fn())
+    # m, template_parameters = true_arm_t.match(false_arm_t, {})
+    # if (not result.is_void()) and (true_arm_t != false_arm_t):
+    #     # FIXME viuact.forms.If should record first token pointing to the if
+    #     raise viuact.errors.If_arms_return_different_types(
+    #         expr.first_token().at(),
+    #         true_arm_t,
+    #         false_arm_t,
+    #     )
 
     body.append(Verbatim(''))
     body.append(Verbatim('.mark: {}'.format(label_end)))
@@ -1012,6 +1212,10 @@ def emit_expr(mod, body, st, result, expr):
     if type(expr) is viuact.forms.Name_ref:
         if not result.is_void():
             st.cancel_slot(result)
+            viuact.util.log.raw('cancelled slot {} for name-ref to {}'.format(
+                result.to_string(),
+                str(expr.name()),
+            ))
         return st.slot_of(str(expr.name()))
     if type(expr) is viuact.forms.Let_binding:
         if not result.is_void():
@@ -1048,7 +1252,9 @@ def cc_fn(mod, fn):
         fn_name)
     signature = mod.signature(fn_name)
 
-    st = State(fn = main_fn_name)
+    types = Type_state(tuple(map(str, signature['template_parameters'])))
+    st = State(fn = main_fn_name, types = types)
+
     main_fn = Fn_cc(main_fn_name)
     out = CC_out(main_fn)
 
@@ -1069,6 +1275,7 @@ def cc_fn(mod, fn):
     result_slot = Slot(None, 0, Register_set.LOCAL)
     st.insert_allocated(result_slot)
     st.mark_permanent(result_slot)
+    viuact.util.log.raw('after: {}'.format(st._allocated_slots))
     try:
         result = emit_expr(
             mod = mod,
@@ -1086,7 +1293,11 @@ def cc_fn(mod, fn):
             source = result,
         ))
 
-    if signature['return'] != st.type_of(result):
+    st._types.dump()
+    viuact.util.log.raw('return value in: {}'.format(result.to_string()))
+    try:
+        st.unify_types(signature['return'], st.type_of(result))
+    except Type_state.Cannot_unify:
         raise viuact.errors.Bad_returned_type(
             (0, 0,),  # FIXME add position
             # signature['return'],

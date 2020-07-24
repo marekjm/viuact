@@ -7,10 +7,14 @@
 (val ('a) whaaat ('a) 'a)
 (let whaaat (x) x)
 
+(val ('a) wut ('a) i8)
+(let wut (x) (if 0 x 0))
+
 (val main () i8)
 (let main () {
     (let s (whaaat 0))
-    (let x (if 0 42 "Hello, World!"))
-    ; (print x)
+    (let x (if s 42 69))
+    (if s (print 42) (print "Hello, World!"))
+    (print s)
     s
 })

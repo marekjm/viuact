@@ -136,7 +136,7 @@ class Cannot_unify(Type_error):
     pass
 
 
-class State:
+class Type_state:
     def __init__(self, template_parameters):
         self._template_parameters = {
             k : None for k in template_parameters
@@ -155,7 +155,7 @@ class State:
                 pass
             else:
                 self._template_parameters[str(a)] = other
-            return (a, other,)
+            return a
         return None
 
     def _unify_with_a(self, a, other):
@@ -167,7 +167,7 @@ class State:
                 pass
             else:
                 self._template_parameters[str(a)] = other
-            return (a, other,)
+            return a
         elif (not a.polymorphic_base()) and other.polymorphic_base():
             v = self._template_parameters[str(other)]
             if (v is not None) and v != a:
@@ -190,7 +190,7 @@ class State:
                     self._template_parameters = tp
                 else:
                     self._template_parameters[str(other)] = a
-            return (a, other,)
+            return a
 
         if a.name() != other.name():
             raise Cannot_unify(a, other)
@@ -199,13 +199,13 @@ class State:
                 other.qualified_parameters()):
             self.unify_types(of_a, of_other)
 
-        return (a, other,)
+        return a
 
     def unify_types(self, a, b):
         print('unifying: {} == {}'.format(a, b))
 
         if a == b:
-            return (a, b,)
+            return a
         if (not a.polymorphic()) and (not b.polymorphic()):
             raise Cannot_unify(a, b)  # two different non-polymorphic types
         if a.polymorphic_base() and b.polymorphic_base():
@@ -216,9 +216,14 @@ class State:
             elif (ax is not None) and (bx is None):
                 self._template_parameters[b.name()] = ax
             else:
-                # Two different core-polymorphic types cannot be unified because
-                # there is not enough information to produce a more concrete
-                # type.
+                # Two different core-polymorphic are unified by producing a new
+                # type variable, and binding them to it. In simpler words:
+                #   - can 'a be unified with 'b?
+                #   - assume that the code is correct, and they can be unified
+                #   - create new type variable: '_
+                #   - set 'a as evaluating to '_
+                #   - set 'b as evaluating to '_
+                #   - set '_ as evaluating to as-yet unknown type
                 placeholders = list(filter(lambda _: _.startswith("'_~"),
                         self._template_parameters.keys()))
                 pt = 0
@@ -229,15 +234,15 @@ class State:
                 self._template_parameters[str(pt)] = None
                 self._template_parameters[str(a)] = pt
                 self._template_parameters[str(b)] = pt
-                # raise Cannot_unify(a, b)
-            return (a, b,)
+                return pt
+            return a
 
         try:
             return self._unify_with_a(a, b)
         except Cannot_unify:
             raise Cannot_unify(a, b)
 
-    def _store_type_parameters(self, t):
+    def store_type_parameters(self, t):
         ps = []
         for each in t.parameters():
             if each.polymorphic_base():
@@ -256,7 +261,7 @@ class State:
                 self._template_parameters[candidate] = None
                 ps.append(Type.t('{}~{}'.format(str(each), n)))
             elif each.polymorphic():
-                ps.append(self._store_type_parameters(each))
+                ps.append(self.store_type_parameters(each))
             else:
                 # No reason to process a type that is not polymorphic.
                 ps.append(each)
@@ -264,7 +269,7 @@ class State:
 
     def store(self, slot, t):
         if t.polymorphic():
-            t = self._store_type_parameters(t)
+            t = self.store_type_parameters(t)
         self._slots[slot] = t
 
     def load(self, slot):
@@ -307,22 +312,36 @@ class State:
                 s += ' [{}]'.format(self._stringify_type(v))
             print(s)
 
+class State:
+    def __init__(self, template_parameters):
+        self._ts = Type_state(template_parameters)
+        # Other state-related stuff would be here.
+
+    def store(self, slot, t):
+        self._ts.store(slot, t)
+
+    def dump(self):
+        self._ts.dump()
+
+    def unify_types(self, a, b):
+        return self._ts.unify_types(a, b)
+
 
 st = State(template_parameters = (
     "'a",
 ))
-st.store('a', Type.t('map', (
+st.store('x', Type.t('map', (
     Type.t("'key"),
     Type.t("'value"),
 )))
 st.dump()
-st.unify_types(
+print(st.unify_types(
     Type.t("'key~0"),
     Type.t("'a"),
-)
+))
 st.dump()
-st.unify_types(
-    Type.i8(),
+print(st.unify_types(
     Type.t("'_~0"),
-)
+    Type.i8(),
+))
 st.dump()
