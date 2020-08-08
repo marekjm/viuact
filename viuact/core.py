@@ -420,6 +420,9 @@ class Scope:
         self.state.erase()
         self.state._parent._active = True
 
+    def exit(self, *args):
+        self.__exit__(*args)
+
 class State:
     def __init__(self, fn, upper = None, parent = None, special = 0, types =
             None):
@@ -1042,6 +1045,14 @@ def emit_fn_call(mod, body, st, result, form):
 
     return result
 
+def emit_enum_ctor_call(mod, body, st, result, form):
+    from_module = form.to().module()
+    viuact.util.log.raw('enum.from_module: {}'.format(from_module))
+
+    viuact.util.log.raw('enum.ctor: {}'.format(to))
+    raise None
+    return result
+
 def emit_primitive_literal(mod, body, st, result, expr):
     lit = expr.value()
     if type(lit) == viuact.lexemes.String:
@@ -1233,6 +1244,14 @@ def emit_expr(mod, body, st, result, expr):
             st = st,
             result = result,
             expr = expr,
+        )
+    if type(expr) is viuact.forms.Enum_ctor_call:
+        return emit_enum_ctor_call(
+            mod = mod,
+            body = body,
+            st = st,
+            result = result,
+            form = expr,
         )
     viuact.util.log.fixme('failed to emit expression: {}'.format(
         typeof(expr)))

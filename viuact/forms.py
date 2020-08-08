@@ -94,6 +94,36 @@ class Fn_call(Form):
     def arguments(self):
         return self._arguments
 
+class Enum_ctor_path(Form):
+    def __init__(self, field, name, module_prefix):
+        super().__init__(field)
+        self._field = field             # lexemes.Enum_ctor_name
+        self._name = name               # lexemes.Name
+        self._prefix = module_prefix    # [lexemes.Mod_name]
+
+    def field(self):
+        return self._field
+
+    def of_enum(self):
+        return self._name
+
+    def module(self):
+        if not self._prefix:
+            return None
+        return '::'.join(map(str, self._prefix))
+
+class Enum_ctor_call(Form):
+    def __init__(self, to, value):
+        super().__init__(to.first_token())
+        self._to = to           # Enum_ctor_path
+        self._value = value     # form
+
+    def to(self):
+        return self._to
+
+    def value(self):
+        return self._value
+
 class Primitive_literal(Form):
     def __init__(self, value):
         super().__init__(value.tok())

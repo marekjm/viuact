@@ -11,6 +11,112 @@ def typeof(value):
     return str(type(value))[8:-2]
 
 
+# Having all language perfectly regular, ie. making all forms use prefix
+# notation and being able to discriminate them based on just type of the first
+# lexeme ("tagging lexeme") in the group is a powerful feature. It makes it
+# incredibly easy to write a parser, and the code very readable once you get in
+# the flow of the language.
+#
+# However, some language constructs benefit from the infix notation. The path
+# resultion forms, ie. module access and struct field access, in particular pay
+# huge dividends here:
+#
+#       (let x (Some::Module::some_enum::Ctor 42))
+#
+# vs.
+#
+#       (let x ((:: (:: (:: Some Module) some_enum) Ctor) 42))
+#
+# The former syntax is clean and readable, while the latter is terrifying and
+# using it leads to madness and insanity.
+# This means that, for the comfort of the programmer, the syntax of the language
+# has to bend in some places.
+#
+# This function's job is to wrap such constructs by mangling the token stream to
+# make the infix forms use prefix notation.
+def wrap_infix(tokens):
+    tmp = []
+
+    class One:
+        def __init__(self, x):
+            self._value = x
+        def first(self):
+            return self._value
+        def as_list(self):
+            return [self._value]
+    class Many:
+        def __init__(self, x = None):
+            self._value = (x if x is not None else [])
+        def append(self, x):
+            self._value.append(x)
+            return self
+        def first(self):
+            if not self._value:
+                raise ValueError('empty')
+            if type(self._value[0]) in (One, Many,):
+                return self._value[0].first()
+            return self._value[0]
+        def as_list(self):
+            l = []
+            for each in self._value:
+                if type(each) is One:
+                    l.append(each.first())
+                elif type(each) is Many:
+                    l.extend(each.as_list())
+                else:
+                    raise TypeError(typeof(each))
+            return l
+
+    i = 0
+    while i < len(tokens):
+        each = tokens[i]
+        i += 1
+
+        if each.t() is viuact.lexemes.Path_resolution:
+            prev = tmp.pop()
+            x = Many()
+            x.append(One(viuact.lexemes.Left_paren(viuact.lexemes.Token(
+                    pos = prev.first().tok().at(),
+                    text = '(',
+            ))))
+            x.append(One(each))
+            x.append(prev)
+            x.append(One(tokens[i]))
+            i += 1
+            x.append(One(viuact.lexemes.Right_paren(viuact.lexemes.Token(
+                    pos = prev.first().tok().at(),
+                    text = ')',
+            ))))
+            tmp.append(x)
+            continue
+
+        tmp.append(One(each))
+
+    wrapped = []
+    for each in tmp:
+        wrapped.extend(each.as_list())
+
+    viuact.util.log.raw('tokens:  {}'.format(list(map(str, tokens[13:]))))
+    viuact.util.log.raw('wrapped: {}'.format(list(map(str, wrapped[13:]))))
+    return wrapped
+
+def recategorise(tokens):
+    toks = []
+    for each in tokens:
+        if each.t() is viuact.lexemes.Mod_name:
+            if toks[-1].t() is viuact.lexemes.Path_resolution:
+                if toks[-2].t() is viuact.lexemes.Name:
+                    toks.append(viuact.lexemes.Enum_ctor_name(
+                        viuact.lexemes.Token(
+                            pos = each.tok().at(),
+                            text = str(each),
+                        ),
+                    ))
+                    continue
+        toks.append(each)
+    return toks
+
+
 class G:
     @staticmethod
     def resolve_token(g):
@@ -168,6 +274,41 @@ def parse_compound_expr(group):
 
     return viuact.forms.Compound_expr(expressions)
 
+def parse_enum_ctor_call(group):
+    to = group[0]
+    enum_field = to[2].val()
+
+    enum_name = None
+    module_prefix = []
+    if type(to[1]) is Element:
+        enum_name = to[1].val()
+    elif type(to[1]) is Group:
+        to = to[1]
+        enum_name = to[2].val()
+        to = to[1]
+
+        while True:
+            module_prefix.append(to[2].val())
+            if type(to[1]) is Element:
+                module_prefix.append(to[1].val())
+                module_prefix.reverse()
+                break
+            to = to[1]
+
+    viuact.util.log.raw('parse.enum_ctor_call.field:      {}'.format(enum_field))
+    viuact.util.log.raw('parse.enum_ctor_call.enum:       {}'.format(enum_name))
+    viuact.util.log.raw('parse.enum_ctor_call.mod_prefix: {}'.format(
+        list(map(str, module_prefix))))
+
+    return viuact.forms.Enum_ctor_call(
+        to = viuact.forms.Enum_ctor_path(
+            field = enum_field,
+            name = enum_name,
+            module_prefix = module_prefix,
+        ),
+        value = parse_expr(group[1]),
+    )
+
 def parse_fn_call(group):
     kind = viuact.forms.Fn_call.Kind.Call
     offset = 0
@@ -181,6 +322,17 @@ def parse_fn_call(group):
 
     name = group[0 + offset]
     if type(name) is Group:
+        last = group.val()[0].val()[2].val()
+        if last.t() is viuact.lexemes.Enum_ctor_name:
+            return parse_enum_ctor_call(group)
+        elif last.t() is viuact.lexemes.Name:
+            pass
+        else:
+            raise viuact.errors.Unexpected_token(
+                G.resolve_position(name),
+                typeof(last),
+            ).note('expected function or enum constructor name')
+        viuact.util.log.raw('last: {} => {}'.format(typeof(last), str(last)))
         raise viuact.errors.Fail(G.resolve_position(name),
             'module paths are not implemented')
     elif type(name) is Element:
@@ -244,6 +396,8 @@ def parse_expr(group):
             return parse_compound_expr(group)
         if not (type(group.tag()) is viuact.lexemes.Paren_tag):
             raise None
+        if type(group.lead()) is Group:
+            return parse_fn_call(group)
         if group.lead().t() is viuact.lexemes.Let and len(group.val()) == 3:
             return parse_let_binding(group)
         if group.lead().t() is viuact.lexemes.Let and len(group.val()) == 4:
@@ -388,7 +542,9 @@ def parse_impl(groups):
 
 def parse(tokens):
     no_comments = strip_comments(tokens)
-    groups = group(no_comments)
+    toks = recategorise(no_comments)
+    wrapped = wrap_infix(toks)
+    groups = group(wrapped)
     return parse_impl(groups)
 
 

@@ -47,6 +47,9 @@ class Left_curly(Lexeme):
 class Right_curly(Lexeme):
     pattern = re.compile('\}')
 
+class Path_resolution(Lexeme):
+    pattern = re.compile('::')
+
 class Let(Lexeme):
     pattern = re.compile(r'\blet\b')
 
@@ -74,6 +77,9 @@ class Template_parameter(Lexeme):
 class Mod_name(Lexeme):
     pattern = re.compile(r'[A-Z][a-zA-Z0-9_]*\b')
 
+class Enum_ctor_name(Lexeme):
+    pattern = re.compile(r'[A-Z][a-zA-Z0-9_]*\b')
+
 class Integer(Lexeme):
     pattern = re.compile(r'-?\b(0|[1-9][0-9]*|0x[a-f0-9]+|0o[0-7]+|0b[01]+)\b')
 
@@ -86,6 +92,7 @@ Lexeme.patterns = [
     Right_paren,
     Left_curly,
     Right_curly,
+    Path_resolution,
     Let,
     Val,
     If,
