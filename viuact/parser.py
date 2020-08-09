@@ -300,13 +300,23 @@ def parse_enum_ctor_call(group):
     viuact.util.log.raw('parse.enum_ctor_call.mod_prefix: {}'.format(
         list(map(str, module_prefix))))
 
+    if len(group) > 2:
+        raise viuact.errors.Invalid_arity(
+            group.first_token(),
+            (
+                '{}::'.format('::'.join(map(str, module_prefix)))
+                if module_prefix else
+                ''
+            ) + '{}::{}'.format(str(enum_name), str(enum_field))
+        ).note('enum ctor has at most 1 parameter')
+
     return viuact.forms.Enum_ctor_call(
         to = viuact.forms.Enum_ctor_path(
             field = enum_field,
             name = enum_name,
             module_prefix = module_prefix,
         ),
-        value = parse_expr(group[1]),
+        value = (parse_expr(group[1]) if len(group) == 2 else None),
     )
 
 def parse_fn_call(group):

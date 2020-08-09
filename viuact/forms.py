@@ -153,6 +153,9 @@ class Enum(Form):
     def template_parameters(self):
         return self._template_parameters
 
+    def bare(self):
+        return all(map(lambda x: x.bare(), self.fields()))
+
 class Primitive_literal(Form):
     def __init__(self, value):
         super().__init__(value.tok())

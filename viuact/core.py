@@ -95,6 +95,10 @@ class Type:
         def __init__(self):
             super().__init__('string')
 
+    class atom(t):
+        def __init__(self):
+            super().__init__('atom')
+
 
 class Module_info:
     def __init__(self, name, source_file):
@@ -161,10 +165,20 @@ class Module_info:
 
     def make_enum(self, name, fields, template_parameters):
         self._enums[str(name)] = {
-            'fields': fields,
+            'fields': {
+                str(f.name()) : {
+                    'index': i,
+                    'field': f,
+                }
+                for i, f
+                in enumerate(fields)
+            },
             'template_parameters': template_parameters,
         }
         return self
+
+    def enum(self, name):
+        return self._enums[str(name)]
 
 
 class Type_state:
@@ -1058,8 +1072,73 @@ def emit_enum_ctor_call(mod, body, st, result, form):
     from_module = form.to().module()
     viuact.util.log.raw('enum.from_module: {}'.format(from_module))
 
-    viuact.util.log.raw('enum.ctor: {}'.format(to))
-    raise None
+    enum_name = form.to().of_enum()
+    viuact.util.log.raw('enum.name: {}'.format(enum_name))
+
+    enum_field = form.to().field()
+    viuact.util.log.raw('enum.field: {}'.format(enum_field))
+
+    enum = (
+        mod.module(from_module).enum(enum_name)
+        if from_module else
+        mod.enum(enum_name)
+    )
+    viuact.util.log.raw(enum)
+
+    field = enum['fields'][str(enum_field)]
+    viuact.util.log.raw(field)
+
+    body.append(Verbatim('struct {}'.format(result.to_string())))
+    with st.scoped() as sc:
+        key = sc.get_slot(name = None)
+        sc.type_of(key, Type.atom())
+        body.append(Ctor(
+            of_type = 'atom',
+            slot = key,
+            value = repr('key'),
+        ))
+
+        value = sc.get_slot(name = None)
+        sc.type_of(value, Type.i64())
+        body.append(Ctor(
+            of_type = 'integer',
+            slot = value,
+            value = field['index'],
+        ))
+
+        body.append(Verbatim('structinsert {} {} {}'.format(
+            result.to_string(),
+            key.to_string(),
+            value.to_string(),
+        )))
+
+        if not field['field'].bare():
+            body.append(Ctor(
+                of_type = 'atom',
+                slot = key,
+                value = repr('value'),
+            ))
+            value_slot = emit_expr(
+                mod = mod,
+                body = body,
+                st = sc,
+                result = value,
+                expr = form.value(),
+            )
+            body.append(Verbatim('structinsert {} {} {}'.format(
+                result.to_string(),
+                key.to_string(),
+                value_slot.to_string(),
+            )))
+
+        sc.deallocate_slot(key)
+        sc.deallocate_slot(value)
+
+    st.type_of(result, Type.t(
+        name = str(enum_name),
+        parameters = enum['template_parameters'],
+    ))
+
     return result
 
 def emit_primitive_literal(mod, body, st, result, expr):

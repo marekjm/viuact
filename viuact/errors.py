@@ -108,12 +108,20 @@ class Source_cannot_be_void(Emitter_error):
         return '{} for {}'.format(super().what(), self.bad)
 
 class Invalid_arity(Emitter_error):
-    def __init__(self, pos, s):
+    FUNCTION = 'function'
+    ENUM_CTOR = 'enum ctor'
+
+    def __init__(self, pos, s, kind = FUNCTION):
         super().__init__(pos)
         self.bad = s
+        self.kind = kind
 
     def what(self):
-        return '{} of function {}'.format(super().what(), self.bad)
+        return '{} of {} {}'.format(
+            super().what(),
+            self.kind,
+            self.bad,
+        )
 
 class Unknown_function(Emitter_error):
     def __init__(self, pos, s):

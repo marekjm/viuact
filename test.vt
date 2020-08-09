@@ -10,7 +10,7 @@
     ; (let x (Some::Example::example::Foo 42))
     ;(let x (example::Foo 42))
     ;(let x example::Foo)
-    (let x 0)
+    (let x (example::Foo))
     (print x)
 
     0
