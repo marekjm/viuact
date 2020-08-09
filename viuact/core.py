@@ -331,6 +331,7 @@ class Type_state:
         if t.polymorphic():
             t = self.store_type_parameters(t)
         self._slots[slot] = t
+        return t
 
     def load(self, slot):
         return self._slots[slot]
@@ -709,19 +710,18 @@ class State:
 
     def _set_type_of(self, slot, t):
         if type(slot) is not Slot:
-            raise TypeError('cannot get type of non-slot {}: {}'.format(
+            raise TypeError('cannot set type of non-slot {}: {}'.format(
                 typeof(slot),
                 slot,
             ))
         if slot.is_void():
-            raise TypeError('cannot get type of void slot')
+            raise TypeError('cannot set type of void slot')
         key = slot.to_string()
         if (slot.index, slot.register_set,) not in self._allocated_slots:
             viuact.util.log.raw(self._allocated_slots)
             raise KeyError(slot.to_string())
         # viuact.util.log.raw('type-of: {} <- {}'.format(key, t))
-        self._types.store(key, t)
-        return t
+        return self._types.store(key, t)
 
     def _get_type_of(self, slot):
         if type(slot) is not Slot:
