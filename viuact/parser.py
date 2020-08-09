@@ -521,8 +521,52 @@ def parse_val(group):
         return parse_val_fn(group)
     raise None
 
+def parse_enum_field(group):
+    if type(group) is Element:
+        return viuact.forms.Enum_field(
+            name = group.val(),
+            value = None,
+        )
+
+    name = group[0].val()
+    value = group[1].val()
+
+    viuact.util.log.raw('enum.field: {} => {}'.format(
+        name,
+        value,
+    ))
+    if type(value) is not viuact.lexemes.Template_parameter:
+        raise viuact.errors.Unexpected_token(
+            value.tok().at(),
+            str(value),
+        ).note('requires template name, eg. \'a')
+
+    return viuact.forms.Enum_field(
+        name = name,
+        value = value,
+    )
+
 def parse_enum(group):
-    pass
+    if len(group) != 3:
+        raise None
+    name = group[1].val()
+
+    fields = []
+    template_parameters = []
+    for each in group[2]:
+        f = parse_enum_field(each)
+        fields.append(f)
+        viuact.util.log.raw('enum: {}::{} => {}'.format(
+            name,
+            f.name(),
+            f.value(),
+        ))
+
+    return viuact.forms.Enum(
+        name = name,
+        fields = fields,
+        template_parameters = template_parameters,
+    )
 
 def parse_impl(groups):
     forms = []

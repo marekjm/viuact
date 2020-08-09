@@ -1,8 +1,16 @@
+(enum example (
+    Foo
+    (Bar 'a)
+))
+
 (val main () i8)
 (let main () {
     ; operator :: is for path resolution
     ; operator . is for struct field access
-    (let x (Some::Example::example::Foo 42))
+    ; (let x (Some::Example::example::Foo 42))
+    ;(let x (example::Foo 42))
+    ;(let x example::Foo)
+    (let x 0)
     (print x)
 
     0

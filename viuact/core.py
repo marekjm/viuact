@@ -104,6 +104,8 @@ class Module_info:
         self._functions = {}
         self._function_signatures = {}
 
+        self._enums = {}
+
     def name(self):
         return self._name
 
@@ -156,6 +158,13 @@ class Module_info:
                 res.append((k, v,))
                 continue
         return res
+
+    def make_enum(self, name, fields, template_parameters):
+        self._enums[str(name)] = {
+            'fields': fields,
+            'template_parameters': template_parameters,
+        }
+        return self
 
 
 class Type_state:
@@ -232,7 +241,7 @@ class Type_state:
         return a
 
     def unify_types(self, a, b):
-        print('unifying: {} == {}'.format(a, b))
+        viuact.util.log.raw('unifying: {} == {}'.format(a, b))
 
         if a == b:
             return a
@@ -1357,6 +1366,13 @@ def cc(source_root, source_file, module_name, forms, output_directory):
     ))
 
     mod = Module_info(module_name, source_file)
+
+    for each in filter(lambda x: type(x) is viuact.forms.Enum, forms):
+        mod.make_enum(
+            name = each.name(),
+            fields = each.fields(),
+            template_parameters = each.template_parameters(),
+        )
 
     for each in filter(lambda x: type(x) is viuact.forms.Val_fn_spec, forms):
         mod.make_fn_signature(

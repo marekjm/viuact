@@ -124,6 +124,35 @@ class Enum_ctor_call(Form):
     def value(self):
         return self._value
 
+class Enum_field(Form):
+    def __init__(self, name, value):
+        self._name = name       # lexemes.Enum_ctor_name
+        self._value = value     # form | None
+
+    def name(self):
+        return self._name
+
+    def value(self):
+        return self._value
+
+    def bare(self):
+        return (self._value is None)
+
+class Enum(Form):
+    def __init__(self, name, fields, template_parameters):
+        self._name = name       # lexemes.Name
+        self._fields = fields   # [Enum_field]
+        self._template_parameters = template_parameters # [form]
+
+    def name(self):
+        return self._name
+
+    def fields(self):
+        return self._fields
+
+    def template_parameters(self):
+        return self._template_parameters
+
 class Primitive_literal(Form):
     def __init__(self, value):
         super().__init__(value.tok())
