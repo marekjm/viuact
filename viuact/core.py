@@ -164,6 +164,11 @@ class Module_info:
         return res
 
     def make_enum(self, name, fields, template_parameters):
+        if len(template_parameters) > 1:
+            raise viuact.errors.Fail(
+                name.tok().at(),
+                'FIXME enums support at most one type parameter',
+            )
         self._enums[str(name)] = {
             'fields': {
                 str(f.name()) : {
