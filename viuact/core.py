@@ -1464,7 +1464,8 @@ def cc(source_root, source_file, module_name, forms, output_directory):
         mod.make_enum(
             name = each.name(),
             fields = each.fields(),
-            template_parameters = each.template_parameters(),
+            template_parameters = [
+                Type.t(name = str(t)) for t in each.template_parameters()],
         )
 
     for each in filter(lambda x: type(x) is viuact.forms.Val_fn_spec, forms):

@@ -566,6 +566,8 @@ def parse_enum(group):
     for each in group[2]:
         f = parse_enum_field(each)
         fields.append(f)
+        if f.value() is not None:
+            template_parameters.append(f.value())
         viuact.util.log.raw('enum: {}::{} => {}'.format(
             name,
             f.name(),
