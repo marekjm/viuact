@@ -13,5 +13,8 @@
     (let x (example::Foo))
     (print x)
 
+    (let y (example::Bar 42))
+    (print y)
+
     0
 })

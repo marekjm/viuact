@@ -1093,6 +1093,11 @@ def emit_enum_ctor_call(mod, body, st, result, form):
     viuact.util.log.raw(field)
 
     body.append(Verbatim('struct {}'.format(result.to_string())))
+    enum_t = st.type_of(result, Type.t(
+        name = str(enum_name),
+        parameters = enum['template_parameters'],
+    ))
+
     with st.scoped() as sc:
         key = sc.get_slot(name = None)
         sc.type_of(key, Type.atom())
@@ -1135,13 +1140,18 @@ def emit_enum_ctor_call(mod, body, st, result, form):
                 value_slot.to_string(),
             )))
 
+            value_t = sc.type_of(value_slot)
+            field_t = Type.t(
+                name = str(enum_name),
+                parameters = (value_t,),
+            )
+            viuact.util.log.raw('t.enum:  {}'.format(enum_t))
+            viuact.util.log.raw('t.value: {}'.format(value_t))
+            viuact.util.log.raw('t.field: {}'.format(field_t))
+            st.unify_types(enum_t, field_t)
+
         sc.deallocate_slot(key)
         sc.deallocate_slot(value)
-
-    st.type_of(result, Type.t(
-        name = str(enum_name),
-        parameters = enum['template_parameters'],
-    ))
 
     return result
 
