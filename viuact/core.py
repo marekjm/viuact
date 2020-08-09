@@ -248,8 +248,7 @@ class Type_state:
         if a.name() != other.name():
             raise Type_state.Cannot_unify(a, other)
 
-        for of_a, of_other in zip(a.qualified_parameters(),
-                other.qualified_parameters()):
+        for of_a, of_other in zip(a.parameters(), other.parameters()):
             self.unify_types(of_a, of_other)
 
         return a
