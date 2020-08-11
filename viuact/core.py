@@ -974,6 +974,11 @@ def emit_builtin_call(mod, body, st, result, form):
                 result = (sc.get_slot(None) if result.is_void() else result),
                 expr = form.arguments()[0],
             )
+            if type(sc.type_of(slot)) is Type.void:
+                raise viuact.errors.Read_of_void(
+                    pos = form.arguments()[0].first_token().at(),
+                    by = 'print function',
+                )
             # st.store(slot.to_string(), Type.void())
             body.append(Verbatim('print {}'.format(
                 slot.to_string(),
