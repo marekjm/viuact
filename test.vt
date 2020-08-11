@@ -16,5 +16,14 @@
     (let y (example::Bar 42))
     (print y)
 
+    (match x (
+        (with Foo (print "nothing"))
+        (with Bar x' (print x'))))
+
+    (print (match y (
+        (with Foo -1)
+        ; (with Bar x' (print x')))))
+        (with Bar x' x' ))))
+
     0
 })
