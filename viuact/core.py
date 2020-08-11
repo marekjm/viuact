@@ -767,7 +767,11 @@ class State:
                 key = slot.to_string()
             else:
                 key = slot.name
-            self._types.erase(key)
+            try:
+                self._types.erase(key)
+            except KeyError:
+                # The slot has no type assigned.
+                pass
         else:
             raise None
 
