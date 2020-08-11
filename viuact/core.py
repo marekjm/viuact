@@ -1369,6 +1369,237 @@ def emit_if(mod, body, st, result, expr):
 
     return result
 
+def emit_match(mod, body, st, result, expr):
+    if not expr.arms():
+        raise viuact.errors.Match_with_no_arms(
+            expr.first_token().at(),
+        )
+
+    guard_slot = st.get_slot(name = None)
+    with st.scoped() as sc:
+        guard_slot = emit_expr(
+            mod = mod,
+            body = body,
+            st = sc,
+            result = guard_slot,
+            expr = expr.guard(),
+        )
+    guard_t = st.type_of(guard_slot)
+    viuact.util.log.raw('t.guard: {}'.format(guard_t))
+
+    enum_definition = mod.enum(guard_t.name())
+    viuact.util.log.raw('enum: {}'.format(enum_definition))
+
+    body.append(Print(guard_slot))
+
+    # The guard_key_slot holds the key of the enum produces by the guard
+    # expression. It will be compared with keys of the with-clauses ("match
+    # arms") to see which expression should be executed.
+    guard_key_slot = st.get_slot(name = None)
+    body.append(Ctor(
+        of_type = 'atom',
+        slot = guard_key_slot,
+        value = repr('key'),
+    ))
+    body.append(Print(guard_key_slot))
+    body.append(Verbatim('structat {} {} {}'.format(
+        guard_key_slot.to_string(),
+        guard_slot.to_string(),
+        guard_key_slot.to_string(),
+    )))
+    guard_key_slot = guard_key_slot.as_pointer()
+    body.append(Print(guard_key_slot))
+
+    # The check_slot is used to hold the result of key comparison between the
+    # guard expression and with-claus. It can be safely deallocated after the
+    # comparisons are done.
+    check_slot = st.get_slot(name = None)
+
+    labelled_arms = []
+    for arm in expr.arms():
+        n = st.special()
+
+        fmt = 'with_arm_{}'
+        arm_id = hashlib.sha1(
+            fmt.format(n).encode('utf-8')).hexdigest()
+
+        fmt_check = 'with_arm_check_{}'
+        arm_check_id = hashlib.sha1(
+            fmt_check.format(n).encode('utf-8')).hexdigest()
+
+        labelled_arms.append((
+            fmt.format(arm_id),
+            fmt_check.format(arm_check_id),
+            arm,
+        ))
+    done_fmt = 'match_done_{}'
+    done_label = done_fmt.format(
+        hashlib.sha1(done_fmt.format(st.special()).encode('utf-8')).hexdigest())
+
+    # Emit code that compares enum value's tag to different fields of the enum,
+    # and dispatches to appropriate with-claus or throws an error. This error is
+    # more like assertion in that it should never be triggered (missing cases
+    # should be handled at compile time), but let's leave it there just in case.
+    #
+    # The loop below emits the comparison code.
+    for arm in labelled_arms:
+        body.append(Ctor(
+            of_type = 'integer',
+            slot = check_slot,
+            value = enum_definition['fields'][str(arm[2].tag())]['index'],
+        ))
+        body.append(Cmp(
+            kind = Cmp.EQ,
+            slot = check_slot,
+            rhs = guard_key_slot,
+            lhs = check_slot,
+        ))
+        body.append(If(
+            cond = check_slot,
+            if_true = arm[0],
+            if_false = '+1',
+        ))
+
+    # This is the error handling code handling that runs in case of unmatched
+    # enum values. Should never be run, unless the compiler fucked up and did
+    # not find a missing case.
+    if True:
+        body.append(Ctor(
+            of_type = 'atom',
+            slot = check_slot,
+            value = repr('Match_failed'),
+        ))
+        body.append(Verbatim('exception {} {} void'.format(
+            check_slot.to_string(),
+            check_slot.to_string(),
+        )))
+        body.append(Verbatim('throw {}'.format(
+            check_slot.to_string(),
+        )))
+
+    # Emit the code that actually executes the with-clauses after the
+    # "supporting" code has already been pushed to the body. Keep the type each
+    # arm produces to compare them later - all arms must produce the same type
+    # if we want to ensure consistency!
+    arm_ts = []
+    matched_tags = []
+    for i, arm in enumerate(labelled_arms):
+        # The markers are needed because the code detecting which arm (or:
+        # with-clause) to execute uses them for jump targets.
+        body.append(Marker(label = arm[0]))
+
+        matched_tags.append(str(arm[2].tag()))
+
+        with st.scoped() as sc:
+            # Remember to extract the "payload" of the enum value if the arm is
+            # not bare, ie. if it provides a name to which the payload value
+            # shall be bound.
+            if not arm[2].bare():
+                body.append(Ctor(
+                    of_type = 'atom',
+                    slot = check_slot,
+                    value = Ctor.TAG_ENUM_VALUE_FIELD,
+                ))
+                value_slot = sc.get_slot(name = str(arm[2].name()))
+                # Why use structuremove instead of structat instruction? Because
+                # we consider the enum value to be "consumed" after the match
+                # expression. If the programmer wants to avoid this they can
+                # always copy the value before matching it.
+                body.append(Verbatim('structremove {} {} {}'.format(
+                    value_slot.to_string(),
+                    guard_slot.to_string(),
+                    check_slot.to_string(),
+                )))
+                sc.type_of(value_slot, guard_t.parameters()[0])
+                viuact.util.log.raw('match.arm.{}: {} => {}'.format(
+                    str(arm[2].tag()),
+                    str(arm[2].name()),
+                    sc.type_of(value_slot),
+                ))
+
+            arm_slot = emit_expr(
+                mod = mod,
+                body = body,
+                st = sc,
+                result = (sc.get_slot(None) if result.is_void() else result),
+                expr = arm[2].expr(),
+            )
+            viuact.util.log.raw('arm.result: {} == {}'.format(
+                arm_slot.to_string(),
+                result.to_string(),
+            ))
+            arm_ts.append(sc.type_of(arm_slot))
+
+        # A jump after the last with-clause would be redundant and would cause
+        # the assembler to complain about "useless jump" so let's not emit it.
+        if i == (len(labelled_arms) - 1):
+            continue
+        body.append(Jump(label = done_label))
+    body.append(Marker(label = done_label))
+    body.append(Verbatim(''))
+
+    if len(matched_tags) != len(enum_definition['fields']):
+        for field in enum_definition['fields'].values():
+            field = field['field']
+            if str(field.name()) not in matched_tags:
+                raise viuact.errors.Missing_with_clause(
+                    expr.guard().first_token().at(),
+                    str(field.name()),
+                    str(guard_t.name()),
+                )
+
+    # Remember to compare types returned by each arm. They must all be the same!
+    if not result.is_void():
+        i = 1
+        while i < len(arm_ts):
+            a = arm_ts[i - 1]
+            b = arm_ts[i]
+
+            try:
+                st.unify_types(a, b)
+            except Type_state.Cannot_unify as e:
+                a_t, b_t = e.args
+                viuact.util.log.raw('DAFUQ?! {} != {}'.format(
+                    a_t,
+                    b_t,
+                ))
+                raise viuact.errors.Type_mismatch(
+                    expr.arms()[i].tag().tok().at(),
+                    a_t,
+                    b_t,
+                ).note('between tags {} and {}'.format(
+                    str(expr.arms()[i - 1].tag()),
+                    str(expr.arms()[i].tag()),
+                )).note('all with-clauses must return the same type')
+
+            i += 1
+
+        viuact.util.log.raw('enum.return.t: {} in {}'.format(
+            result.to_string(),
+            st.all_allocated_slots(),
+        ))
+        viuact.util.log.raw('freed: {}'.format(
+            list(map(lambda x: x.to_string(), st.all_freed_slots()))))
+        viuact.util.log.raw('cancelled: {}'.format(
+            list(map(lambda x: x.to_string(), st.all_cancelled_slots()))))
+        st.type_of(result, arm_ts[0])
+
+    st.deallocate_slot(check_slot)
+    st.deallocate_slot(guard_key_slot)
+
+    # The guard slot value is consumed. If it was a variable it is destroyed and
+    # shall not be available after the match-expression that consumed it.
+    #
+    # FIXME It would be *INCREDIBLY* useful to record the place and reason of
+    # deallocation of a slot (and its associated value) to provide better error
+    # messages -- see what Rust's compiler is able to do (or look at newer GCC
+    # and Clang).
+    st.deallocate_slot(guard_slot)
+    # st.deallocate_slot_if_anonymous(guard_slot)
+
+    # raise None
+    return result
+
 def emit_expr(mod, body, st, result, expr):
     if type(expr) is viuact.forms.Fn_call:
         return emit_fn_call(
