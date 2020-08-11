@@ -810,6 +810,16 @@ class Verbatim:
     def to_string(self):
         return self.text
 
+class Print:
+    def __init__(self, slot):
+        self.slot = slot
+
+    def __repr__(self):
+        return 'Print: {}'.format(repr(self.text))
+
+    def to_string(self):
+        return 'print {}'.format(self.slot.to_string())
+
 class Ctor:
     TAG_ENUM_TAG_FIELD = repr('tag')
     TAG_ENUM_VALUE_FIELD = repr('value')
@@ -824,6 +834,54 @@ class Ctor:
             self.of_type,
             self.slot.to_string(),
             self.value,
+        )
+
+class Cmp:
+    EQ = 'eq'
+
+    def __init__(self, kind : str, slot : Slot, rhs : Slot, lhs : Slot):
+        self.kind = kind
+        self.slot = slot
+        self.rhs = rhs
+        self.lhs = lhs
+
+    def to_string(self):
+        return '{} {} {}'.format(
+            self.kind,
+            self.slot.to_string(),
+            self.rhs.to_string(),
+            self.lhs.to_string(),
+        )
+
+class If:
+    def __init__(self, cond : Slot, if_true : str, if_false : str):
+        self.condition = cond
+        self.if_true = if_true
+        self.if_false = if_false
+
+    def to_string(self):
+        return 'if {} {} {}'.format(
+            self.condition.to_string(),
+            self.if_true,
+            self.if_false,
+        )
+
+class Jump:
+    def __init__(self, label : str):
+        self.label = label
+
+    def to_string(self):
+        return 'jump {}'.format(
+            self.label,
+        )
+
+class Marker:
+    def __init__(self, label : str):
+        self.label = label
+
+    def to_string(self):
+        return '.mark: {}'.format(
+            self.label,
         )
 
 class Move:
