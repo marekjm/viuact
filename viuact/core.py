@@ -229,7 +229,7 @@ class Type_state:
         elif (not a.polymorphic_base()) and other.polymorphic_base():
             v = self._template_parameters[str(other)]
             if (v is not None) and v != a:
-                raise Type_state.Cannot_unify(a, other)
+                raise Type_state.Cannot_unify(a, v)
             elif (v is not None) and v == a:
                 pass
             else:
@@ -296,8 +296,13 @@ class Type_state:
 
         try:
             return self._unify_with_a(a, b)
-        except Type_state.Cannot_unify:
-            raise Type_state.Cannot_unify(a, b)
+        except Type_state.Cannot_unify as e:
+            a_t, b_t = e.args
+            viuact.util.log.raw('cannot unify: repacking: {} [{}] != {} [{}]'.format(
+                a, a_t,
+                b, b_t,
+            ))
+            raise Type_state.Cannot_unify(a_t, b_t)
 
     def register_type_parameter(self, p):
         if p.polymorphic_base():
