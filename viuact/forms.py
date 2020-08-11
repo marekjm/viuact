@@ -1,5 +1,7 @@
 import enum
 
+import viuact.lexemes
+
 
 class Form:
     forms = []
@@ -157,6 +159,38 @@ class Enum(Form):
 
     def bare(self):
         return all(map(lambda x: x.bare(), self.fields()))
+
+class Match_arm(Form):
+    def __init__(self, tag, name, expr):
+        super().__init__(tag.tok())
+        self._tag = tag         # lexemes.Enum_ctor_name
+        self._name = name       # lexemes.Name | None
+        self._expression = expr # form
+
+    def tag(self):
+        return self._tag
+
+    def name(self):
+        return self._name
+
+    def bare(self):
+        return ((self.name() is None)
+                or (type(self.name()) is viuact.lexemes.Drop))
+
+    def expr(self):
+        return self._expression
+
+class Match(Form):
+    def __init__(self, guard, arms):
+        super().__init__(guard.first_token())
+        self._guard = guard     # form
+        self._arms = arms       # [Match_arm]
+
+    def guard(self):
+        return self._guard
+
+    def arms(self):
+        return self._arms
 
 class Primitive_literal(Form):
     def __init__(self, value):

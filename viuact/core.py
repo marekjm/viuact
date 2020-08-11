@@ -1364,6 +1364,14 @@ def emit_expr(mod, body, st, result, expr):
             result = result,
             form = expr,
         )
+    if type(expr) is viuact.forms.Match:
+        return emit_match(
+            mod = mod,
+            body = body,
+            st = st,
+            result = result,
+            expr = expr,
+        )
     viuact.util.log.fixme('failed to emit expression: {}'.format(
         typeof(expr)))
     raise None

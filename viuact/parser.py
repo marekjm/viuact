@@ -400,6 +400,27 @@ def parse_argument_bind(group):
         value = parse_expr(group[1]),
     )
 
+def parse_match_arm(group):
+    tag = group[1].val()
+
+    name = None
+    expr = None
+    if len(group) == 4:
+        name = group[2].val()
+        expr = group[3]
+    else:
+        name = viuact.lexemes.Drop(viuact.lexemes.Token(
+            pos = tag.tok().at(),
+            text = '_',
+        ))
+        expr = group[2]
+
+    return viuact.forms.Match_arm(
+        tag = tag,
+        name = name,
+        expr = parse_expr(expr),
+    )
+
 def parse_expr(group):
     if type(group) is Group:
         if type(group.tag()) is viuact.lexemes.Curly_tag:
@@ -419,6 +440,11 @@ def parse_expr(group):
                 guard = parse_expr(group[1]),
                 if_true = parse_expr(group[2]),
                 if_false = parse_expr(group[3]),
+            )
+        if group.lead().t() is viuact.lexemes.Match:
+            return viuact.forms.Match(
+                guard = parse_expr(group[1]),
+                arms = [parse_match_arm(x) for x in group[2]],
             )
         return parse_fn_call(group)
     else:
