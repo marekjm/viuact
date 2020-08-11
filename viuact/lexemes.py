@@ -62,14 +62,23 @@ class If(Lexeme):
 class Enum(Lexeme):
     pattern = re.compile(r'\benum\b')
 
+class Match(Lexeme):
+    pattern = re.compile(r'\bmatch\b')
+
+class With(Lexeme):
+    pattern = re.compile(r'\bwith\b')
+
 class Tail(Lexeme):
     pattern = re.compile(r'\btailcall\b')
 
+class Drop(Lexeme):
+    pattern = re.compile(r'\b_\b')
+
 class Name(Lexeme):
-    pattern = re.compile(r'\b[a-z][a-zA-Z0-9_]*\'?\b')
+    pattern = re.compile(r'\b[a-z][a-zA-Z0-9_]*\'?')
 
 class Labelled_name(Lexeme):
-    pattern = re.compile(r'~[a-z][a-zA-Z0-9_]*\'?\b')
+    pattern = re.compile(r'~[a-z][a-zA-Z0-9_]*\'?')
 
 class Template_parameter(Lexeme):
     pattern = re.compile(r'\'[a-z][a-zA-Z0-9_]*\b')
@@ -97,10 +106,13 @@ Lexeme.patterns = [
     Val,
     If,
     Enum,
+    Match,
+    With,
     Labelled_name,
     Template_parameter,
     Mod_name,
     Name,
+    Drop,
     Integer,
     String,
 ]
