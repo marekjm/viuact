@@ -126,6 +126,7 @@ class Enum_ctor_call(Form):
 
 class Enum_field(Form):
     def __init__(self, name, value):
+        super().__init__(name.tok())
         self._name = name       # lexemes.Enum_ctor_name
         self._value = value     # form | None
 
@@ -140,6 +141,7 @@ class Enum_field(Form):
 
 class Enum(Form):
     def __init__(self, name, fields, template_parameters):
+        super().__init__(name.tok())
         self._name = name       # lexemes.Name
         self._fields = fields   # [Enum_field]
         self._template_parameters = template_parameters # [form]
