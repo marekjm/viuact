@@ -607,6 +607,22 @@ class State:
         self._allocated_slots.append( (i, register_set,) )
         return i
 
+    def all_allocated_slots(self):
+        slots = self._allocated_slots[:]
+        if self._parent is not None:
+            slots.extend(self._parent.all_allocated_slots())
+        return slots
+    def all_freed_slots(self):
+        slots = self._freed_slots[:]
+        if self._parent is not None:
+            slots.extend(self._parent.all_freed_slots())
+        return slots
+    def all_cancelled_slots(self):
+        slots = self._cancelled_slots[:]
+        if self._parent is not None:
+            slots.extend(self._parent.all_cancelled_slots())
+        return slots
+
     def get_slot(self, name, register_set = Register_set.DEFAULT):
         self.assert_active()
         if name is not None and type(name) is not str:
