@@ -738,7 +738,7 @@ class State:
             raise TypeError('cannot get type of void slot')
         key = slot.to_string()
         if (slot.index, slot.register_set,) not in self._allocated_slots:
-            raise KeyError(slot.to_string())
+            raise viuact.errors.Read_of_untyped_slot(slot)
         t = self._types.load(key)
         # viuact.util.log.raw('type-of: {} -> {}'.format(key, t))
         return t
@@ -749,7 +749,7 @@ class State:
                 return self._get_type_of(slot)
             else:
                 return self._set_type_of(slot, t)
-        except KeyError:
+        except (KeyError, viuact.errors.Read_of_untyped_slot,):
             if self._parent:
                 return self._parent.type_of(slot, t)
             else:
