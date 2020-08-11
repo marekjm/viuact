@@ -126,6 +126,22 @@ HELP = '''{NAME}
 EXECUTABLE = 'viuact-cc'
 
 
+def report_error(source_file_name, e, human = True):
+    viuact.util.log.error(
+        s = e.what(),
+        path = source_file_name,
+        pos = e.at(human = human),
+    )
+    for each in e.notes():
+        viuact.util.log.note(
+            s = each,
+            path = source_file_name,
+            pos = e.at(human = human),
+        )
+
+    for each in e.fallout():
+        report_error(source_file_name, e, human)
+
 def main(executable_name, args):
     if '--version' in args:
         print('{} version {} ({})'.format(
@@ -210,17 +226,7 @@ def main(executable_name, args):
             output_directory,
         )
     except viuact.errors.Error as e:
-        viuact.util.log.error(
-            s = e.what(),
-            path = source_file,
-            pos = e.at(human = True),
-        )
-        for each in e.notes():
-            viuact.util.log.note(
-                s = each,
-                path = source_file,
-                pos = e.at(human = True),
-            )
+        report_error(source_file, e, human = True)
         exit(1)
 
 main(sys.argv[0], sys.argv[1:])

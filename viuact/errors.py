@@ -11,12 +11,15 @@ class Error(Exception):
     def at(self, human = False):
         return (self.line + int(human), self.character + int(human),)
 
-    def then(self, another_error):
-        self._fallout = another_error
-        return self
-
     def what(self):
         return ' '.join(str(type(self))[8:-2].split('.')[-1].lower().split('_'))
+
+    def then(self, another_error):
+        self._fallout.append(another_error)
+        return self
+
+    def fallout(self):
+        return self._fallout
 
     def notes(self):
         return self._notes
