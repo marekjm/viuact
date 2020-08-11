@@ -157,6 +157,27 @@ class No_signature_for_function(Emitter_error):
     def what(self):
         return '{} {}'.format(super().what(), self.fn)
 
+class Missing_with_clause(Emitter_error):
+    def __init__(self, pos, tag, for_enum):
+        super().__init__(pos)
+        self.tag = tag
+        self.for_enum = for_enum
+
+    def what(self):
+        return '{} for tag {} when matching over enum {}'.format(
+            super().what(),
+            repr(self.tag),
+            repr(self.for_enum),
+        )
+
+class Read_of_unbound_variable(Emitter_error):
+    def __init__(self, pos, variable):
+        super().__init__(pos)
+        self.variable = variable
+
+    def what(self):
+        return '{}: {}'.format(super().what(), self.variable)
+
 class Type_error(Emitter_error):
     pass
 
@@ -216,13 +237,29 @@ class If_arms_return_different_types(Type_error):
             f = self.false_arm_t,
         )
 
+class Match_with_no_arms(Type_error):
+    def __init__(self, pos):
+        super().__init__(pos)
+
+class Read_of_void(Type_error):
+    def __init__(self, pos, by : str):
+        super().__init__(pos)
+        self.by = by
+
+    def what(self):
+        return '{} by {}'.format(super().what(), self.by)
+
 
 ################################################################################
 # Errors that occur if the compiler as a bug.
 #
 class Internal_compiler_error(Exception):
+    def __init__(self):
+        self.pos = None
+
     def what(self):
-        return ' '.join(str(type(self))[8:-2].split('.')[-1].lower().split('_'))
+        return 'ICE: {}'.format(
+            ' '.join(str(type(self))[8:-2].split('.')[-1].lower().split('_')))
 
 class Mutation_of_inactive_state(Internal_compiler_error):
     pass
@@ -254,3 +291,10 @@ class Deallocation_of_cancelled(Internal_compiler_error):
 
     def __str__(self):
         return '{} of slot {}'.format(self.what(), self.slot.to_string())
+
+class Read_of_untyped_slot(Internal_compiler_error):
+    def __init__(self, slot):
+        self.slot = slot
+
+    def __str__(self):
+        return '{}: {}'.format(self.what(), self.slot.to_string())
