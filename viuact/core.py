@@ -1734,6 +1734,7 @@ def cc_fn(mod, fn):
         )
     except Exception:
         viuact.util.log.error('during compilation of {}'.format(main_fn_name))
+        st._types.dump()
         raise
     if result != result_slot:
         main_fn.append(Move.make_move(
