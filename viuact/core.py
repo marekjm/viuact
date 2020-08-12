@@ -869,7 +869,7 @@ class Cmp:
         self.lhs = lhs
 
     def to_string(self):
-        return '{} {} {}'.format(
+        return '{} {} {} {}'.format(
             self.kind,
             self.slot.to_string(),
             self.rhs.to_string(),
