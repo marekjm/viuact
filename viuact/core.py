@@ -826,6 +826,13 @@ class Verbatim:
     def to_string(self):
         return self.text
 
+class Comment:
+    def __init__(self, text):
+        self.text = text
+
+    def to_string(self):
+        return '; {}'.format(self.text)
+
 class Print:
     def __init__(self, slot):
         self.slot = slot
