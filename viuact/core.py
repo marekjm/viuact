@@ -396,10 +396,21 @@ class Slot:
 
         self._is_pointer = False
 
+        # Disposable slot is allocated automatically by the compiler for its own
+        # needs (eg. to store a temporary value). Such a slot may be freely
+        # cancelled or freed, as it is not accessible to the program being
+        # compiled (eg. it is dropped immediately after use).
+        #
+        # The compiler may automatically drop such a slot and replace it with a
+        # non-disposable one it if detects that it is required.
+        self._is_disposable = False
+
     def __eq__(self, other):
         if type(other) is not Slot:
-            raise TypeError('cannot compare Slot to {}'.format(
-                other.__class__.__name__))
+            raise TypeError('cannot compare Slot to {}: {}'.format(
+                other.__class__.__name__,
+                other,
+            ))
         return ((self.index == other.index)
             and (self.register_set == other.register_set))
 
@@ -431,6 +442,14 @@ class Slot:
     def as_pointer(self, pointer = True):
         s = Slot(self.name, self.index, self.register_set)
         s._is_pointer = pointer
+        return s
+
+    def is_disposable(self):
+        return self._is_disposable
+
+    def as_disposable(self, disposable = True):
+        s = Slot(self.name, self.index, self.register_set)
+        s._is_disposable = disposable
         return s
 
     def to_string(self):
@@ -653,6 +672,17 @@ class State:
 
         return slot
 
+    def get_disposable_slot(self, register_set = Register_set.DEFAULT):
+        self.assert_active()
+
+        slot = Slot(
+            None,
+            self.allocate_slot(register_set),
+            register_set,
+        )
+
+        return slot.as_disposable()
+
     def slot_of(self, name):
         try:
             return self._named_slots[name]
@@ -660,6 +690,15 @@ class State:
             if self._parent is None:
                 raise
             return self._parent.slot_of(name)
+
+    def name_slot(self, slot, name):
+        x = (slot.index, slot.register_set,)
+        if x not in self._allocated_slots:
+            if self._parent:
+                return self._parent.name_slot(slot, name)
+            raise KeyError(slot.to_string())
+        self._named_slots[name] = slot
+        return self
 
     def actual_pressure(self, register_set):
         n = self._next_slot_index[register_set]
@@ -994,7 +1033,7 @@ def emit_builtin_call(mod, body, st, result, form):
                 mod = mod,
                 body = body,
                 st = sc,
-                result = (sc.get_slot(None) if result.is_void() else result),
+                result = (sc.get_disposable_slot() if result.is_void() else result),
                 expr = form.arguments()[0],
             )
             if type(sc.type_of(slot)) is Type.void:
@@ -1636,6 +1675,36 @@ def emit_match(mod, body, st, result, expr):
     # raise None
     return result
 
+def emit_name_ref(mod, body, st, result, expr):
+    if result.is_void():
+        viuact.util.log.raw('void slot for name-ref to {}'.format(
+            str(expr.name()),
+        ))
+        raise None
+    if result.is_disposable():
+        viuact.util.log.raw('cancelled disposable slot {} for name-ref to {}'.format(
+            result.to_string(),
+            str(expr.name()),
+        ))
+        st.cancel_slot(result)
+        return st.slot_of(str(expr.name()))
+    else:
+        slot = st.slot_of(str(expr.name()))
+        viuact.util.log.raw('move to {} from {} for name-ref to {}'.format(
+            result.to_string(),
+            slot.to_string(),
+            str(expr.name()),
+        ))
+        t = st.type_of(slot)
+        st.name_slot(result, str(expr.name()))
+        st.type_of(result, t)
+        st.deallocate_slot(slot)
+        body.append(Move.make_move(
+            source = slot,
+            dest = result,
+        ))
+        return result
+
 def emit_expr(mod, body, st, result, expr):
     if type(expr) is viuact.forms.Fn_call:
         return emit_fn_call(
@@ -1662,13 +1731,13 @@ def emit_expr(mod, body, st, result, expr):
             expr = expr,
         )
     if type(expr) is viuact.forms.Name_ref:
-        if not result.is_void():
-            st.cancel_slot(result)
-            viuact.util.log.raw('cancelled slot {} for name-ref to {}'.format(
-                result.to_string(),
+        try:
+            return emit_name_ref(mod, body, st, result, expr)
+        except KeyError:
+            raise viuact.errors.Read_of_unbound_variable(
+                expr.name().tok().at(),
                 str(expr.name()),
-            ))
-        return st.slot_of(str(expr.name()))
+            )
     if type(expr) is viuact.forms.Let_binding:
         if not result.is_void():
             st.cancel_slot(result)

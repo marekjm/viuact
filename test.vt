@@ -8,7 +8,9 @@
     (let a 42)
     (print a)
 
-    ; (let b a)
+    (let b a)
+    (print b)
+    (print a)
 
     ; operator :: is for path resolution
     ; operator . is for struct field access
