@@ -5,25 +5,42 @@
 
 (val main () i8)
 (let main () {
+    (let a 42)
+    (print a)
+
+    ; (let b a)
+
     ; operator :: is for path resolution
     ; operator . is for struct field access
-    ; (let x (Some::Example::example::Foo 42))
-    ;(let x (example::Foo 42))
-    ;(let x example::Foo)
-    (let x (example::Foo))
-    (print x)
+    ; (let x (example::Foo))
+    ; (print x)
 
-    (let y (example::Bar 42))
-    (print y)
+    ; (let y (example::Bar 42))
+    ; (print y)
 
-    (match x (
-        (with Foo (print "nothing"))
-        (with Bar x' (print x'))))
+    ; (match x (
+    ;     (with Foo (print "nothing"))
+    ;     (with Bar x' (print x'))))
 
-    (print (match y (
-        (with Foo -1)
-        ; (with Bar x' (print x')))))
-        (with Bar x' x' ))))
+    ; (match y (
+    ;     (with Foo (print -1))
+    ;     (with Bar x' (print x'))))
+
+    ; (let a (example::Foo))
+    ; (print a)
+    ; (print (match a (
+    ;     (with Foo (print "nothing"))
+    ;     (with Bar a' (print a')))))
+    ; (let c (match a (
+    ;     (with Foo "nothing")
+    ;     (with Bar a' a'))))
+    ; (print c)
+
+    ; (let y (example::Bar 42))
+    ; (print y)
+    ; (print (match y (
+    ;     (with Foo "nothing")
+    ;     (with Bar y' y'))))
 
     0
 })

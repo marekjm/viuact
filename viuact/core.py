@@ -1442,19 +1442,17 @@ def emit_match(mod, body, st, result, expr):
     for arm in expr.arms():
         n = st.special()
 
-        fmt = 'with_arm_{}'
-        arm_id = hashlib.sha1(
-            fmt.format(n).encode('utf-8')).hexdigest()
+        fmt_base = 'with_clause_{}'.format(n)
+        arm_id = hashlib.sha1(fmt_base.encode('utf-8')).hexdigest()
+        arm_expression_label = 'with_arm_expr_{}'.format(arm_id)
+        arm_condition_label = 'with_arm_cond_{}'.format(arm_id)
 
-        fmt_check = 'with_arm_check_{}'
-        arm_check_id = hashlib.sha1(
-            fmt_check.format(n).encode('utf-8')).hexdigest()
-
-        labelled_arms.append((
-            fmt.format(arm_id),
-            fmt_check.format(arm_check_id),
-            arm,
-        ))
+        labelled_arms.append({
+            'expr_label': arm_expression_label,
+            'cond_label': arm_condition_label,
+            'id': arm_id,
+            'arm': arm,
+        })
     done_fmt = 'match_done_{}'
     done_label = done_fmt.format(
         hashlib.sha1(done_fmt.format(st.special()).encode('utf-8')).hexdigest())
@@ -1465,11 +1463,15 @@ def emit_match(mod, body, st, result, expr):
     # should be handled at compile time), but let's leave it there just in case.
     #
     # The loop below emits the comparison code.
-    for arm in labelled_arms:
+    for i, arm in enumerate(labelled_arms):
+        body.append(Comment(
+            'check for with-clause of {}'.format(arm['arm'].tag())
+        ))
+        body.append(Marker(label = arm['cond_label']))
         body.append(Ctor(
             of_type = 'integer',
             slot = check_slot,
-            value = enum_definition['fields'][str(arm[2].tag())]['index'],
+            value = enum_definition['fields'][str(arm['arm'].tag())]['index'],
         ))
         body.append(Cmp(
             kind = Cmp.EQ,
@@ -1479,14 +1481,21 @@ def emit_match(mod, body, st, result, expr):
         ))
         body.append(If(
             cond = check_slot,
-            if_true = arm[0],
-            if_false = '+1',
+            if_true = arm['expr_label'],
+            if_false = (
+                labelled_arms[i + 1]['cond_label']
+                if (i < (len(labelled_arms) - 1)) else
+                done_label
+            ),
         ))
 
     # This is the error handling code handling that runs in case of unmatched
     # enum values. Should never be run, unless the compiler fucked up and did
     # not find a missing case.
     if True:
+        body.append(Comment(
+            'trigger an error in case nothing matched'
+        ))
         body.append(Ctor(
             of_type = 'atom',
             slot = check_slot,
@@ -1509,21 +1518,25 @@ def emit_match(mod, body, st, result, expr):
     for i, arm in enumerate(labelled_arms):
         # The markers are needed because the code detecting which arm (or:
         # with-clause) to execute uses them for jump targets.
-        body.append(Marker(label = arm[0]))
+        body.append(Verbatim(''))
+        body.append(Comment(
+            'expression for with-clause of {}'.format(arm['arm'].tag())
+        ))
+        body.append(Marker(label = arm['expr_label']))
 
-        matched_tags.append(str(arm[2].tag()))
+        matched_tags.append(str(arm['arm'].tag()))
 
         with st.scoped() as sc:
             # Remember to extract the "payload" of the enum value if the arm is
             # not bare, ie. if it provides a name to which the payload value
             # shall be bound.
-            if not arm[2].bare():
+            if not arm['arm'].bare():
                 body.append(Ctor(
                     of_type = 'atom',
                     slot = check_slot,
                     value = Ctor.TAG_ENUM_VALUE_FIELD,
                 ))
-                value_slot = sc.get_slot(name = str(arm[2].name()))
+                value_slot = sc.get_slot(name = str(arm['arm'].name()))
                 # Why use structuremove instead of structat instruction? Because
                 # we consider the enum value to be "consumed" after the match
                 # expression. If the programmer wants to avoid this they can
@@ -1535,8 +1548,8 @@ def emit_match(mod, body, st, result, expr):
                 )))
                 sc.type_of(value_slot, guard_t.parameters()[0])
                 viuact.util.log.raw('match.arm.{}: {} => {}'.format(
-                    str(arm[2].tag()),
-                    str(arm[2].name()),
+                    str(arm['arm'].tag()),
+                    str(arm['arm'].name()),
                     sc.type_of(value_slot),
                 ))
 
@@ -1545,7 +1558,7 @@ def emit_match(mod, body, st, result, expr):
                 body = body,
                 st = sc,
                 result = (sc.get_slot(None) if result.is_void() else result),
-                expr = arm[2].expr(),
+                expr = arm['arm'].expr(),
             )
             viuact.util.log.raw('arm.result: {} == {}'.format(
                 arm_slot.to_string(),
