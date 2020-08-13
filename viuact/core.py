@@ -714,6 +714,10 @@ class State:
         if f is not None:
             f = (f + 1)
 
+        viuact.util.log.raw('pressure.n: {}'.format(n))
+        viuact.util.log.raw('pressure.a: {}'.format(a))
+        viuact.util.log.raw('pressure.f: {}'.format(f))
+
         # By default, use the pressure from the next slot as this is exactly the
         # number we should use in the most pessimistic case.
         pressure = n
@@ -736,7 +740,7 @@ class State:
         if f is not None:
             pressure = max(f, (a or 0))
 
-        return pressure
+        return max(pressure, n)
 
     def scoped(self):
         self._active = False
