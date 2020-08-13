@@ -1042,9 +1042,7 @@ def emit_builtin_call(mod, body, st, result, form):
                     by = 'print function',
                 )
             # st.store(slot.to_string(), Type.void())
-            body.append(Verbatim('print {}'.format(
-                slot.to_string(),
-            )))
+            body.append(Print(slot))
             body.append(Verbatim(''))
 
         return slot
@@ -1452,8 +1450,6 @@ def emit_match(mod, body, st, result, expr):
     enum_definition = mod.enum(guard_t.name())
     viuact.util.log.raw('enum: {}'.format(enum_definition))
 
-    body.append(Print(guard_slot))
-
     # The guard_key_slot holds the key of the enum produces by the guard
     # expression. It will be compared with keys of the with-clauses ("match
     # arms") to see which expression should be executed.
@@ -1463,14 +1459,12 @@ def emit_match(mod, body, st, result, expr):
         slot = guard_key_slot,
         value = repr('key'),
     ))
-    body.append(Print(guard_key_slot))
     body.append(Verbatim('structat {} {} {}'.format(
         guard_key_slot.to_string(),
         guard_slot.to_string(),
         guard_key_slot.to_string(),
     )))
     guard_key_slot = guard_key_slot.as_pointer()
-    body.append(Print(guard_key_slot))
 
     # The check_slot is used to hold the result of key comparison between the
     # guard expression and with-claus. It can be safely deallocated after the
