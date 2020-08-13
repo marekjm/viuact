@@ -1548,6 +1548,13 @@ def emit_match(mod, body, st, result, expr):
             check_slot.to_string(),
         )))
 
+    # Result slots of match-expressions are not disposable since they have a
+    # very real effect - they consume their inputs, and this effect must be
+    # enforced. Also, we can't have the result slot cancelled or all hell breaks
+    # loose (the compiler crashes, for example).
+    if result.is_disposable():
+        result = result.as_disposable(False)
+
     # Emit the code that actually executes the with-clauses after the
     # "supporting" code has already been pushed to the body. Keep the type each
     # arm produces to compare them later - all arms must produce the same type
