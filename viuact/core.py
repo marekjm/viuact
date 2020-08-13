@@ -55,6 +55,50 @@ class Type:
             p = any(map(lambda x: x.polymorphic(), self.parameters()))
             return (self.polymorphic_base() or p)
 
+    class fn:
+        def __init__(self, return_type, parameters = (), template = ()):
+            self._return_type = return_type # Type.t | Type.fn
+            self._parameters = parameters   # [Type.t | Type.fn]
+            self._template = template       # [Type.t | Type.fn]
+
+        def __eq__(self, other):
+            if not isinstance(other, Type.fn):
+                raise TypeError('cannot compare Type.fn with {}'.format(typeof(other)))
+            r = (self.return_type() == other.return_type())
+            p = (self.parameters() == other.parameters())
+            t = (self.template() == other.template())
+            return (r and p and t)
+
+        def __str__(self):
+            fmt = (
+                '(({t}) ({p}) -> {r})'
+                if self.template() else
+                '(({p}) -> {r})'
+            )
+            return fmt.format(
+                p = ' '.join(map(str, self.parameters())),
+                r = str(self.name()),
+            )
+
+        def __repr__(self):
+            return str(self)
+
+        def return_type(self):
+            return self._return_type
+
+        def parameters(self):
+            return self._parameters
+
+        def template(self):
+            return self._template
+
+        def polymorphic_base(self):
+            return self.name().startswith("'")
+
+        def polymorphic(self):
+            p = any(map(lambda x: x.polymorphic(), self.template()))
+            return (self.polymorphic_base() or p)
+
     class void(t):
         def __init__(self):
             super().__init__('void')
@@ -1863,11 +1907,34 @@ def cc_type(mod, form):
     # FIXME Add checks if used types were defined before.
     # FIXME Add checks for used template parameters - if they are defined by the
     # val expression.
-    t = Type.t(
-        name = str(form.name()),
-        parameters = tuple([cc_type(mod, each) for each in form.parameters()]),
-    )
-    return t
+    if type(form) is viuact.forms.Type_name:
+        name = str(form.name())
+        viuact.util.log.raw('cc.t: {} => {}'.format(typeof(form), name))
+
+        parameters = [cc_type(mod, each) for each in form.parameters()]
+        if parameters:
+            viuact.util.log.raw('cc.t.params: ({})'.format(
+                ', '.join(map(str, parameters))))
+
+        return Type.t(
+            name = name,
+            parameters = tuple(parameters),
+        )
+    if type(form) is viuact.forms.Fn_type:
+        viuact.util.log.raw('cc.t: {} => {}'.format(typeof(form), form))
+
+        return_type = cc_type(mod, form.return_type())
+        parameter_types = []
+        for x in form.parameter_types():
+            viuact.util.log.raw('p.t: {} => {}'.format(typeof(x), x))
+            parameter_types.append(cc_type(mod, x))
+
+        return Type.fn(
+            return_type = return_type,
+            parameters = tuple(parameter_types),
+            template = (),
+        )
+    raise None
 
 
 def cc(source_root, source_file, module_name, forms, output_directory):
@@ -1898,6 +1965,8 @@ def cc(source_root, source_file, module_name, forms, output_directory):
             template_parameters = [
                 cc_type(mod, t) for t in each.template_parameters()],
         )
+
+    return
 
     for each in forms:
         if type(each) is not viuact.forms.Fn:

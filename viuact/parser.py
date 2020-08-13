@@ -295,10 +295,10 @@ def parse_enum_ctor_call(group):
                 break
             to = to[1]
 
-    viuact.util.log.raw('parse.enum_ctor_call.field:      {}'.format(enum_field))
-    viuact.util.log.raw('parse.enum_ctor_call.enum:       {}'.format(enum_name))
-    viuact.util.log.raw('parse.enum_ctor_call.mod_prefix: {}'.format(
-        list(map(str, module_prefix))))
+    # viuact.util.log.raw('parse.enum_ctor_call.field:      {}'.format(enum_field))
+    # viuact.util.log.raw('parse.enum_ctor_call.enum:       {}'.format(enum_name))
+    # viuact.util.log.raw('parse.enum_ctor_call.mod_prefix: {}'.format(
+    #     list(map(str, module_prefix))))
 
     if len(group) > 2:
         raise viuact.errors.Invalid_arity(
@@ -508,30 +508,52 @@ def parse_type(group):
             name = group[1].val(),
             template_parameters = [parse_type(each) for each in group[0]],
         )
+    if type(group) is Group and len(group) == 3:
+        parameter_types = []
+        viuact.util.log.raw('parameter types: {}'.format(group[0].val()))
+        for x in group[0]:
+            viuact.util.log.raw('parse.p.t: {} => {}'.format(typeof(x), x.val()))
+            parameter_types.append(parse_type(x))
+
+        viuact.util.log.raw('return type: {}'.format(group[2].val()))
+        return_type = parse_type(group[2])
+
+        return viuact.forms.Fn_type(
+            return_type = return_type,
+            parameter_types = [parse_type(x) for x in group[0]],
+        )
     raise None
 
 def parse_val_fn(group):
-    offset = (0 if len(group) == 4 else 1)
+    offset = (0 if len(group) == 5 else 1)
     template_parameters = (group[offset + 0] if offset else [])
     name = group[offset + 1]
     parameter_list = group[offset + 2]
-    return_type = group[offset + 3]
+    return_type = group[offset + 4]
+
+    if type(group[offset + 3].val()) is not viuact.lexemes.Arrow_right:
+        raise None
+
+    name = name.val()
+    template_parameters = list(map(parse_type, template_parameters))
+    parameter_list = list(map(parse_type, parameter_list))
+    return_type = parse_type(return_type)
 
     fmt = 'type of {}: ({}) -> {}'
     if template_parameters:
         fmt += ' [with {}]'
     viuact.util.log.note(fmt.format(
-        str(name.val()),
-        ', '.join(map(lambda a: str(a.val()), parameter_list)),
-        str(return_type.val()),
-        ', '.join(map(lambda a: str(a.val()), template_parameters)),
+        str(name),
+        ', '.join(map(lambda a: a.to_string(), parameter_list)),
+        return_type.to_string(),
+        ', '.join(map(lambda a: a.to_string(), template_parameters)),
     ))
 
     return viuact.forms.Val_fn_spec(
-        name = name.val(),
-        template_parameters = list(map(parse_type, template_parameters)),
-        parameter_types = list(map(parse_type, parameter_list)),
-        return_type = parse_type(return_type),
+        name = name,
+        template_parameters = template_parameters,
+        parameter_types = parameter_list,
+        return_type = return_type,
     )
 
 def parse_val_var(group):
@@ -543,7 +565,7 @@ def parse_val_var(group):
 
 def parse_val(group):
     is_var = 4
-    is_fn = 5
+    is_fn = 6
 
     # The first element is not a list of type parameters so let's reduce the
     # length requirements.
@@ -555,6 +577,8 @@ def parse_val(group):
         return parse_val_var(group)
     if len(group) == is_fn:
         return parse_val_fn(group)
+
+    viuact.util.log.raw('{}'.format(group.val()))
     raise None
 
 def parse_enum_field(group):

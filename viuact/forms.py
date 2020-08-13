@@ -262,7 +262,7 @@ class Val_fn_spec(Form):
 class Type_name(Form):
     def __init__(self, name, template_parameters):
         super().__init__(name.tok())
-        self._name = name
+        self._name = name   # Name
         self._template_parameters = template_parameters
 
     def name(self):
@@ -270,6 +270,33 @@ class Type_name(Form):
 
     def parameters(self):
         return self._template_parameters
+
+    def to_string(self):
+        if self.parameters():
+            return '(({}) {})'.format(
+                ' '.join(map(lambda x: x.to_string(), self.parameters())),
+                self.name(),
+            )
+        else:
+            return str(self.name())
+
+class Fn_type(Form):
+    def __init__(self, return_type, parameter_types):
+        super().__init__(return_type.first_token())
+        self._return_type = return_type
+        self._parameter_types = parameter_types
+
+    def return_type(self):
+        return self._return_type
+
+    def parameter_types(self):
+        return self._parameter_types
+
+    def to_string(self):
+        return '(({}) -> {})'.format(
+            ', '.join(map(lambda x: x.to_string(), self.parameter_types())),
+            self.return_type().to_string(),
+        )
 
 
 Form.forms = [

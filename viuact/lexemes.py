@@ -50,6 +50,9 @@ class Right_curly(Lexeme):
 class Path_resolution(Lexeme):
     pattern = re.compile('::')
 
+class Arrow_right(Lexeme):
+    pattern = re.compile(r'->')
+
 class Let(Lexeme):
     pattern = re.compile(r'\blet\b')
 
@@ -102,6 +105,7 @@ Lexeme.patterns = [
     Left_curly,
     Right_curly,
     Path_resolution,
+    Arrow_right,
     Let,
     Val,
     If,
