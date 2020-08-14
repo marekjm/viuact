@@ -1241,7 +1241,11 @@ def emit_fn_call(mod, body, st, result, form):
     return_t = type_signature['return']
     if return_t.polymorphic():
         return_t = tmp[return_t.name()]
-    st.type_of(result, return_t)
+
+    # Only set type of the result is not a void register (it does not make sense
+    # to assign type to a void).
+    if not result.is_void():
+        st.type_of(result, return_t)
 
     body.append(Call(
         to = called_fn_name,
