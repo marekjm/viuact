@@ -1095,7 +1095,187 @@ def emit_builtin_call(mod, body, st, result, form):
 
         return slot
 
-def emit_fn_call(mod, body, st, result, form):
+def emit_indirect_fn_call(mod, body, st, result, form):
+    if str(form.to().name()) in BUILTIN_FUNCTIONS:
+        return emit_builtin_call(mod, body, st, result, form)
+
+    base_name = str(form.to().name().tok())
+    called_fn_name = '{name}/{arity}'.format(
+        name = base_name,
+        arity = len(form.arguments()),
+    )
+
+    candidates = list(filter(
+        lambda each: each[1]['base_name'] == base_name,
+        mod.fns(),
+    ))
+    signature = None
+    type_signature = None
+    if not candidates:
+        fn = None
+        try:
+            fn = st.slot_of(base_name)
+        except KeyError:
+            raise viuact.errors.Unknown_function(
+                form.to().name().tok().at(),
+                called_fn_name,
+            )
+
+        arity = len(st.type_of(fn).parameters())
+        signature = {
+            # It does not matter if the function is local in this context; in
+            # fact, we don't even know whether it is local or not! All we have
+            # is a pointer to a function.
+            #
+            # The same thing with the module the function is from - we do not
+            # know it.
+            'local': True,
+            'from': (None, None,),
+
+            'parameters': list(range(0, arity)),
+            'base_name': None,
+            'arity': arity,
+        }
+    else:
+        signature = (lambda x: (x[0] if x else None))(list(filter(
+            lambda each: each[1]['arity'] == len(form.arguments()),
+            candidates
+        )))
+
+    if signature is None:
+        e = viuact.errors.Invalid_arity(
+            form.to().name().tok().at(),
+            called_fn_name,
+        )
+        for each in candidates:
+            e.note('candidate: {}({})'.format(
+                each[1]['base_name'],
+                ' '.join(map(lambda p: str(p.name()), each[1]['parameters'])),
+            ))
+        raise e
+
+    viuact.util.log.raw('call to {}: signature = {}'.format(
+        called_fn_name,
+        signature,
+    ))
+    type_signature = mod.signature(called_fn_name)
+    viuact.util.log.raw('call to {}: type sig =  {}'.format(
+        called_fn_name,
+        type_signature,
+    ))
+
+    args = []
+    if True:
+        parameters = signature[1]['parameters']
+        arguments = form.arguments()
+
+        need_labelled = list(filter(
+            lambda a: type(a) is viuact.forms.Labelled_parameter,
+            parameters))
+        need_positional = list(filter(
+            lambda a: type(a) is viuact.forms.Named_parameter, parameters))
+
+        got_labelled = dict(
+            map(lambda a: ( str(a.name()), a.val(), ),
+            filter(lambda a: type(a) is viuact.forms.Argument_bind,
+            arguments)))
+        got_positional = list(filter(
+            lambda a: type(a) is not viuact.forms.Argument_bind, arguments))
+
+        # print('positional:', need_positional, '=>', got_positional)
+        # print('labelled:',
+        #     list(map(lambda a: str(a.name()), need_labelled)),
+        #     '=>', got_labelled)
+
+        if len(got_positional) < len(need_positional):
+            raise viuact.errors.Missing_positional_argument(
+                form.to().name().tok().at(),
+                called_fn_name,
+                need_positional[len(got_positional)],
+            )
+        for l in need_labelled:
+            if str(l.name()) not in got_labelled:
+                raise viuact.errors.Missing_labelled_argument(
+                    form.to().name().tok().at(),
+                    called_fn_name,
+                    l,
+                )
+
+        args = got_positional[:]
+        for a in need_labelled:
+            args.append(got_labelled[str(a.name())])
+
+    body.append(Verbatim('frame %{} arguments'.format(len(form.arguments()))))
+
+    parameter_types = []
+    tmp = {}
+    for each in type_signature['template_parameters']:
+        tmp[each.name()] = st.register_type_parameter(each)
+    for each in type_signature['parameters']:
+        if each.name() not in tmp:
+            parameter_types.append(each)
+        else:
+            parameter_types.append(tmp[each.name()])
+
+    for i, arg in enumerate(args):
+        body.append(Verbatim('; for argument {}'.format(i)))
+        slot = st.get_slot(name = None)
+        with st.scoped() as sc:
+            slot = emit_expr(
+                mod = mod,
+                body = body,
+                st = sc,
+                result = slot,
+                expr = arg,
+            )
+            body.append(Move.make_move(
+                source = slot,
+                dest = Slot(
+                    name = None,
+                    index = i,
+                    register_set = Register_set.ARGUMENTS,
+                ),
+            ))
+
+            param_t = parameter_types[i]
+            arg_t = st.type_of(slot)
+            viuact.util.log.raw('call to {}: [{}] p{{ {} }} -> a{{ {} }}'.format(
+                called_fn_name,
+                i,
+                param_t,
+                arg_t,
+            ))
+
+            try:
+                st.unify_types(param_t, arg_t)
+            except Type_state.Cannot_unify:
+                raise viuact.errors.Bad_argument_type(
+                    arg.first_token().at(),
+                    called_fn_name,
+                    i,
+                    param_t,
+                    arg_t,
+                )
+
+            # FIXME Maybe mark the slot as moved in some way to aid with error
+            # reporting?
+            sc.deallocate_slot(slot)
+
+    return_t = type_signature['return']
+    if return_t.polymorphic():
+        return_t = tmp[return_t.name()]
+    st.type_of(result, return_t)
+
+    body.append(Call(
+        to = called_fn_name,
+        slot = result,
+        kind = Call.Kind.Synchronous,
+    ))
+    body.append(Verbatim(''))
+
+    return result
+
+def emit_direct_fn_call(mod, body, st, result, form):
     if str(form.to().name()) in BUILTIN_FUNCTIONS:
         return emit_builtin_call(mod, body, st, result, form)
 
@@ -1255,6 +1435,22 @@ def emit_fn_call(mod, body, st, result, form):
     body.append(Verbatim(''))
 
     return result
+
+def emit_fn_call(mod, body, st, result, form):
+    if str(form.to().name()) in BUILTIN_FUNCTIONS:
+        return emit_builtin_call(mod, body, st, result, form)
+
+    base_name = str(form.to().name().tok())
+    try:
+        # Let's see if the base name is a name of a slot. If that is the case
+        # this is an indirect call and we have to employ slightly different
+        # machinery to emit it, than what would be used for direct calls.
+        st.slot_of(base_name)
+        return emit_indirect_fn_call(mod, body, st, result, form)
+    except KeyError:
+        pass
+
+    return emit_direct_fn_call(mod, body, st, result, form)
 
 def emit_enum_ctor_call(mod, body, st, result, form):
     from_module = form.to().module()
@@ -1969,8 +2165,6 @@ def cc(source_root, source_file, module_name, forms, output_directory):
             template_parameters = [
                 cc_type(mod, t) for t in each.template_parameters()],
         )
-
-    return
 
     for each in forms:
         if type(each) is not viuact.forms.Fn:
