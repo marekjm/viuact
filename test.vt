@@ -7,11 +7,12 @@
     None
     (Some 'a)
 ))
+
 (val ('a) map (
     (('a) option)
     (((('a) option)) -> (('a) option))
 ) -> (('a) option))
-(let map (fn x) (match x (
+(let map (x fn) (match x (
     (with None (option::None))
     (with Some x' (fn x')))))
 
@@ -20,37 +21,40 @@
     ; operator :: is for path resolution
     ; operator . is for struct field access
 
-    (let x (example::Foo))
+    (let x (option::None))
     (print x)
 
-    (let y (example::Bar 42))
-    (print y)
+    ; (let x (example::Foo))
+    ; (print x)
 
-    (match x (
-        (with Foo (print "nothing"))
-        (with Bar x' (print x'))))
+    ; (let y (example::Bar 42))
+    ; (print y)
 
-    (match y (
-        (with Foo (print -1))
-        (with Bar x' (print x'))))
+    ; (match x (
+    ;     (with Foo (print "nothing"))
+    ;     (with Bar x' (print x'))))
 
-    (let a (example::Foo))
-    (print a)
-    (print (match a (
-        (with Foo "nothing")
-        (with Bar a' a'))))
+    ; (match y (
+    ;     (with Foo (print -1))
+    ;     (with Bar x' (print x'))))
 
-    (let a (example::Foo))
-    (let c (match a (
-        (with Foo "nothing")
-        (with Bar a' a'))))
-    (print c)
+    ; (let a (example::Foo))
+    ; (print a)
+    ; (print (match a (
+    ;     (with Foo "nothing")
+    ;     (with Bar a' a'))))
 
-    (let y (example::Bar 42))
-    (print y)
-    (print (match y (
-        (with Foo "nothing")
-        (with Bar y' y'))))
+    ; (let a (example::Foo))
+    ; (let c (match a (
+    ;     (with Foo "nothing")
+    ;     (with Bar a' a'))))
+    ; (print c)
+
+    ; (let y (example::Bar 42))
+    ; (print y)
+    ; (print (match y (
+    ;     (with Foo "nothing")
+    ;     (with Bar y' y'))))
 
     0
 })
