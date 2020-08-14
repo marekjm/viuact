@@ -77,7 +77,7 @@ class Type:
             )
             return fmt.format(
                 p = ' '.join(map(str, self.parameters())),
-                r = str(self.name()),
+                r = str(self.return_type()),
             )
 
         def __repr__(self):
@@ -93,7 +93,7 @@ class Type:
             return self._template
 
         def polymorphic_base(self):
-            return self.name().startswith("'")
+            return False
 
         def polymorphic(self):
             p = any(map(lambda x: x.polymorphic(), self.template()))
