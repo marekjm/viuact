@@ -285,11 +285,44 @@ def unify_impl(state, left, right):
                 raise Cannot_unify(left, right)
 
             ut = []
-            for l, r in zip(left.templates(), right.templates()):
+            for l, r in zip(lt, rt):
                 ut.append(unify_impl(state, l, r))
             return value(
                 name = left.name(),
                 templates = tuple(ut),
+            )
+
+        if type(left) is fn:
+            # lt = left.templates()
+            # rt = right.templates()
+            # if len(lt) != len(rt):
+            #     # See comment about template list lengths in value-type
+            #     # unification code.
+            #     raise Cannot_unify(left, right)
+
+            lp = left.parameter_types()
+            rp = right.parameter_types()
+            if len(lp) != len(rp):
+                # See comment about template list lengths in value-type
+                # unification code.
+                raise Cannot_unify(left, right)
+
+            # ut = []
+            # for l, r in zip(lt, rt):
+            #     ut.append(unify_impl(state, l, r))
+
+            up = []
+            for l, r in zip(lp, rp):
+                up.append(unify_impl(state, l, r))
+
+            lr = left.return_type()
+            rr = right.return_type()
+            ur = unify_impl(state, lr, rr)
+
+            return fn(
+                rt = rr,
+                pt = tuple(up),
+                # templates = tuple(ut),
             )
 
     raise Cannot_unify(left, right)
@@ -395,7 +428,7 @@ if False:
     try_unify(state, a, i8)
     try_unify(state, b, i8)
 
-if True:
+if False:
     state = make_typing_state()
     i8 = value('i8')
     i64 = value('i64')
@@ -406,5 +439,102 @@ if True:
     try_unify(state, template('a~1'), b)
     try_unify(state, v, register_type(state, value('vec', templates = (i8,))))
     try_unify(state, i8, b)
-    # try_unify(state, b, i8)
-    # try_unify(state, b, i64)
+    try_unify(state, b, i64)
+
+if True:
+    state = make_typing_state()
+    i8 = value('i8')
+    i64 = value('i64')
+    fa = fn(
+        rt = i8,
+        pt = (),
+    )
+    fb = fn(
+        rt = i8,
+        pt = (),
+    )
+    fc = fn(
+        rt = i64,
+        pt = (),
+    )
+    try_unify(state, fa, fb)
+    try_unify(state, fa, fc)
+
+if True:
+    state = make_typing_state()
+    i8 = value('i8')
+    i64 = value('i64')
+    fa = fn(
+        rt = register_type(state, template('a')),
+        pt = (),
+    )
+    fb = fn(
+        rt = i8,
+        pt = (),
+    )
+    fc = fn(
+        rt = i64,
+        pt = (),
+    )
+    try_unify(state, fa, fb)
+    try_unify(state, fa, fc)
+
+if True:
+    state = make_typing_state()
+    i8 = value('i8')
+    i64 = value('i64')
+    fa = fn(
+        rt = i8,
+        pt = (i8,),
+    )
+    fb = fn(
+        rt = i8,
+        pt = (i8,),
+    )
+    fc = fn(
+        rt = i8,
+        pt = (i64,),
+    )
+    try_unify(state, fa, fb)
+    try_unify(state, fa, fc)
+
+if True:
+    state = make_typing_state()
+    i8 = value('i8')
+    i64 = value('i64')
+    fa = register_type(state, fn(
+        rt = i8,
+        pt = (template('a'),),
+        templates = (template('a'),),
+    ))
+    fb = fn(
+        rt = i8,
+        pt = (i8,),
+    )
+    fc = fn(
+        rt = i8,
+        pt = (i64,),
+    )
+    try_unify(state, fa, fb)
+    try_unify(state, fa, fc)
+
+if True:
+    state = make_typing_state()
+    i8 = value('i8')
+    i64 = value('i64')
+    fa = register_type(state, fn(
+        rt = i8,
+        pt = (template('a'),),
+        templates = (template('a'),),
+    ))
+    fb = register_type(state, fn(
+        rt = i8,
+        pt = (template('b'),),
+        templates = (template('b'),),
+    ))
+    fc = fn(
+        rt = i8,
+        pt = (i64,),
+    )
+    try_unify(state, fb, fa)
+    try_unify(state, fa, fc)
