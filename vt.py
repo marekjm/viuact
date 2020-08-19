@@ -21,6 +21,9 @@ class template:
             ))
         self._name = name
 
+    def __repr__(self):
+        return '(template: [{}])'.format(self.to_string())
+
     def __eq__(self, other):
         if type(other) is not template:
             raise TypeError('cannot compare <template> with {}'.format(
@@ -72,6 +75,9 @@ class value(base):
                 type(name),
             ))
         self._name = name
+
+    def __repr__(self):
+        return '(value: [{}])'.format(self.to_string())
 
     def to_string(self):
         if self.templates():
@@ -161,13 +167,15 @@ def register_type(state, t):
         # name. Every index must be unique.
         state['indexes'][name] += 1
 
-        # Initialise the variable to "no type" as the compiler did not yet infer
-        # what type it represents.
-        state['variables'][registered_name] = None
-
         # Strip the initial ' character from the name (it will be added by the
         # template class anyway).
-        return template(name = registered_name[1:])
+        t = template(name = registered_name[1:])
+
+        # Initialise the variable to "no type" as the compiler did not yet infer
+        # what type it represents.
+        state['variables'][t] = None
+
+        return t
     elif type(t) is value:
         # If the type describes a value we just have to register its templates,
         # and replace the original ones with the registered variant.
@@ -213,8 +221,84 @@ def register_type(state, t):
 # type cannot be found it throws an exception.
 class Cannot_unify(Exception):
     pass
-def unify(mapping, left, right):
+def unify_impl(state, left, right):
+    print('unify_impl({} + {})'.format(left.to_string(), right.to_string()))
+
+    # This switcharoo allows the code to make the assumption that a combination
+    # of a non-template type with a template type, the right parameter is the
+    # non-template one. In effect, it prevents duplicating the checks and makes
+    # the code shorter.
+    if type(left) is not template and type(right) is template:
+        return unify(state, right, left)
+
+    if type(left) is template and type(right) is template:
+        left_none = (state['variables'][left] is None)
+        right_none = (state['variables'][right] is None)
+        if left_none and right_none:
+            t = register_type(state, template('_'))
+            state['variables'][left] = t
+            state['variables'][right] = t
+            return t
+        if (not left_none) and right_none:
+            t = state['variables'][left]
+            state['variables'][right] = t
+            return t
+        if left_none and (not right_none):
+            t = state['variables'][right]
+            state['variables'][left] = t
+            return t
+        if (not left_none) and (not right_none):
+            l = state['variables'][left]
+            r = state['variables'][right]
+            return unify_impl(state, l, r)
+
+    if type(left) is template and type(right) is not template:
+        if state['variables'][left] is None:
+            t = right
+            state['variables'][left] = t
+            return t
+        return unify_impl(state, state['variables'][left], right)
+
+    if type(left) is not template and type(right) is not template:
+        # Function type will never unify with value type.
+        if type(left) is not type(right):
+            raise Cannot_unify(left, right)
+
+        # If both concrete types are equal there is nothing to do, so let's just
+        # return the left one.
+        if left == right:
+            return left
+
+        # Try to unify value types if their names match, since we have a nominal
+        # type system (working with names) instead of a structural one (working
+        # with "shapes", ie. comparing members instead of names).
+        if type(left) is value and (left.name() == right.name()):
+            lt = left.templates()
+            rt = right.templates()
+            if len(lt) != len(rt):
+                # Types with the same name but different lengths of templates
+                # are really a compiler error since it should not allow such a
+                # situation to happen.
+                #
+                # We cannot have, for example, (('a) vec) and (('a 'b) vec)
+                # values in the same program.
+                raise Cannot_unify(left, right)
+
+            ut = []
+            for l, r in zip(left.templates(), right.templates()):
+                ut.append(unify_impl(state, l, r))
+            return value(
+                name = left.name(),
+                templates = tuple(ut),
+            )
+
     raise Cannot_unify(left, right)
+def unify(state, left, right):
+    try:
+        return unify_impl(state, left, right)
+    except Cannot_unify as e:
+        l, r = e.args
+        raise Cannot_unify((left, l,), (right, r,))
 
 ################################################################################
 # Type stringification and concretisation.
@@ -253,8 +337,10 @@ if True:
 ################################################################################
 # Type registration
 #
+def make_typing_state():
+    return { 'indexes': {}, 'variables': {}, }
 if True:
-    state = { 'indexes': {}, 'variables': {}, }
+    state = make_typing_state()
     a = template('a')
     ar = register_type(state, a)
     print(a.to_string(), '=>', ar.to_string())
@@ -281,15 +367,44 @@ if True:
 #
 def try_unify(state, l, r):
     try:
-        u = unify({}, l, r)
+        u = unify(state, l, r)
+        print('{} + {} => {} (in {})'.format(
+            l.to_string(),
+            r.to_string(),
+            u.to_string(),
+            state['variables'],
+        ))
+        return u
     except Cannot_unify as e:
-        left, right = e.args
-        sys.stderr.write('cannot unify: {} != {}\n'.format(
+        (left, l,), (right, r,) = e.args
+        sys.stderr.write('cannot unify: {} [{}] != {} [{}] (in {})\n'.format(
             left.to_string(),
+            l.to_string(),
             right.to_string(),
+            r.to_string(),
+            state['variables'],
         ))
 
-if True:
+if False:
+    state = make_typing_state()
     i8 = value('i8')
-    a = template('a')
-    try_unify({}, i8, a)
+    i64 = value('i64')
+    a = register_type(state, template('a'))
+    b = register_type(state, template('b'))
+    try_unify(state, a, b)
+    try_unify(state, a, i8)
+    try_unify(state, b, i8)
+
+if True:
+    state = make_typing_state()
+    i8 = value('i8')
+    i64 = value('i64')
+    a = register_type(state, template('a'))
+    b = register_type(state, template('b'))
+    v = register_type(state, value('vec', templates = (template('a'),)))
+    try_unify(state, a, v)
+    try_unify(state, template('a~1'), b)
+    try_unify(state, v, register_type(state, value('vec', templates = (i8,))))
+    try_unify(state, i8, b)
+    # try_unify(state, b, i8)
+    # try_unify(state, b, i64)
