@@ -120,7 +120,7 @@ class Invalid_arity(Emitter_error):
         self.kind = kind
 
     def what(self):
-        return '{} of {} {}'.format(
+        return '{} in call to {} {}'.format(
             super().what(),
             self.kind,
             self.bad,
