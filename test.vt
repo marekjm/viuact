@@ -1,17 +1,22 @@
-(val f (string) -> string)
-(let f (x) x)
+; (val f (string) -> string)
+; (let f (x) x)
 
 (enum option (
     None
     (Some 'a)
 ))
 
+(val ('a) print_option ((('a) option)) -> void)
+(let print_option (x) (match x (
+    (with None (print "none"))
+    (with Some x' (print x')))))
+
 (val main () -> i8)
 (let main () {
     (let n (option::None))
     (let s (option::Some 42))
 
-    (f n)
+    (print_option n)
 
     0
 })

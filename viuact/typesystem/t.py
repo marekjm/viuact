@@ -18,7 +18,9 @@ class Template:
         return '(template: [{}])'.format(self.to_string())
 
     def __eq__(self, other):
-        if type(other) is not template:
+        if isinstance(other, Base):
+            return False
+        if type(other) is not Template:
             raise TypeError('cannot compare <template> with {}'.format(
                 type(other),
             ))
@@ -71,6 +73,37 @@ class Base:
         return any(map(lambda _: _.polymorphic(), self.templates()))
 
 
+class Void(Base):
+    def __init__(self, templates = ()):
+        super().__init__(templates)
+
+    def __repr__(self):
+        return self.to_string()
+
+    def to_string(self):
+        if self.templates():
+            return '(({}) void)'.format(
+                ' '.join(list(map(lambda _: _.to_string(), self.templates()))),
+                self.name(),
+            )
+        else:
+            return self.name()
+
+    def name(self):
+        return 'void'
+
+    def polymorphic(self):
+        return super().polymorphic()
+
+    def concretise(self, blueprint):
+        return Void(
+            templates = tuple(map(
+                lambda _: _.concretise(blueprint),
+                self.templates(),
+            )),
+        )
+
+
 # Value types are used to describe values like integers, vectors, and
 # enumerations. They have a name (eg. i8) and an optional list of templates by
 # which the type is parametrised.
@@ -81,6 +114,11 @@ class Value(Base):
             raise TypeError('cannot use {} as name of value type'.format(
                 type(name),
             ))
+        if not name:
+            raise TypeError('name of value type cannot be empty')
+        if name[0] == "'":
+            raise ValueError(
+                'name of type cannot start with the \' character')
         self._name = name
 
     def __repr__(self):
@@ -102,7 +140,7 @@ class Value(Base):
         return (super().polymorphic() or self._name.startswith("'"))
 
     def concretise(self, blueprint):
-        return value(
+        return Value(
             name = self.name(),
             templates = tuple(map(
                 lambda _: _.concretise(blueprint),

@@ -794,7 +794,7 @@ def emit_builtin_call(mod, body, st, result, form):
                 result = (sc.get_disposable_slot() if result.is_void() else result),
                 expr = form.arguments()[0],
             )
-            if type(sc.type_of(slot)) is Type.void:
+            if sc.type_of(slot) == viuact.typesystem.t.Void():
                 raise viuact.errors.Read_of_void(
                     pos = form.arguments()[0].first_token().at(),
                     by = 'print function',
@@ -971,15 +971,10 @@ def emit_direct_fn_call(mod, body, st, result, form):
     parameter_types = []
     tmp = {}
     for each in type_signature['template_parameters']:
-        tmp[each.name()] = st.register_template_variable(each)
+        tmp[viuact.typesystem.t.Template(each.name()[1:])] = st.register_template_variable(each)
     for each in type_signature['parameters']:
         if type(each) is viuact.typesystem.t.Value:
-            if each.name() not in tmp:
-                parameter_types.append(each)
-            else:
-                parameter_types.append(tmp[each.name()])
-        elif type(each) is Type.fn:
-            parameter_types.append(each)
+            parameter_types.append(each.concretise(tmp))
         else:
             raise None
 
@@ -1454,7 +1449,9 @@ def emit_match(mod, body, st, result, expr):
                     guard_slot.to_string(),
                     check_slot.to_string(),
                 )))
-                sc.type_of(value_slot, guard_t.parameters()[0])
+
+                temp_t = guard_t.templates()[0]
+                sc.type_of(value_slot, temp_t)
                 viuact.util.log.raw('match.arm.{}: {} => {}'.format(
                     str(arm['arm'].tag()),
                     str(arm['arm'].name()),
@@ -1693,10 +1690,11 @@ def cc_fn(mod, fn):
         fn_name)
     signature = mod.signature(fn_name)
 
-    # types = Type_state(tuple(map(str, signature['template_parameters'])))
     types = viuact.typesystem.state.State()
+    blueprint = {}
     for each in signature['template_parameters']:
-        types.register_type(viuact.typesystem.t.Template(each[1:]))
+        t = viuact.typesystem.t.Template(each.name()[1:])
+        blueprint[t] = types.register_type(t)
     st = State(fn = main_fn_name, types = types)
 
     main_fn = Fn_cc(main_fn_name)
@@ -1710,7 +1708,9 @@ def cc_fn(mod, fn):
             str(each)
         )
         dest = st.get_slot(label)
-        st.type_of(dest, signature['parameters'][i])
+        param = signature['parameters'][i].concretise(blueprint)
+        viuact.util.log.raw('fn.param.{}: {}'.format(i, param))
+        st.type_of(dest, param)
         main_fn.append(Move.make_move(
             source = source,
             dest = dest,
@@ -1769,15 +1769,22 @@ def cc_type(mod, form):
         name = str(form.name())
         viuact.util.log.raw('cc.t: {} => {}'.format(typeof(form), name))
 
-        parameters = [cc_type(mod, each) for each in form.parameters()]
-        if parameters:
-            viuact.util.log.raw('cc.t.params: ({})'.format(
-                ', '.join(map(str, parameters))))
+        if name[0] == "'":
+            return viuact.typesystem.t.Template(
+                name = name[1:],
+            )
+        elif name == 'void':
+            return viuact.typesystem.t.Void()
+        else:
+            parameters = [cc_type(mod, each) for each in form.parameters()]
+            if parameters:
+                viuact.util.log.raw('cc.t.params: ({})'.format(
+                    ', '.join(map(str, parameters))))
 
-        return viuact.typesystem.t.Value(
-            name = name,
-            templates = tuple(parameters),
-        )
+            return viuact.typesystem.t.Value(
+                name = name,
+                templates = tuple(parameters),
+            )
     if type(form) is viuact.forms.Fn_type:
         viuact.util.log.raw('cc.t: {} => {}'.format(typeof(form), form))
 

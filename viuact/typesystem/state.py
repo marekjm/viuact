@@ -2,6 +2,7 @@
 
 
 import viuact.util.log
+from viuact.util.type_annotations import T, I, Alt
 import viuact.typesystem.t
 
 
@@ -130,8 +131,10 @@ class State:
         return value
 
     def store(self, key, t):
-        if not isinstance(t, viuact.typesystem.t.Base):
-            raise TypeError(t)
+        t = Alt(
+            I(viuact.typesystem.t.Base),
+            T(viuact.typesystem.t.Template),
+        ) | t
         self._slots[key] = t
         return t
 
@@ -192,7 +195,7 @@ def unify_impl(state, left, right):
         left_none = state.is_unknown(left)
         right_none = state.is_unknown(right)
         if left_none and right_none:
-            t = state.register_type(template('_'))
+            t = state.register_type(viuact.typesystem.t.Template('_'))
             state.let(left, t)
             state.let(right, t)
             return t
@@ -211,6 +214,14 @@ def unify_impl(state, left, right):
         return unify_impl(state, state.variable(left), right)
 
     if type(left) is not viuact.typesystem.t.Template and type(right) is not viuact.typesystem.t.Template:
+        # All types can be unified with void, but being unified with a void
+        # means they stop existing, ie. they cannot be used to create new
+        # values.
+        left_void = (type(left) is viuact.typesystem.t.Void)
+        right_void = (type(right) is viuact.typesystem.t.Void)
+        if left_void or right_void:
+            return viuact.typesystem.t.Void()
+
         # Function type will never unify with value type.
         if type(left) is not type(right):
             raise Cannot_unify(left, right)
