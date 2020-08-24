@@ -1098,7 +1098,6 @@ def emit_enum_ctor_call(mod, body, st, result, form):
 
     with st.scoped() as sc:
         key = sc.get_slot(name = None)
-        sc.type_of(key, Type.atom())
         body.append(Ctor(
             of_type = 'atom',
             slot = key,
@@ -1106,7 +1105,6 @@ def emit_enum_ctor_call(mod, body, st, result, form):
         ))
 
         value = sc.get_slot(name = None)
-        sc.type_of(value, Type.i64())
         body.append(Ctor(
             of_type = 'integer',
             slot = value,
