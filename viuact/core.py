@@ -567,7 +567,7 @@ class State:
     def remove_type(self, slot):
         self.assert_active()
         if type(slot) is str:
-            del self._types[slot]
+            self._types.erase(slot)
         elif type(slot) is Slot:
             if slot.is_void():
                 raise None
