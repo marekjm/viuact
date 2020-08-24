@@ -1790,10 +1790,10 @@ def cc_type(mod, form):
         for x in form.parameter_types():
             parameter_types.append(cc_type(mod, x))
 
-        return Type.fn(
-            return_type = return_type,
-            parameters = tuple(parameter_types),
-            template = (),
+        return viuact.typesystem.t.Fn(
+            rt = return_type,
+            pt = tuple(parameter_types),
+            templates = (),
         )
     raise None
 

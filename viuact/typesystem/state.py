@@ -159,7 +159,13 @@ class State:
                 )
             else:
                 return t.name()
-
+        elif type(t) is viuact.typesystem.t.Fn:
+            pts = [self.stringify_type(each) for each in t.parameter_types()]
+            rt = self.stringify_type(t.return_type())
+            return '(({}) -> {})'.format(
+                ' '.join(pts),
+                rt,
+            )
         raise TypeError(t)
 
     def dump(self):
