@@ -812,7 +812,7 @@ def emit_indirect_fn_call(mod, body, st, result, form):
     viuact.util.log.raw('indirect.call: {} = {}'.format(name, fn_slot.to_string()))
     viuact.util.log.raw('fn.t: {}'.format(str(fn_t)))
 
-    if len(fn_t.parameters()) != len(form.arguments()):
+    if len(fn_t.parameter_types()) != len(form.arguments()):
         e = viuact.errors.Invalid_arity(
             form.to().name().tok().at(),
             'from variable {}'.format(name),
@@ -824,7 +824,7 @@ def emit_indirect_fn_call(mod, body, st, result, form):
 
     body.append(Verbatim('frame %{} arguments'.format(len(form.arguments()))))
 
-    parameter_types = fn_t.parameters()
+    parameter_types = fn_t.parameter_types()
     args = form.arguments()
     for i, arg in enumerate(args):
         body.append(Verbatim('; for argument {}'.format(i)))
