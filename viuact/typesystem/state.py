@@ -290,7 +290,10 @@ def unify_impl(state, left, right):
     raise Cannot_unify(left, right)
 def unify(state, left, right):
     try:
-        return unify_impl(state, left, right)
+        t = unify_impl(state, left, right)
+        viuact.util.log.raw('unifying: {} == {}'.format(left, right))
+        viuact.util.log.raw('unified: {}'.format(t))
+        return t
     except Cannot_unify as e:
         l, r = e.args
         raise Cannot_unify((left, l,), (right, r,))

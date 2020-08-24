@@ -810,7 +810,7 @@ def emit_indirect_fn_call(mod, body, st, result, form):
     fn_slot = st.slot_of(name)
     fn_t = st.type_of(fn_slot)
     viuact.util.log.raw('indirect.call: {} = {}'.format(name, fn_slot.to_string()))
-    viuact.util.log.raw('fn.t: {}'.format(str(fn_t)))
+    viuact.util.log.raw('fn.t: {}'.format(fn_t.to_string()))
 
     if len(fn_t.parameter_types()) != len(form.arguments()):
         e = viuact.errors.Invalid_arity(
@@ -1078,21 +1078,17 @@ def emit_enum_ctor_call(mod, body, st, result, form):
         if from_module else
         mod.enum(enum_name)
     )
-    viuact.util.log.raw(enum)
 
     field = enum['fields'][str(enum_field)]
-    viuact.util.log.raw(field)
 
     # FIXME embed typing requirement into the list...
     ts = []
     for each in enum['template_parameters']:
-        viuact.util.log.raw('enum.ts.each: {} = {}'.format(typeof(each), each))
         # FIXME ...instead of checking it here
         ts.append(Alt(
             I(viuact.typesystem.t.Base),
             T(viuact.typesystem.t.Template),
         ) | st.register_template_variable(each))
-    viuact.util.log.raw('enum.ts: {}'.format(ts))
 
     body.append(Verbatim('struct {}'.format(result.to_string())))
     enum_t = st.type_of(result, viuact.typesystem.t.Value(
@@ -1141,6 +1137,7 @@ def emit_enum_ctor_call(mod, body, st, result, form):
                 key.to_string(),
                 value_slot.to_string(),
             )))
+            viuact.util.log.raw('enum.field: {}'.format(field['field'].name()))
 
             value_t = sc.type_of(value_slot)
             field_t = viuact.typesystem.t.Value(
@@ -1745,7 +1742,6 @@ def cc_fn(mod, fn):
             source = result,
         ))
 
-    st._types.dump()
     viuact.util.log.raw('return value in: {}'.format(result.to_string()))
     try:
         st.unify_types(signature['return'], st.type_of(result))
@@ -1758,6 +1754,8 @@ def cc_fn(mod, fn):
             st.type_of(result),
         )
         raise 0
+
+    st._types.dump()
 
     main_fn.body.insert(0, Verbatim(''))
     main_fn.body.insert(0, Verbatim('allocate_registers %{} local'.format(
@@ -1774,7 +1772,6 @@ def cc_type(mod, form):
     # val expression.
     if type(form) is viuact.forms.Type_name:
         name = str(form.name())
-        viuact.util.log.raw('cc.t: {} => {}'.format(typeof(form), name))
 
         if name[0] == "'":
             return viuact.typesystem.t.Template(
@@ -1784,21 +1781,14 @@ def cc_type(mod, form):
             return viuact.typesystem.t.Void()
         else:
             parameters = [cc_type(mod, each) for each in form.parameters()]
-            if parameters:
-                viuact.util.log.raw('cc.t.params: ({})'.format(
-                    ', '.join(map(str, parameters))))
-
             return viuact.typesystem.t.Value(
                 name = name,
                 templates = tuple(parameters),
             )
     if type(form) is viuact.forms.Fn_type:
-        viuact.util.log.raw('cc.t: {} => {}'.format(typeof(form), form))
-
         return_type = cc_type(mod, form.return_type())
         parameter_types = []
         for x in form.parameter_types():
-            viuact.util.log.raw('p.t: {} => {}'.format(typeof(x), x))
             parameter_types.append(cc_type(mod, x))
 
         return Type.fn(
