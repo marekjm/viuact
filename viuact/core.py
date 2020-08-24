@@ -1742,7 +1742,8 @@ def cc_fn(mod, fn):
 
     viuact.util.log.raw('return value in: {}'.format(result.to_string()))
     try:
-        st.unify_types(signature['return'], st.type_of(result))
+        return_t = signature['return'].concretise(blueprint)
+        st.unify_types(return_t, st.type_of(result))
     except viuact.typesystem.state.Cannot_unify:
         raise viuact.errors.Bad_returned_type(
             (0, 0,),  # FIXME add position
