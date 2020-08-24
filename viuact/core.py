@@ -7,6 +7,8 @@ import viuact.forms
 import viuact.typesystem.t
 import viuact.typesystem.state
 
+from viuact.util.type_annotations import T, I, Alt
+
 
 EXEC_MODULE = '<main>'
 
@@ -28,6 +30,16 @@ class Type:
     def i8():
         return viuact.typesystem.t.Value(
             name = 'i8',
+        )
+
+    def i64():
+        return viuact.typesystem.t.Value(
+            name = 'i8',
+        )
+
+    def atom():
+        return viuact.typesystem.t.Value(
+            name = 'atom',
         )
 
 
@@ -850,8 +862,8 @@ def emit_indirect_fn_call(mod, body, st, result, form):
                     arg.first_token().at(),
                     name,
                     i,
-                    param_t,
-                    arg_t,
+                    st._types.stringify_type(param_t, human_readable = True),
+                    st._types.stringify_type(arg_t, human_readable = True),
                 )
 
             # FIXME Maybe mark the slot as moved in some way to aid with error
@@ -961,7 +973,7 @@ def emit_direct_fn_call(mod, body, st, result, form):
     for each in type_signature['template_parameters']:
         tmp[each.name()] = st.register_template_variable(each)
     for each in type_signature['parameters']:
-        if type(each) is Type.t:
+        if type(each) is viuact.typesystem.t.Value:
             if each.name() not in tmp:
                 parameter_types.append(each)
             else:
@@ -1007,8 +1019,8 @@ def emit_direct_fn_call(mod, body, st, result, form):
                     arg.first_token().at(),
                     called_fn_name,
                     i,
-                    param_t,
-                    arg_t,
+                    st._types.stringify_type(param_t, human_readable = True),
+                    st._types.stringify_type(arg_t, human_readable = True),
                 )
 
             # FIXME Maybe mark the slot as moved in some way to aid with error
@@ -1069,10 +1081,21 @@ def emit_enum_ctor_call(mod, body, st, result, form):
     field = enum['fields'][str(enum_field)]
     viuact.util.log.raw(field)
 
+    # FIXME embed typing requirement into the list...
+    ts = []
+    for each in enum['template_parameters']:
+        viuact.util.log.raw('enum.ts.each: {} = {}'.format(typeof(each), each))
+        # FIXME ...instead of checking it here
+        ts.append(Alt(
+            I(viuact.typesystem.t.Base),
+            T(viuact.typesystem.t.Template),
+        ) | st.register_template_variable(each))
+    viuact.util.log.raw('enum.ts: {}'.format(ts))
+
     body.append(Verbatim('struct {}'.format(result.to_string())))
-    enum_t = st.type_of(result, Type.t(
+    enum_t = st.type_of(result, viuact.typesystem.t.Value(
         name = str(enum_name),
-        parameters = enum['template_parameters'],
+        templates = tuple(ts),
     ))
 
     with st.scoped() as sc:
@@ -1118,9 +1141,9 @@ def emit_enum_ctor_call(mod, body, st, result, form):
             )))
 
             value_t = sc.type_of(value_slot)
-            field_t = Type.t(
+            field_t = viuact.typesystem.t.Value(
                 name = str(enum_name),
-                parameters = (value_t,),
+                templates = (value_t,),
             )
             viuact.util.log.raw('t.enum:  {}'.format(enum_t))
             viuact.util.log.raw('t.value: {}'.format(value_t))
@@ -1789,7 +1812,12 @@ def cc(source_root, source_file, module_name, forms, output_directory):
             name = each.name(),
             fields = each.fields(),
             template_parameters = [
-                Type.t(name = str(t)) for t in each.template_parameters()],
+                viuact.typesystem.t.Template(
+                    name = str(t)[1:],
+                )
+                for t
+                in each.template_parameters()
+            ],
         )
 
     for each in filter(lambda x: type(x) is viuact.forms.Val_fn_spec, forms):

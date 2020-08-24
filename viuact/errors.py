@@ -214,7 +214,7 @@ class Bad_argument_type(Type_error):
         self.actual = actual
 
     def what(self):
-        fmt = '{w} of parameter {i} in call to {fn}: declared {decl} != actal {act}'
+        fmt = '{w} of parameter {i} in call to {fn}: declared {decl} != actual {act}'
         return fmt.format(
             w = super().what(),
             i = self.index,

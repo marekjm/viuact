@@ -1,6 +1,17 @@
+(val f (string) -> string)
+(let f (x) x)
+
+(enum option (
+    None
+    (Some 'a)
+))
+
 (val main () -> i8)
 (let main () {
-    (let s "Hello, World!")
-    (let i 0)
-    i
+    (let n (option::None))
+    (let s (option::Some 42))
+
+    (f n)
+
+    0
 })
