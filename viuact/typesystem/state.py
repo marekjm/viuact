@@ -198,6 +198,9 @@ def unify_impl(state, left, right):
         return unify(state, right, left)
 
     if type(left) is viuact.typesystem.t.Template and type(right) is viuact.typesystem.t.Template:
+        if left == right:
+            return left
+
         left_none = state.is_unknown(left)
         right_none = state.is_unknown(right)
         if left_none and right_none:
