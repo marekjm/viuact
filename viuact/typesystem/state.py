@@ -299,6 +299,7 @@ def unify_impl(state, left, right):
     raise Cannot_unify(left, right)
 def unify(state, left, right):
     try:
+        state.dump()
         t = unify_impl(state, left, right)
         viuact.util.log.raw('unifying: {} == {}'.format(left, right))
         viuact.util.log.raw('unified: {}'.format(t))

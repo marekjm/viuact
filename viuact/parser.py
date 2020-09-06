@@ -96,8 +96,6 @@ def wrap_infix(tokens):
     for each in tmp:
         wrapped.extend(each.as_list())
 
-    viuact.util.log.raw('tokens:  {}'.format(list(map(str, tokens[13:]))))
-    viuact.util.log.raw('wrapped: {}'.format(list(map(str, wrapped[13:]))))
     return wrapped
 
 def recategorise(tokens):

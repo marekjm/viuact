@@ -1605,6 +1605,8 @@ def emit_fn_ref(mod, body, st, result, expr):
         templates = tuple(tmp.values()),
     ))
 
+    st._types.dump()
+
     return result
 
 def emit_name_ref(mod, body, st, result, expr):
