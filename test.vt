@@ -11,25 +11,33 @@
 (val ('a) print_stuff ('a) -> 'a)
 (let print_stuff (x) (print x))
 
-(val ('a) map (
+(val print_i8 (i8) -> i8)
+(let print_i8 (x) (print x))
+
+(val print_string (string) -> string)
+(let print_string (x) (print x))
+
+(val ('a 'b) map (
     (('a) option)
-    (('a) -> 'a)
-) -> (('a) option))
+    (('a) -> 'b)
+) -> (('b) option))
 (let map (x fn) (match x (
     (with None { (print "nothing") (option::None) })
-    ; (with Some x' (option::Some (fn x')))
-    ; (with Some x' x') ; FIXME compiler crashes on this
-    (with _ { (print "something") (option::None) })
+    (with Some x' (option::Some (fn x')))
 )))
 
 (val main () -> i8)
 (let main () {
     (let n (option::None))
-    (let s (option::Some 42))
+    (let sa (option::Some 42))
+    (let si (option::Some 42))
+    (let ss (option::Some "Hello, World!"))
 
     ; (print_option n)
     (map n print_stuff)
-    (map s print_stuff)
+    (map sa print_stuff)
+    (map si print_i8)
+    (map ss print_string)
 
     0
 })
