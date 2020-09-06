@@ -1448,9 +1448,8 @@ def emit_match(mod, body, st, result, expr):
             body.append(Comment(
                 'expression for with-clause of {}'.format(arm['arm'].tag())
             ))
+            matched_tags.append(arm['arm'].tag())
         body.append(Marker(label = arm['expr_label']))
-
-        matched_tags.append(arm['arm'].tag())
 
         with st.scoped() as sc:
             # Remember to extract the "payload" of the enum value if the arm is
@@ -1506,7 +1505,8 @@ def emit_match(mod, body, st, result, expr):
         matched_fields = list(map(lambda _: str(_), matched_tags))
         for field in enum_definition['fields'].values():
             field = field['field']
-            if str(field.name()) not in matched_fields:
+            if ((str(field.name()) not in matched_fields) and not
+                    catchall_encountered):
                 raise viuact.errors.Missing_with_clause(
                     expr.guard().first_token().at(),
                     str(field.name()),
@@ -1524,10 +1524,11 @@ def emit_match(mod, body, st, result, expr):
                 )
             already_matched.append(str(field))
 
-        raise viuact.errors.Mismatched_with_clauses(
-            expr.guard().first_token().at(),
-            str(guard_t.name()),
-        )
+        if not catchall_encountered:
+            raise viuact.errors.Mismatched_with_clauses(
+                expr.guard().first_token().at(),
+                str(guard_t.name()),
+            )
 
     # Remember to compare types returned by each arm. They must all be the same!
     if not result.is_void():
