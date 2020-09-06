@@ -1031,7 +1031,7 @@ def emit_direct_fn_call(mod, body, st, result, form):
             # reporting?
             sc.deallocate_slot(slot)
 
-    return_t = type_signature['return']
+    return_t = type_signature['return'].concretise(tmp)
 
     # Only set type of the result is not a void register (it does not make sense
     # to assign type to a void).
