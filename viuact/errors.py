@@ -170,6 +170,30 @@ class Missing_with_clause(Emitter_error):
             repr(self.for_enum),
         )
 
+class Duplicated_with_clause(Emitter_error):
+    def __init__(self, pos, tag, for_enum):
+        super().__init__(pos)
+        self.tag = tag
+        self.for_enum = for_enum
+
+    def what(self):
+        return '{} for tag {} when matching over enum {}'.format(
+            super().what(),
+            repr(self.tag),
+            repr(self.for_enum),
+        )
+
+class Mismatched_with_clauses(Emitter_error):
+    def __init__(self, pos, for_enum):
+        super().__init__(pos)
+        self.for_enum = for_enum
+
+    def what(self):
+        return '{} when matching over enum {}'.format(
+            super().what(),
+            repr(self.for_enum),
+        )
+
 class Read_of_unbound_variable(Emitter_error):
     def __init__(self, pos, variable):
         super().__init__(pos)

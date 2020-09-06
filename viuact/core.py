@@ -1429,7 +1429,7 @@ def emit_match(mod, body, st, result, expr):
         ))
         body.append(Marker(label = arm['expr_label']))
 
-        matched_tags.append(str(arm['arm'].tag()))
+        matched_tags.append(arm['arm'].tag())
 
         with st.scoped() as sc:
             # Remember to extract the "payload" of the enum value if the arm is
@@ -1482,14 +1482,31 @@ def emit_match(mod, body, st, result, expr):
     body.append(Verbatim(''))
 
     if len(matched_tags) != len(enum_definition['fields']):
+        matched_fields = list(map(lambda _: str(_), matched_tags))
         for field in enum_definition['fields'].values():
             field = field['field']
-            if str(field.name()) not in matched_tags:
+            if str(field.name()) not in matched_fields:
                 raise viuact.errors.Missing_with_clause(
                     expr.guard().first_token().at(),
                     str(field.name()),
                     str(guard_t.name()),
                 )
+
+        already_matched = []
+        for field in matched_tags:
+            viuact.util.log.raw(field, already_matched)
+            if str(field) in already_matched:
+                raise viuact.errors.Duplicated_with_clause(
+                    field.tok().at(),
+                    str(field),
+                    str(guard_t.name()),
+                )
+            already_matched.append(str(field))
+
+        raise viuact.errors.Mismatched_with_clauses(
+            expr.guard().first_token().at(),
+            str(guard_t.name()),
+        )
 
     # Remember to compare types returned by each arm. They must all be the same!
     if not result.is_void():
