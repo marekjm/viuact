@@ -1788,7 +1788,15 @@ def cc_fn(mod, fn):
         )
         raise 0
 
-    st._types.dump()
+    try:
+        st._types.dump()
+    except RecursionError:
+        viuact.util.log.error(
+            'a type refers to itself (check template variables dump)')
+        raise viuact.errors.Fail(
+            (0, 0,),
+            'infinite loop encountered during type dump'
+        )
 
     main_fn.body.insert(0, Verbatim(''))
     main_fn.body.insert(0, Verbatim('allocate_registers %{} local'.format(
