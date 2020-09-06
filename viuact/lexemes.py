@@ -77,6 +77,9 @@ class Tail(Lexeme):
 class Drop(Lexeme):
     pattern = re.compile(r'\b_\b')
 
+class Bool_literal(Lexeme):
+    pattern = re.compile(r'\b(true|false)\b')
+
 class Name(Lexeme):
     pattern = re.compile(r'\b[a-z][a-zA-Z0-9_]*\'?')
 
@@ -112,6 +115,7 @@ Lexeme.patterns = [
     Enum,
     Match,
     With,
+    Bool_literal,
     Labelled_name,
     Template_parameter,
     Mod_name,

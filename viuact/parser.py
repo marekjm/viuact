@@ -374,6 +374,8 @@ def parse_simple_expr(elem):
         return viuact.forms.Primitive_literal(value = elem.val())
     if elem.t() is viuact.lexemes.String:
         return viuact.forms.Primitive_literal(value = elem.val())
+    if elem.t() is viuact.lexemes.Bool_literal:
+        return viuact.forms.Primitive_literal(value = elem.val())
     if elem.t() is viuact.lexemes.Name:
         return viuact.forms.Name_ref(name = elem.val())
     viuact.util.log.fixme('failed to parse simple expression: {} {}'.format(

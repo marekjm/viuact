@@ -37,6 +37,11 @@ class Type:
             name = 'i8',
         )
 
+    def bool():
+        return viuact.typesystem.t.Value(
+            name = 'bool',
+        )
+
     def atom():
         return viuact.typesystem.t.Value(
             name = 'atom',
@@ -1169,6 +1174,18 @@ def emit_primitive_literal(mod, body, st, result, expr):
             value = str(lit),
         ))
         st.type_of(result, Type.i8())
+        return result
+    if type(lit) == viuact.lexemes.Bool_literal:
+        body.append(Ctor(
+            of_type = 'integer',
+            slot = result,
+            value = ('0' if str(lit) == 'true' else '1'),
+        ))
+        body.append(Verbatim('not {} {}'.format(
+            result.to_string(),
+            result.to_string(),
+        )))
+        st.type_of(result, Type.bool())
         return result
     viuact.util.log.fixme('failed to emit primitive literal: {}'.format(
         typeof(lit)))
