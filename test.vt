@@ -1,6 +1,3 @@
-; (val f (string) -> string)
-; (let f (x) x)
-
 (enum option (
     None
     (Some 'a)
@@ -11,22 +8,28 @@
 ;     (with None (print "none"))
 ;     (with Some x' (print x')))))
 
+(val ('a) print_stuff ('a) -> 'a)
+(let print_stuff (x) (print x))
+
 (val ('a) map (
     (('a) option)
     (('a) -> 'a)
 ) -> (('a) option))
 (let map (x fn) (match x (
-    (with None (option::None))
-    (with Some x' (option::Some (fn x')))
+    (with None { (print "nothing") (option::None) })
+    ; (with Some x' (option::Some (fn x')))
     ; (with Some x' x') ; FIXME compiler crashes on this
+    (with _ { (print "something") (option::None) })
 )))
 
-; (val main () -> i8)
-; (let main () {
-;     (let n (option::None))
-;     (let s (option::Some 42))
+(val main () -> i8)
+(let main () {
+    (let n (option::None))
+    (let s (option::Some 42))
 
-;     (print_option n)
+    ; (print_option n)
+    (map n print_stuff)
+    (map s print_stuff)
 
-;     0
-; })
+    0
+})
