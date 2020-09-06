@@ -1356,36 +1356,50 @@ def emit_match(mod, body, st, result, expr):
         hashlib.sha1(done_fmt.format(st.special()).encode('utf-8')).hexdigest())
 
     # Emit code that compares enum value's tag to different fields of the enum,
-    # and dispatches to appropriate with-claus or throws an error. This error is
-    # more like assertion in that it should never be triggered (missing cases
+    # and dispatches to appropriate with-clause or throws an error. This error
+    # is more like assertion in that it should never be triggered (missing cases
     # should be handled at compile time), but let's leave it there just in case.
     #
     # The loop below emits the comparison code.
+    catchall_encountered = False
     for i, arm in enumerate(labelled_arms):
-        body.append(Comment(
-            'check for with-clause of {}'.format(arm['arm'].tag())
-        ))
-        body.append(Marker(label = arm['cond_label']))
-        body.append(Ctor(
-            of_type = 'integer',
-            slot = check_slot,
-            value = enum_definition['fields'][str(arm['arm'].tag())]['index'],
-        ))
-        body.append(Cmp(
-            kind = Cmp.EQ,
-            slot = check_slot,
-            rhs = guard_key_slot,
-            lhs = check_slot,
-        ))
-        body.append(If(
-            cond = check_slot,
-            if_true = arm['expr_label'],
-            if_false = (
-                labelled_arms[i + 1]['cond_label']
-                if (i < (len(labelled_arms) - 1)) else
-                done_label
-            ),
-        ))
+        is_catchall = (str(arm['arm'].tag()) == '_')
+
+        if is_catchall:
+            catchall_encountered = True
+
+            body.append(Comment(
+                'jump to catch-all with-clause'
+            ))
+            body.append(Marker(label = arm['cond_label']))
+            body.append(Jump(
+                label = arm['expr_label'],
+            ))
+        else:
+            body.append(Comment(
+                'check for with-clause of {}'.format(arm['arm'].tag())
+            ))
+            body.append(Marker(label = arm['cond_label']))
+            body.append(Ctor(
+                of_type = 'integer',
+                slot = check_slot,
+                value = enum_definition['fields'][str(arm['arm'].tag())]['index'],
+            ))
+            body.append(Cmp(
+                kind = Cmp.EQ,
+                slot = check_slot,
+                rhs = guard_key_slot,
+                lhs = check_slot,
+            ))
+            body.append(If(
+                cond = check_slot,
+                if_true = arm['expr_label'],
+                if_false = (
+                    labelled_arms[i + 1]['cond_label']
+                    if (i < (len(labelled_arms) - 1)) else
+                    done_label
+                ),
+            ))
 
     # This is the error handling code handling that runs in case of unmatched
     # enum values. Should never be run, unless the compiler fucked up and did
@@ -1424,9 +1438,16 @@ def emit_match(mod, body, st, result, expr):
         # The markers are needed because the code detecting which arm (or:
         # with-clause) to execute uses them for jump targets.
         body.append(Verbatim(''))
-        body.append(Comment(
-            'expression for with-clause of {}'.format(arm['arm'].tag())
-        ))
+
+        is_catchall = (str(arm['arm'].tag()) == '_')
+        if is_catchall:
+            body.append(Comment(
+                'expression for catch-all with-clause'
+            ))
+        else:
+            body.append(Comment(
+                'expression for with-clause of {}'.format(arm['arm'].tag())
+            ))
         body.append(Marker(label = arm['expr_label']))
 
         matched_tags.append(arm['arm'].tag())
