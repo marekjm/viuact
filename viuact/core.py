@@ -76,10 +76,10 @@ class Module_info:
             'base_name': str(name),
             'arity': len(parameters),
         }
-        viuact.util.log.print('module info [{}]: visible local fn {}'.format(
-            self._name,
-            n,
-        ))
+        # viuact.util.log.print('module info [{}]: visible local fn {}'.format(
+        #     self._name,
+        #     n,
+        # ))
         return self
 
     def make_fn_signature(self, name, parameters, return_type, template_parameters):
@@ -91,10 +91,10 @@ class Module_info:
             'return': return_type,
             'template_parameters': template_parameters,
         }
-        viuact.util.log.print('module info [{}]: local fn sig {}'.format(
-            self._name,
-            n,
-        ))
+        # viuact.util.log.print('module info [{}]: local fn sig {}'.format(
+        #     self._name,
+        #     n,
+        # ))
         return self
 
     def signature(self, fn_name):
@@ -365,7 +365,6 @@ class State:
     def insert_allocated(self, slot):
         self.assert_active()
         self._allocated_slots.append( (slot.index, slot.register_set,) )
-        viuact.util.log.raw('inserted: {}'.format(slot.to_string()))
         return self
 
     def allocate_slot(self, register_set):
@@ -469,10 +468,6 @@ class State:
         if f is not None:
             f = (f + 1)
 
-        viuact.util.log.raw('pressure.n: {}'.format(n))
-        viuact.util.log.raw('pressure.a: {}'.format(a))
-        viuact.util.log.raw('pressure.f: {}'.format(f))
-
         # By default, use the pressure from the next slot as this is exactly the
         # number we should use in the most pessimistic case.
         pressure = n
@@ -537,7 +532,6 @@ class State:
             raise TypeError('cannot set type of void slot')
         key = slot.to_string()
         if (slot.index, slot.register_set,) not in self._allocated_slots:
-            viuact.util.log.raw(self._allocated_slots)
             raise KeyError(slot.to_string())
         # viuact.util.log.raw('type-of: {} <- {}'.format(key, t))
         return self._types.store(key, t)
@@ -814,8 +808,6 @@ def emit_indirect_fn_call(mod, body, st, result, form):
     name = str(form.to().name())
     fn_slot = st.slot_of(name)
     fn_t = st.type_of(fn_slot)
-    viuact.util.log.raw('indirect.call: {} = {}'.format(name, fn_slot.to_string()))
-    viuact.util.log.raw('fn.t: {}'.format(fn_t.to_string()))
 
     if len(fn_t.parameter_types()) != len(form.arguments()):
         e = viuact.errors.Invalid_arity(
@@ -853,12 +845,6 @@ def emit_indirect_fn_call(mod, body, st, result, form):
 
             param_t = parameter_types[i]
             arg_t = st.type_of(arg_slot)
-            viuact.util.log.raw('call from {}: [{}] p{{ {} }} -> a{{ {} }}'.format(
-                name,
-                i,
-                param_t,
-                arg_t,
-            ))
 
             try:
                 st.unify_types(param_t, arg_t)
@@ -927,15 +913,15 @@ def emit_direct_fn_call(mod, body, st, result, form):
             ))
         raise e
 
-    viuact.util.log.raw('call to {}: signature = {}'.format(
-        called_fn_name,
-        signature,
-    ))
+    # viuact.util.log.raw('call to {}: signature = {}'.format(
+    #     called_fn_name,
+    #     signature,
+    # ))
     type_signature = mod.signature(called_fn_name)
-    viuact.util.log.raw('call to {}: type sig =  {}'.format(
-        called_fn_name,
-        type_signature,
-    ))
+    # viuact.util.log.raw('call to {}: type sig =  {}'.format(
+    #     called_fn_name,
+    #     type_signature,
+    # ))
 
     args = []
     if True:
@@ -1014,12 +1000,6 @@ def emit_direct_fn_call(mod, body, st, result, form):
 
             param_t = parameter_types[i]
             arg_t = st.type_of(slot)
-            viuact.util.log.raw('call to {}: [{}] p{{ {} }} -> a{{ {} }}'.format(
-                called_fn_name,
-                i,
-                param_t,
-                arg_t,
-            ))
 
             try:
                 st.unify_types(param_t, arg_t)
@@ -1070,13 +1050,8 @@ def emit_fn_call(mod, body, st, result, form):
 
 def emit_enum_ctor_call(mod, body, st, result, form):
     from_module = form.to().module()
-    viuact.util.log.raw('enum.from_module: {}'.format(from_module))
-
     enum_name = form.to().of_enum()
-    viuact.util.log.raw('enum.name: {}'.format(enum_name))
-
     enum_field = form.to().field()
-    viuact.util.log.raw('enum.field: {}'.format(enum_field))
 
     enum = (
         mod.module(from_module).enum(enum_name)
@@ -1140,16 +1115,12 @@ def emit_enum_ctor_call(mod, body, st, result, form):
                 key.to_string(),
                 value_slot.to_string(),
             )))
-            viuact.util.log.raw('enum.field: {}'.format(field['field'].name()))
 
             value_t = sc.type_of(value_slot)
             field_t = viuact.typesystem.t.Value(
                 name = str(enum_name),
                 templates = (value_t,),
             )
-            viuact.util.log.raw('t.enum:  {}'.format(enum_t))
-            viuact.util.log.raw('t.value: {}'.format(value_t))
-            viuact.util.log.raw('t.field: {}'.format(field_t))
             st.unify_types(enum_t, field_t)
 
         sc.deallocate_slot(key)
@@ -1327,10 +1298,8 @@ def emit_match(mod, body, st, result, expr):
             expr = expr.guard(),
         )
     guard_t = st.type_of(guard_slot)
-    viuact.util.log.raw('t.guard: {}'.format(guard_t))
 
     enum_definition = mod.enum(guard_t.name())
-    viuact.util.log.raw('enum: {}'.format(enum_definition))
 
     # The guard_key_slot holds the key of the enum produces by the guard
     # expression. It will be compared with keys of the with-clauses ("match
@@ -1491,11 +1460,6 @@ def emit_match(mod, body, st, result, expr):
 
                 temp_t = guard_t.templates()[0]
                 sc.type_of(value_slot, temp_t)
-                viuact.util.log.raw('match.arm.{}: {} => {}'.format(
-                    str(arm['arm'].tag()),
-                    str(arm['arm'].name()),
-                    sc.type_of(value_slot),
-                ))
 
             arm_slot = emit_expr(
                 mod = mod,
@@ -1504,10 +1468,6 @@ def emit_match(mod, body, st, result, expr):
                 result = (sc.get_slot(None) if result.is_void() else result),
                 expr = arm['arm'].expr(),
             )
-            viuact.util.log.raw('arm.result: {} == {}'.format(
-                arm_slot.to_string(),
-                result.to_string(),
-            ))
             arm_ts.append(sc.type_of(arm_slot))
 
         # A jump after the last with-clause would be redundant and would cause
@@ -1532,7 +1492,6 @@ def emit_match(mod, body, st, result, expr):
 
         already_matched = []
         for field in matched_tags:
-            viuact.util.log.raw(field, already_matched)
             if str(field) in already_matched:
                 raise viuact.errors.Duplicated_with_clause(
                     field.tok().at(),
@@ -1558,10 +1517,6 @@ def emit_match(mod, body, st, result, expr):
                 st.unify_types(a, b)
             except viuact.typesystem.state.Cannot_unify as e:
                 a_t, b_t = e.args
-                viuact.util.log.raw('DAFUQ?! {} != {}'.format(
-                    a_t,
-                    b_t,
-                ))
                 raise viuact.errors.Type_mismatch(
                     expr.arms()[i].tag().tok().at(),
                     a_t,
@@ -1573,14 +1528,6 @@ def emit_match(mod, body, st, result, expr):
 
             i += 1
 
-        viuact.util.log.raw('enum.return.t: {} in {}'.format(
-            result.to_string(),
-            st.all_allocated_slots(),
-        ))
-        viuact.util.log.raw('freed: {}'.format(
-            list(map(lambda x: x.to_string(), st.all_freed_slots()))))
-        viuact.util.log.raw('cancelled: {}'.format(
-            list(map(lambda x: x.to_string(), st.all_cancelled_slots()))))
         st.type_of(result, arm_ts[0])
 
     st.deallocate_slot(check_slot)
@@ -1620,9 +1567,7 @@ def emit_fn_ref(mod, body, st, result, expr):
         result.to_string(),
         fn_full_name,
     )))
-    viuact.util.log.raw('fn-ref: {}'.format(fn_full_name))
     fn_sig = mod.signature(fn_full_name)
-    viuact.util.log.raw('fn.sig: {} = {}'.format(fn_full_name, fn_sig))
 
     parameter_types = []
     tmp = {}
@@ -1644,8 +1589,6 @@ def emit_fn_ref(mod, body, st, result, expr):
         templates = tuple(tmp.values()),
     ))
 
-    st._types.dump()
-
     return result
 
 def emit_name_ref(mod, body, st, result, expr):
@@ -1666,11 +1609,11 @@ def emit_name_ref(mod, body, st, result, expr):
         return st.slot_of(str(expr.name()))
     else:
         slot = st.slot_of(str(expr.name()))
-        viuact.util.log.raw('move to {} from {} for name-ref to {}'.format(
-            result.to_string(),
-            slot.to_string(),
-            str(expr.name()),
-        ))
+        # viuact.util.log.raw('move to {} from {} for name-ref to {}'.format(
+        #     result.to_string(),
+        #     slot.to_string(),
+        #     str(expr.name()),
+        # ))
         t = st.type_of(slot)
         st.name_slot(result, str(expr.name()))
         st.type_of(result, t)
@@ -1784,7 +1727,6 @@ def cc_fn(mod, fn):
         )
         dest = st.get_slot(label)
         param = signature['parameters'][i].concretise(blueprint)
-        viuact.util.log.raw('fn.param.{}: {}'.format(i, param))
         st.type_of(dest, param)
         main_fn.append(Move.make_move(
             source = source,
@@ -1794,7 +1736,6 @@ def cc_fn(mod, fn):
     result_slot = Slot(None, 0, Register_set.LOCAL)
     st.insert_allocated(result_slot)
     st.mark_permanent(result_slot)
-    viuact.util.log.raw('after: {}'.format(st._allocated_slots))
     try:
         result = emit_expr(
             mod = mod,
@@ -1805,7 +1746,6 @@ def cc_fn(mod, fn):
         )
     except Exception:
         viuact.util.log.error('during compilation of {}'.format(main_fn_name))
-        st._types.dump()
         raise
     if result != result_slot:
         main_fn.append(Move.make_move(
@@ -1813,7 +1753,6 @@ def cc_fn(mod, fn):
             source = result,
         ))
 
-    viuact.util.log.raw('return value in: {}'.format(result.to_string()))
     try:
         return_t = signature['return'].concretise(blueprint)
         st.unify_types(return_t, st.type_of(result))
@@ -1828,7 +1767,8 @@ def cc_fn(mod, fn):
         raise 0
 
     try:
-        st._types.dump()
+        # st._types.dump()
+        pass
     except RecursionError:
         viuact.util.log.error(
             'a type refers to itself (check template variables dump)')

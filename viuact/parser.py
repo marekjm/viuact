@@ -510,12 +510,9 @@ def parse_type(group):
         )
     if type(group) is Group and len(group) == 3:
         parameter_types = []
-        viuact.util.log.raw('parameter types: {}'.format(group[0].val()))
         for x in group[0]:
-            viuact.util.log.raw('parse.p.t: {} => {}'.format(typeof(x), x.val()))
             parameter_types.append(parse_type(x))
 
-        viuact.util.log.raw('return type: {}'.format(group[2].val()))
         return_type = parse_type(group[2])
 
         return viuact.forms.Fn_type(
@@ -591,10 +588,6 @@ def parse_enum_field(group):
     name = group[0].val()
     value = group[1].val()
 
-    viuact.util.log.raw('enum.field: {} => {}'.format(
-        name,
-        value,
-    ))
     if type(value) is not viuact.lexemes.Template_parameter:
         raise viuact.errors.Unexpected_token(
             value.tok().at(),
@@ -618,11 +611,6 @@ def parse_enum(group):
         fields.append(f)
         if f.value() is not None:
             template_parameters.append(f.value())
-        viuact.util.log.raw('enum: {}::{} => {}'.format(
-            name,
-            f.name(),
-            f.value(),
-        ))
 
     return viuact.forms.Enum(
         name = name,

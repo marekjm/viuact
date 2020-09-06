@@ -188,7 +188,7 @@ class State:
 class Cannot_unify(Exception):
     pass
 def unify_impl(state, left, right):
-    viuact.util.log.raw('unifying: {} == {}'.format(left, right))
+    # viuact.util.log.raw('unifying: {} == {}'.format(left, right))
 
     # This switcharoo allows the code to make the assumption that a combination
     # of a non-template type with a template type, the right parameter is the
@@ -299,10 +299,9 @@ def unify_impl(state, left, right):
     raise Cannot_unify(left, right)
 def unify(state, left, right):
     try:
-        state.dump()
         t = unify_impl(state, left, right)
-        viuact.util.log.raw('unifying: {} == {}'.format(left, right))
-        viuact.util.log.raw('unified: {}'.format(t))
+        # viuact.util.log.raw('unifying: {} == {}'.format(left, right))
+        # viuact.util.log.raw('unified: {}'.format(t))
         return t
     except Cannot_unify as e:
         l, r = e.args
