@@ -861,7 +861,7 @@ def emit_indirect_fn_call(mod, body, st, result, form):
                 raise viuact.errors.Bad_argument_type(
                     arg.first_token().at(),
                     name,
-                    i,
+                    (i + 1),
                     st._types.stringify_type(param_t, human_readable = True),
                     st._types.stringify_type(arg_t, human_readable = True),
                 )
@@ -1022,7 +1022,7 @@ def emit_direct_fn_call(mod, body, st, result, form):
                 raise viuact.errors.Bad_argument_type(
                     arg.first_token().at(),
                     called_fn_name,
-                    i,
+                    (i + 1),
                     st._types.stringify_type(param_t, human_readable = True),
                     st._types.stringify_type(arg_t, human_readable = True),
                 )
