@@ -290,7 +290,7 @@ def unify_impl(state, left, right):
             rr = right.return_type()
             ur = unify_impl(state, lr, rr)
 
-            return fn(
+            return viuact.typesystem.t.Fn(
                 rt = rr,
                 pt = tuple(up),
                 # templates = tuple(ut),

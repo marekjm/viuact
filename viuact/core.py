@@ -982,6 +982,8 @@ def emit_direct_fn_call(mod, body, st, result, form):
     for each in type_signature['parameters']:
         if type(each) is viuact.typesystem.t.Value:
             parameter_types.append(each.concretise(tmp))
+        elif type(each) is viuact.typesystem.t.Fn:
+            parameter_types.append(each.concretise(tmp))
         else:
             raise None
 
@@ -1030,8 +1032,6 @@ def emit_direct_fn_call(mod, body, st, result, form):
             sc.deallocate_slot(slot)
 
     return_t = type_signature['return']
-    if return_t.polymorphic():
-        return_t = tmp[return_t.name()]
 
     # Only set type of the result is not a void register (it does not make sense
     # to assign type to a void).
@@ -1584,10 +1584,25 @@ def emit_fn_ref(mod, body, st, result, expr):
     viuact.util.log.raw('fn-ref: {}'.format(fn_full_name))
     fn_sig = mod.signature(fn_full_name)
     viuact.util.log.raw('fn.sig: {} = {}'.format(fn_full_name, fn_sig))
-    st.type_of(result, Type.fn(
-        return_type = fn_sig['return'],
-        parameters = fn_sig['parameters'],
-        template = fn_sig['template_parameters'],
+
+    parameter_types = []
+    tmp = {}
+    for each in fn_sig['template_parameters']:
+        tmp[viuact.typesystem.t.Template(each.name()[1:])] = st.register_template_variable(each)
+    for each in fn_sig['parameters']:
+        if type(each) is viuact.typesystem.t.Value:
+            parameter_types.append(each.concretise(tmp))
+        elif type(each) is viuact.typesystem.t.Fn:
+            parameter_types.append(each.concretise(tmp))
+        elif type(each) is viuact.typesystem.t.Template:
+            parameter_types.append(each.concretise(tmp))
+        else:
+            raise None
+
+    st.type_of(result, viuact.typesystem.t.Fn(
+        rt = fn_sig['return'].concretise(tmp),
+        pt = tuple(parameter_types),
+        templates = tuple(tmp.values()),
     ))
 
     return result
