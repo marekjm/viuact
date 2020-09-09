@@ -57,6 +57,7 @@ class Module_info:
         self._function_signatures = {}
 
         self._enums = {}
+        self._exceptions = {}
 
     def name(self):
         return self._name
@@ -131,7 +132,16 @@ class Module_info:
         return self
 
     def enum(self, name):
+        # FIXME error checking
         return self._enums[str(name)]
+
+    def make_exception(self, name, value):
+        self._exceptions[str(name)] = value
+        return self
+
+    def exception(self, name):
+        # FIXME error checking
+        return self._exceptions[str(name)]
 
 
 class Register_set(enum.Enum):
@@ -1842,6 +1852,12 @@ def cc(source_root, source_file, module_name, forms, output_directory):
                 for t
                 in each.template_parameters()
             ],
+        )
+
+    for each in filter(lambda x: type(x) is viuact.forms.Exception_definition, forms):
+        mod.make_exception(
+            name = each.name(),
+            value = each.value(),
         )
 
     for each in filter(lambda x: type(x) is viuact.forms.Val_fn_spec, forms):

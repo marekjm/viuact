@@ -298,6 +298,21 @@ class Fn_type(Form):
             self.return_type().to_string(),
         )
 
+class Exception_definition(Form):
+    def __init__(self, name, value):
+        super().__init__(name.tok())
+        self._name = name       # lexemes.Exception_name
+        self._value = value     # form | None
+
+    def name(self):
+        return self._name
+
+    def value(self):
+        return self._value
+
+    def bare(self):
+        return (self._value is None)
+
 
 Form.forms = [
     Fn,
@@ -309,4 +324,5 @@ Form.forms = [
     Fn_call,
     Primitive_literal,
     Let_binding,
+    Exception_definition,
 ]

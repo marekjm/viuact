@@ -71,6 +71,18 @@ class Match(Lexeme):
 class With(Lexeme):
     pattern = re.compile(r'\bwith\b')
 
+class Exception_def(Lexeme):
+    pattern = re.compile(r'\bexception\b')
+
+class Try(Lexeme):
+    pattern = re.compile(r'\btry\b')
+
+class Catch(Lexeme):
+    pattern = re.compile(r'\bcatch\b')
+
+class Of(Lexeme):
+    pattern = re.compile(r'\bof\b')
+
 class Tail(Lexeme):
     pattern = re.compile(r'\btailcall\b')
 
@@ -115,6 +127,10 @@ Lexeme.patterns = [
     Enum,
     Match,
     With,
+    Exception_def,
+    Try,
+    Catch,
+    Of,
     Bool_literal,
     Labelled_name,
     Template_parameter,
@@ -133,4 +149,7 @@ class Paren_tag(Phantom):
     pass
 
 class Curly_tag(Phantom):
+    pass
+
+class Exception_name(Phantom):
     pass

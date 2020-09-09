@@ -111,6 +111,14 @@ def recategorise(tokens):
                         ),
                     ))
                     continue
+            if toks[-1].t() is viuact.lexemes.Exception_def:
+                toks.append(viuact.lexemes.Exception_name(
+                    viuact.lexemes.Token(
+                        pos = each.tok().at(),
+                        text = str(each),
+                    ),
+                ))
+                continue
         toks.append(each)
     return toks
 
@@ -618,6 +626,18 @@ def parse_enum(group):
         template_parameters = template_parameters,
     )
 
+def parse_exception_definition(group):
+    name = group[1].val()
+    if type(name) is not viuact.lexemes.Exception_name:
+        raise viuact.errors.Unexpected_token(
+            name.tok().at(),
+            str(name),
+        ).note('expected exception name')
+    return viuact.forms.Exception_definition(
+        name = name,
+        value = None,  # FIXME some exceptions can carry values
+    )
+
 def parse_impl(groups):
     forms = []
 
@@ -628,6 +648,8 @@ def parse_impl(groups):
             forms.append(parse_val(g))
         elif g.lead().t() is viuact.lexemes.Enum:
             forms.append(parse_enum(g))
+        elif g.lead().t() is viuact.lexemes.Exception_def:
+            forms.append(parse_exception_definition(g))
         else:
             tok = g.lead().val().tok()
             raise viuact.errors.Unexpected_token(tok.at(), str(tok))
