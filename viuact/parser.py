@@ -466,9 +466,11 @@ def parse_expr(group):
                 guard = parse_expr(group[1]),
                 arms = [parse_match_arm(x) for x in group[2]],
             )
+        if group.lead().t() is viuact.lexemes.Name:
+            return parse_fn_call(group)
         if group.lead().t() is viuact.lexemes.Throw:
             return parse_throw(group)
-        return parse_fn_call(group)
+        raise None
     else:
         return parse_simple_expr(group)
 
