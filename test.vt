@@ -27,6 +27,7 @@
 )))
 
 (exception Foo i8)
+(exception Bar)
 
 (val main () -> i8)
 (let main () {
@@ -40,6 +41,8 @@
     (map sa print_stuff)
     (map si print_i8)
     (map ss print_string)
+
+    (throw Bar)
 
     0
 })

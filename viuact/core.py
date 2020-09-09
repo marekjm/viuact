@@ -135,8 +135,8 @@ class Module_info:
         # FIXME error checking
         return self._enums[str(name)]
 
-    def make_exception(self, name, value):
-        self._exceptions[str(name)] = value
+    def make_exception(self, tag, value):
+        self._exceptions[str(tag)] = value
         return self
 
     def exception(self, name):
@@ -1634,6 +1634,33 @@ def emit_name_ref(mod, body, st, result, expr):
         ))
         return result
 
+def emit_throw(mod, body, st, result, expr):
+    with st.scoped() as sc:
+        tag = sc.get_slot(None)
+        body.append(Ctor(
+            of_type = 'atom',
+            slot = tag,
+            value = repr(str(expr.tag())),
+        ))
+
+        value = Slot.make_void()
+        if not expr.bare():
+            value = None
+
+        if result.is_void():
+            result = sc.get_slot(None)
+
+        body.append(Verbatim('exception {} {} {}'.format(
+            result.to_string(),
+            tag.to_string(),
+            value.to_string(),
+        )))
+        body.append(Verbatim('throw {}'.format(
+            result.to_string(),
+        )))
+        body.append(Verbatim(''))
+    return result
+
 def emit_expr(mod, body, st, result, expr):
     if type(expr) is viuact.forms.Fn_call:
         return emit_fn_call(
@@ -1694,6 +1721,14 @@ def emit_expr(mod, body, st, result, expr):
         )
     if type(expr) is viuact.forms.Match:
         return emit_match(
+            mod = mod,
+            body = body,
+            st = st,
+            result = result,
+            expr = expr,
+        )
+    if type(expr) is viuact.forms.Throw:
+        return emit_throw(
             mod = mod,
             body = body,
             st = st,
@@ -1856,7 +1891,7 @@ def cc(source_root, source_file, module_name, forms, output_directory):
 
     for each in filter(lambda x: type(x) is viuact.forms.Exception_definition, forms):
         mod.make_exception(
-            name = each.name(),
+            tag = each.tag(),
             value = each.value(),
         )
 

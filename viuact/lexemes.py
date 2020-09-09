@@ -74,6 +74,9 @@ class With(Lexeme):
 class Exception_def(Lexeme):
     pattern = re.compile(r'\bexception\b')
 
+class Throw(Lexeme):
+    pattern = re.compile(r'\bthrow\b')
+
 class Try(Lexeme):
     pattern = re.compile(r'\btry\b')
 
@@ -128,6 +131,7 @@ Lexeme.patterns = [
     Match,
     With,
     Exception_def,
+    Throw,
     Try,
     Catch,
     Of,

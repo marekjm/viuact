@@ -299,13 +299,28 @@ class Fn_type(Form):
         )
 
 class Exception_definition(Form):
-    def __init__(self, name, value):
-        super().__init__(name.tok())
-        self._name = name       # lexemes.Exception_name
+    def __init__(self, tag, value):
+        super().__init__(tag.tok())
+        self._name = tag       # lexemes.Exception_name
         self._value = value     # form | None
 
-    def name(self):
+    def tag(self):
         return self._name
+
+    def value(self):
+        return self._value
+
+    def bare(self):
+        return (self._value is None)
+
+class Throw(Form):
+    def __init__(self, tag, value):
+        super().__init__(tag.tok())
+        self._tag = tag       # lexemes.Exception_name
+        self._value = value     # form | None
+
+    def tag(self):
+        return self._tag
 
     def value(self):
         return self._value

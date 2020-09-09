@@ -429,6 +429,18 @@ def parse_match_arm(group):
         expr = parse_expr(expr),
     )
 
+def parse_throw(group):
+    tag = group[1].val()
+
+    value = None
+    if len(group) > 2:
+        value = parse_expr(group[2])
+
+    return viuact.forms.Throw(
+        tag = tag,
+        value = value,
+    )
+
 def parse_expr(group):
     if type(group) is Group:
         if type(group.tag()) is viuact.lexemes.Curly_tag:
@@ -454,6 +466,8 @@ def parse_expr(group):
                 guard = parse_expr(group[1]),
                 arms = [parse_match_arm(x) for x in group[2]],
             )
+        if group.lead().t() is viuact.lexemes.Throw:
+            return parse_throw(group)
         return parse_fn_call(group)
     else:
         return parse_simple_expr(group)
@@ -627,14 +641,14 @@ def parse_enum(group):
     )
 
 def parse_exception_definition(group):
-    name = group[1].val()
-    if type(name) is not viuact.lexemes.Exception_name:
+    tag = group[1].val()
+    if type(tag) is not viuact.lexemes.Exception_name:
         raise viuact.errors.Unexpected_token(
-            name.tok().at(),
-            str(name),
+            tag.tok().at(),
+            str(tag),
         ).note('expected exception name')
     return viuact.forms.Exception_definition(
-        name = name,
+        tag = tag,
         value = None,  # FIXME some exceptions can carry values
     )
 
