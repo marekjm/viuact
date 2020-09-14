@@ -42,7 +42,8 @@
     (map si print_i8)
     (map ss print_string)
 
-    (throw Bar)
+    ; (throw Bar)
+    (throw Foo "Hello, World!")
 
     0
 })

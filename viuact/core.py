@@ -1636,16 +1636,48 @@ def emit_name_ref(mod, body, st, result, expr):
 
 def emit_throw(mod, body, st, result, expr):
     with st.scoped() as sc:
+        ex = mod.exception(expr.tag())
+        viuact.util.log.raw(ex)
+
+        if ex and expr.bare():
+            raise viuact.errors.Invalid_arity(
+                pos = expr.tag().tok().at(),
+                s = str(expr.tag()),
+                kind = viuact.errors.Invalid_arity.EX_CTOR,
+            ).note(
+                'value is expected'
+            ).note(
+                '(throw {ex} <value>) instead of (throw {ex})'.format(
+                    ex = str(expr.tag()),
+                ),
+            )
+
+        if not ex and not expr.bare():
+            raise viuact.errors.Invalid_arity(
+                pos = expr.tag().tok().at(),
+                s = str(expr.tag()),
+                kind = viuact.errors.Invalid_arity.EX_CTOR,
+            ).note(
+                '{} is a bare exception'.format(str(expr.tag()))
+            )
+
+        value = Slot.make_void()
+        if not expr.bare():
+            value = sc.get_slot(None)
+            value = emit_expr(
+                mod = mod,
+                body = body,
+                st = sc,
+                result = value,
+                expr = expr.value(),
+            )
+
         tag = sc.get_slot(None)
         body.append(Ctor(
             of_type = 'atom',
             slot = tag,
             value = repr(str(expr.tag())),
         ))
-
-        value = Slot.make_void()
-        if not expr.bare():
-            value = None
 
         if result.is_void():
             result = sc.get_slot(None)

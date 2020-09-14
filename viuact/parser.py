@@ -649,9 +649,26 @@ def parse_exception_definition(group):
             tag.tok().at(),
             str(tag),
         ).note('expected exception name')
+
+    value = None
+    if len(group) > 2:
+        value = group[2].val()
+        if type(value) not in (viuact.lexemes.Template_parameter,
+                viuact.lexemes.Name,):
+            raise viuact.errors.Unexpected_token(
+                value.tok().at(),
+                str(value),
+            ).note('expected type name or template parameter')
+        if type(value) is not viuact.lexemes.Name:
+            raise viuact.errors.Unexpected_token(
+                value.tok().at(),
+                str(value),
+            ).note('FIXME: only unqualified type names are supported now')
+        value = viuact.forms.Type_name(name = value, template_parameters = ())
+
     return viuact.forms.Exception_definition(
         tag = tag,
-        value = None,  # FIXME some exceptions can carry values
+        value = value,
     )
 
 def parse_impl(groups):
