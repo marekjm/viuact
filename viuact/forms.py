@@ -328,6 +328,38 @@ class Throw(Form):
     def bare(self):
         return (self._value is None)
 
+class Try(Form):
+    def __init__(self, guard, arms):
+        super().__init__(guard.first_token())
+        self._guard = guard     # form
+        self._arms = arms       # [Catch_arm]
+
+    def guard(self):
+        return self._guard
+
+    def arms(self):
+        return self._arms
+
+class Catch_arm(Form):
+    def __init__(self, tag, name, expr):
+        super().__init__(tag.tok())
+        self._tag = tag         # lexemes.Exception_name
+        self._name = name       # lexemes.Name | None
+        self._expression = expr # form
+
+    def tag(self):
+        return self._tag
+
+    def name(self):
+        return self._name
+
+    def bare(self):
+        return ((self.name() is None)
+                or (type(self.name()) is viuact.lexemes.Drop))
+
+    def expr(self):
+        return self._expression
+
 
 Form.forms = [
     Fn,

@@ -429,6 +429,27 @@ def parse_match_arm(group):
         expr = parse_expr(expr),
     )
 
+def parse_catch_arm(group):
+    tag = group[1].val()
+
+    name = None
+    expr = None
+    if len(group) == 4:
+        name = group[2].val()
+        expr = group[3]
+    else:
+        name = viuact.lexemes.Drop(viuact.lexemes.Token(
+            pos = tag.tok().at(),
+            text = '_',
+        ))
+        expr = group[2]
+
+    return viuact.forms.Catch_arm(
+        tag = tag,
+        name = name,
+        expr = parse_expr(expr),
+    )
+
 def parse_throw(group):
     tag = group[1].val()
 
@@ -470,6 +491,11 @@ def parse_expr(group):
             return parse_fn_call(group)
         if group.lead().t() is viuact.lexemes.Throw:
             return parse_throw(group)
+        if group.lead().t() is viuact.lexemes.Try:
+            return viuact.forms.Try(
+                guard = parse_expr(group[1]),
+                arms = [parse_catch_arm(x) for x in group[2]],
+            )
         raise None
     else:
         return parse_simple_expr(group)

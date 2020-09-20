@@ -43,7 +43,10 @@
     (map ss print_string)
 
     ; (throw Bar)
-    (throw Foo "Hello, World!")
+    (try (throw Foo "Hello, World!") (
+        (catch Foo x (print x))
+        ; (catch _ (print "other error"))
+    ))
 
     0
 })

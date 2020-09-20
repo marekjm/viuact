@@ -266,6 +266,10 @@ class Match_with_no_arms(Type_error):
     def __init__(self, pos):
         super().__init__(pos)
 
+class Try_with_no_arms(Type_error):
+    def __init__(self, pos):
+        super().__init__(pos)
+
 class Read_of_void(Type_error):
     def __init__(self, pos, by : str):
         super().__init__(pos)

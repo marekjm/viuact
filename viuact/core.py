@@ -1693,6 +1693,80 @@ def emit_throw(mod, body, st, result, expr):
         body.append(Verbatim(''))
     return result
 
+def emit_catch_arm(mod, body, st, result, expr):
+    exception_slot = (
+        st.get_slot(None)
+        if expr.bare() else
+        st.get_slot(name = str(expr.name()))
+    )
+    body.append(Verbatim('draw {}'.format(exception_slot.to_string())))
+    if expr.bare():
+        body.append(Verbatim('delete {}'.format(exception_slot.to_string())))
+        st.deallocate_slot(exception_slot)
+        exception_slot = Slot.make_void()
+
+    result_slot = emit_expr(
+        mod = mod,
+        body = body,
+        st = st,
+        result = result,
+        expr = expr.expr(),
+    )
+    body.append(Verbatim('leave'))
+
+    return result_slot
+
+def emit_try(mod, body, st, result, expr):
+    if not expr.arms():
+        raise viuact.errors.Try_with_no_arms(
+            expr.first_token().at(),
+        )
+
+    try_arm_id = hashlib.sha1(
+        'try_arm_{}'.format(st.special()).encode('utf-8')).hexdigest()
+    try_arm_name = 'try_arm_{}'.format(try_arm_id)
+
+    arms = []
+    for arm in expr.arms():
+        fmt_base = 'catch_arm_{}'.format(st.special())
+        arm_id = hashlib.sha1(fmt_base.encode('utf-8')).hexdigest()
+        arm_name = 'catch_arm_{}'.format(arm_id)
+        arms.append({
+            'exception': arm.tag(),
+            'block_id': arm_name,
+            'expression': arm,
+        })
+
+    body.append(Verbatim('try'))
+
+    for arm in arms:
+        body.append(Verbatim('catch {} .block: {}'.format(
+            repr(str(arm['exception'])),
+            arm['block_id'],
+        )))
+        with st.scoped() as sc:
+            emit_catch_arm(
+                mod = mod,
+                body = body,
+                st = sc,
+                result = result,
+                expr = arm['expression'],
+            )
+        body.append(Verbatim('.end'))
+
+    body.append(Verbatim('enter .block: {}'.format(try_arm_name)))
+    result = emit_expr(
+        mod = mod,
+        body = body,
+        st = st,
+        result = result,
+        expr = expr.guard(),
+    )
+    body.append(Verbatim('leave'))
+    body.append(Verbatim('.end'))
+
+    return result
+
 def emit_expr(mod, body, st, result, expr):
     if type(expr) is viuact.forms.Fn_call:
         return emit_fn_call(
@@ -1761,6 +1835,14 @@ def emit_expr(mod, body, st, result, expr):
         )
     if type(expr) is viuact.forms.Throw:
         return emit_throw(
+            mod = mod,
+            body = body,
+            st = st,
+            result = result,
+            expr = expr,
+        )
+    if type(expr) is viuact.forms.Try:
+        return emit_try(
             mod = mod,
             body = body,
             st = st,
