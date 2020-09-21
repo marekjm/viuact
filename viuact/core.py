@@ -1637,7 +1637,6 @@ def emit_name_ref(mod, body, st, result, expr):
 def emit_throw(mod, body, st, result, expr):
     with st.scoped() as sc:
         ex = mod.exception(expr.tag())
-        viuact.util.log.raw(ex)
 
         if ex and expr.bare():
             raise viuact.errors.Invalid_arity(
@@ -1699,11 +1698,28 @@ def emit_catch_arm(mod, body, st, result, expr):
         if expr.bare() else
         st.get_slot(name = str(expr.name()))
     )
+
+    ex_t = mod.exception(str(expr.tag()))
+    if (not expr.bare()) and ex_t is None:
+        raise viuact.errors.Bind_of_exception_with_no_value(
+            expr.first_token().at(),
+            expr.tag(),
+            expr.name(),
+        )
+
     body.append(Verbatim('draw {}'.format(exception_slot.to_string())))
+
     if expr.bare():
         body.append(Verbatim('delete {}'.format(exception_slot.to_string())))
         st.deallocate_slot(exception_slot)
         exception_slot = Slot.make_void()
+    else:
+        body.append(Verbatim('exception_value {ex} {ex}'.format(
+            ex = exception_slot.to_string(),
+        )))
+        st.type_of(exception_slot, viuact.typesystem.t.Value(
+            name = str(ex_t.name()),
+        ))
 
     result_slot = emit_expr(
         mod = mod,

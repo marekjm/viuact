@@ -278,6 +278,15 @@ class Read_of_void(Type_error):
     def what(self):
         return '{} by {}'.format(super().what(), self.by)
 
+class Bind_of_exception_with_no_value(Type_error):
+    def __init__(self, pos, ex : str, to : str):
+        super().__init__(pos)
+        self.ex = ex
+        self.to = to
+
+    def what(self):
+        return '{}: {} to name {}'.format(super().what(), self.ex, self.to)
+
 
 ################################################################################
 # Errors that occur if the compiler as a bug.

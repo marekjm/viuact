@@ -42,10 +42,9 @@
     (map si print_i8)
     (map ss print_string)
 
-    ; (throw Bar)
     (try (throw Foo "Hello, World!") (
-        (catch Foo x (print x))
-        ; (catch _ (print "other error"))
+        (catch Bar (print 0))
+        (catch Foo x (print_i8 x))
     ))
 
     0
