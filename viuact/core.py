@@ -640,14 +640,18 @@ class Comment:
         return '; {}'.format(self.text)
 
 class Print:
-    def __init__(self, slot):
-        self.slot = slot
+    PRINT = 'print'
+    ECHO = 'echo'
+
+    def __init__(self, slot : Slot, kind : str):
+        self.slot = T(Slot) | slot
+        self.kind = kind
 
     def __repr__(self):
-        return 'Print: {}'.format(repr(self.text))
+        return '{}: {}'.format(self.kind, repr(self.text))
 
     def to_string(self):
-        return 'print {}'.format(self.slot.to_string())
+        return '{} {}'.format(self.kind, self.slot.to_string())
 
 class Ctor:
     TAG_ENUM_TAG_FIELD = repr('tag')
@@ -655,7 +659,7 @@ class Ctor:
 
     def __init__(self, of_type : str, slot : Slot, value : str):
         self.of_type = of_type
-        self.slot = slot
+        self.slot = T(Slot) | slot
         self.value = value
 
     def to_string(self):
@@ -670,9 +674,9 @@ class Cmp:
 
     def __init__(self, kind : str, slot : Slot, rhs : Slot, lhs : Slot):
         self.kind = kind
-        self.slot = slot
-        self.rhs = rhs
-        self.lhs = lhs
+        self.slot = T(Slot) | slot
+        self.rhs = T(Slot) | rhs
+        self.lhs = T(Slot) | lhs
 
     def to_string(self):
         return '{} {} {} {}'.format(
@@ -684,7 +688,7 @@ class Cmp:
 
 class If:
     def __init__(self, cond : Slot, if_true : str, if_false : str):
-        self.condition = cond
+        self.condition = T(Slot) | cond
         self.if_true = if_true
         self.if_false = if_false
 
@@ -703,6 +707,13 @@ class Jump:
         return 'jump {}'.format(
             self.label,
         )
+
+class Return:
+    def __init__(self):
+        pass
+
+    def to_string(self):
+        return 'return'
 
 class Marker:
     def __init__(self, label : str):
@@ -745,15 +756,12 @@ class Move:
     def __init__(self, of_type : str, source : Slot, dest : Slot):
         self.of_type = of_type
 
-        if source is None:
-            raise TypeError('{} cannot be used as Slot'.format(
-                source.__class__.__name__))
         if source.is_void():
             raise viuact.errors.Source_cannot_be_void(
                 (0, 0), '{} to {}'.format(of_type, dest.to_string()))
 
-        self.source = source
-        self.dest = dest
+        self.source = T(Slot) | source
+        self.dest = T(Slot) | dest
 
     def to_string(self):
         return '{} {} {}'.format(
@@ -772,7 +780,7 @@ class Call:
 
     def __init__(self, to : str, slot : Slot, kind = Kind.Synchronous):
         self.to = to
-        self.slot = slot
+        self.slot = T(Slot) | slot
         self.kind = kind
 
     def to_string(self):
@@ -809,7 +817,7 @@ def emit_builtin_call(mod, body, st, result, form):
                     by = 'print function',
                 )
             # st.store(slot.to_string(), Type.void())
-            body.append(Print(slot))
+            body.append(Print(slot, Print.PRINT))
             body.append(Verbatim(''))
 
         return slot
