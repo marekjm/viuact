@@ -362,6 +362,7 @@ class Catch_arm(Form):
 
 class Record_definition(Form):
     def __init__(self, tag, fields):
+        super().__init__(tag.tok())
         self._tag = tag
         self._fields = fields
 
@@ -373,6 +374,7 @@ class Record_definition(Form):
 
 class Record_field_definition(Form):
     def __init__(self, name, type):
+        super().__init__(name.tok())
         self._name = name  # viuact.lexmes.Name
         self._type = type  # viuact.lexmes.Name
 
@@ -384,6 +386,7 @@ class Record_field_definition(Form):
 
 class Record_ctor_field(Form):
     def __init__(self, name, value):
+        super().__init__(name.tok())
         self._name = name   # viuact.lexmes.Name
         self._value = value # Form
 
@@ -395,7 +398,9 @@ class Record_ctor_field(Form):
 
 class Record_ctor(Form):
     def __init__(self, name, fields):
-        self._name = name       # viuact.lexmes.Name
+        if name is not None: # this just for temporary ctor calls
+            super().__init__(name.first_token())
+        self._name = name       # None | viuact.lexmes.Name
         self._fields = fields   # [Record_ctor_field]
 
     def name(self):
@@ -406,6 +411,7 @@ class Record_ctor(Form):
 
 class Record_field_access(Form):
     def __init__(self, base, field):
+        super().__init__(base.first_token())
         self._base = base    # Form
         self._field = field  # Name
 

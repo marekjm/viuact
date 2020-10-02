@@ -57,6 +57,7 @@ class Module_info:
         self._function_signatures = {}
 
         self._enums = {}
+        self._records = {}
         self._exceptions = {}
 
     def name(self):
@@ -134,6 +135,18 @@ class Module_info:
     def enum(self, name):
         # FIXME error checking
         return self._enums[str(name)]
+
+    def make_record(self, name, fields):
+        self._records[str(name)] = {
+            'fields': {
+                str(f.name()) : f.type()
+                for f
+                in fields
+            },
+        }
+
+    def record(self, name):
+        return self._records[str(name)]
 
     def make_exception(self, tag, value):
         self._exceptions[str(tag)] = value
@@ -1863,7 +1876,15 @@ def emit_record_field_access(mod, body, st, result, expr):
             result.as_pointer().to_string()
         )))
 
-        st.type_of(result, Type.i8())  # FIXME set actual type
+        record_t = st.type_of(base)
+        record_definition = mod.record(record_t.name())
+        field_t = viuact.typesystem.t.Value(
+            name = str(record_definition['fields'][str(expr.field())]),
+        )
+        viuact.util.log.raw(record_definition)
+
+        # FIXME register the type in case of templates
+        st.type_of(result, field_t)
     return result
 
 def emit_expr(mod, body, st, result, expr):
@@ -2093,7 +2114,11 @@ def cc_type(mod, form):
             pt = tuple(parameter_types),
             templates = (),
         )
-    raise None
+    viuact.util.log.raw('cannot compile type from: {} [{}]'.format(
+        str(form),
+        typeof(form),
+    ))
+    raise viuact.errors.Internal_compiler_error()
 
 
 def cc(source_root, source_file, module_name, forms, output_directory):
@@ -2119,6 +2144,12 @@ def cc(source_root, source_file, module_name, forms, output_directory):
                 for t
                 in each.template_parameters()
             ],
+        )
+
+    for each in filter(lambda x: type(x) is viuact.forms.Record_definition, forms):
+        mod.make_record(
+            name = each.tag(),
+            fields = each.fields(),
         )
 
     for each in filter(lambda x: type(x) is viuact.forms.Exception_definition, forms):
