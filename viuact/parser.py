@@ -72,7 +72,16 @@ def wrap_infix(tokens):
         each = tokens[i]
         i += 1
 
-        if each.t() is viuact.lexemes.Path_resolution:
+        is_path_resolution = (each.t() is viuact.lexemes.Path_resolution)
+        is_field_access = (
+                (each.t() is viuact.lexemes.Operator_dot)
+            and (type(tmp[-1]) is One)
+            and (type(tmp[-1].first()) is viuact.lexemes.Name)
+        )
+
+        do_wrap = (is_path_resolution or is_field_access)
+
+        if do_wrap:
             prev = tmp.pop()
             x = Many()
             x.append(One(viuact.lexemes.Left_paren(viuact.lexemes.Token(
@@ -342,6 +351,23 @@ def parse_enum_ctor_call(group):
         value = (parse_expr(group[1]) if len(group) == 2 else None),
     )
 
+def parse_record_field_access(group):
+    base = group[1]
+    field = group[2].val()
+
+    viuact.util.log.raw('access to field {} of {} [{}]'.format(
+        str(field),
+        str(base),
+        typeof(base),
+    ))
+
+    return viuact.forms.Record_field_access(
+        base = parse_expr(base),
+        field = field,  # FIXME what about constructions like foo.*bar from C++?
+                        # They would require parsing the field, but let's not
+                        # support such black-magic fuckery for now.
+    )
+
 def parse_fn_call(group):
     kind = viuact.forms.Fn_call.Kind.Call
     offset = 0
@@ -531,6 +557,8 @@ def parse_expr(group):
                 name = group[0].val(),
                 value = parse_expr(group[1]),
             )
+        if group.lead().t() is viuact.lexemes.Operator_dot:
+            return parse_record_field_access(group)
         viuact.util.log.raw('unrecognised leader: {} ({})'.format(
             typeof(group.lead()),
             group.lead().t(),

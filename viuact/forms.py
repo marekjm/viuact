@@ -404,6 +404,17 @@ class Record_ctor(Form):
     def fields(self):
         return self._fields
 
+class Record_field_access(Form):
+    def __init__(self, base, field):
+        self._base = base    # Form
+        self._field = field  # Name
+
+    def base(self):
+        return self._base
+
+    def field(self):
+        return self._field
+
 
 Form.forms = [
     Fn,

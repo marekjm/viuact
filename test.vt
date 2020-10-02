@@ -60,6 +60,8 @@
         (.protocol      "tcp")
     }))
     (print sv_info)
+    (print sv_info.service_name)
+    (print sv_info)
 
     0
 })

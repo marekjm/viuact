@@ -1828,6 +1828,44 @@ def emit_record_ctor(mod, body, st, result, expr):
 
     return result
 
+def emit_record_field_access(mod, body, st, result, expr):
+    with st.scoped() as sc:
+        base = sc.get_disposable_slot()
+        viuact.util.log.raw('base slot: {}'.format(
+            base.to_string(),
+        ))
+        base = emit_expr(
+            mod = mod,
+            body = body,
+            st = sc,
+            result = base,
+            expr = expr.base(),
+        )
+
+        field = sc.get_slot(None)
+        viuact.util.log.raw('field slot: {}'.format(
+            field.to_string(),
+        ))
+        body.append(Ctor(
+            of_type = 'atom',
+            slot = field,
+            value = repr(str(expr.field())),
+        ))
+        # FIXME use structremove and consume fields if possible (try to detect
+        # such opportunities); copying is expensive
+        body.append(Verbatim('structat {} {} {}'.format(
+            result.to_string(),
+            base.to_string(),
+            field.to_string(),
+        )))
+        body.append(Verbatim('copy {} {}'.format(
+            result.to_string(),
+            result.as_pointer().to_string()
+        )))
+
+        st.type_of(result, Type.i8())  # FIXME set actual type
+    return result
+
 def emit_expr(mod, body, st, result, expr):
     if type(expr) is viuact.forms.Fn_call:
         return emit_fn_call(
@@ -1912,6 +1950,14 @@ def emit_expr(mod, body, st, result, expr):
         )
     if type(expr) is viuact.forms.Record_ctor:
         return emit_record_ctor(
+            mod = mod,
+            body = body,
+            st = st,
+            result = result,
+            expr = expr,
+        )
+    if type(expr) is viuact.forms.Record_field_access:
+        return emit_record_field_access(
             mod = mod,
             body = body,
             st = st,
