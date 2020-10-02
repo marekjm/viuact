@@ -1974,6 +1974,9 @@ def cc_fn(mod, fn):
         )
     except Exception:
         viuact.util.log.error('during compilation of {}'.format(main_fn_name))
+        viuact.util.log.error('dumping body emitted so far')
+        for each in main_fn.body:
+            viuact.util.log.raw(each.to_string())
         raise
     if result != result_slot:
         main_fn.append(Move.make_move(
