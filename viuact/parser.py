@@ -531,6 +531,10 @@ def parse_expr(group):
                 name = group[0].val(),
                 value = parse_expr(group[1]),
             )
+        viuact.util.log.raw('unrecognised leader: {} ({})'.format(
+            typeof(group.lead()),
+            group.lead().t(),
+        ))
         raise None
     else:
         return parse_simple_expr(group)
