@@ -100,7 +100,7 @@ syntax keyword viuactSpecial        actor defer tailcall watchdog
 syntax keyword viuactType           i8 i16 i32 i64 f32 f64 bool bits string
 syntax keyword viuactStorageClass   static
 syntax keyword viuactStructure      enum skipwhite nextgroup=viuactEnumName
-syntax keyword viuactStructure      struct vector exception
+syntax keyword viuactStructure      struct vector exception type
 
 syntax match viuactCompoundExpr     "[{}]"
 

@@ -203,6 +203,18 @@ class Read_of_unbound_variable(Emitter_error):
     def what(self):
         return '{}: {}'.format(super().what(), self.variable)
 
+class Record_ctor_received_more_than_one_argument(Emitter_error):
+    def __init__(self, pos, name, no_of_args):
+        super().__init__(pos)
+        self.name = name
+        self.no_of_args = no_of_args
+
+    def what(self):
+        return 'record constructor for {} expects 1 argument, but received {}'.format(
+            self.name,
+            self.no_of_args,
+        )
+
 class Type_error(Emitter_error):
     pass
 

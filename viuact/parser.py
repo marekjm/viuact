@@ -119,6 +119,17 @@ def recategorise(tokens):
                     ),
                 ))
                 continue
+        if each.t() is viuact.lexemes.Name:
+            if toks[-1].t() is viuact.lexemes.Operator_dot:
+                if toks[-2].t() is viuact.lexemes.Left_paren:
+                    toks.pop()
+                    toks.append(viuact.lexemes.Record_ctor_field(
+                        viuact.lexemes.Token(
+                            pos = each.tok().at(),
+                            text = str(each),
+                        ),
+                    ))
+                    continue
         toks.append(each)
     return toks
 
@@ -278,6 +289,12 @@ def parse_compound_expr(group):
     for each in group[1:]:
         expressions.append(parse_expr(each))
 
+    if expressions and type(expressions[0]) is viuact.forms.Record_ctor_field:
+        return viuact.forms.Record_ctor(
+            name = None,    # to be filled later
+            fields = expressions,
+        )
+
     return viuact.forms.Compound_expr(expressions)
 
 def parse_enum_ctor_call(group):
@@ -370,6 +387,19 @@ def parse_fn_call(group):
             ))
         else:
             args.append(parse_expr(each))
+
+    if args and type(args[0]) is viuact.forms.Record_ctor:
+        if len(args) > 1:
+            viuact.util.log.raw(name)
+            raise viuact.errors.Record_ctor_received_more_than_one_argument(
+                name.first_token().at(),
+                str(name.name()),
+                no_of_args = len(args),
+            )
+        return viuact.forms.Record_ctor(
+            name = name,
+            fields = args[0].fields(),
+        )
 
     return viuact.forms.Fn_call(
         to = name,
@@ -495,6 +525,11 @@ def parse_expr(group):
             return viuact.forms.Try(
                 guard = parse_expr(group[1]),
                 arms = [parse_catch_arm(x) for x in group[2]],
+            )
+        if group.lead().t() is viuact.lexemes.Record_ctor_field:
+            return viuact.forms.Record_ctor_field(
+                name = group[0].val(),
+                value = parse_expr(group[1]),
             )
         raise None
     else:
@@ -697,6 +732,41 @@ def parse_exception_definition(group):
         value = value,
     )
 
+# FIXME this should be rougly similar to parsing val variables
+def parse_record_field(group):
+    if group[0].val().t() is not viuact.lexemes.Val:
+        # record definitions must include only field type declarations
+        raise None
+
+    field_name = group[1].val()
+    field_type = group[2].val()
+
+    if field_name.t() is not viuact.lexemes.Name:
+        raise None
+    if field_type.t() is not viuact.lexemes.Name:
+        # only simple types are supported
+        raise None
+
+    return viuact.forms.Record_field_definition(
+        name = field_name,
+        type = field_type,
+    )
+
+def parse_record_definition(group):
+    tag = group[1].val()
+    if type(tag) is not viuact.lexemes.Name:
+        raise viuact.errors.Unexpected_token(
+            tag.tok().at(),
+            str(tag),
+        ).note('expected record name')
+
+    fields = [parse_record_field(each) for each in group[2][1:]]
+
+    return viuact.forms.Record_definition(
+        tag = tag,
+        fields = fields,
+    )
+
 def parse_impl(groups):
     forms = []
 
@@ -709,6 +779,8 @@ def parse_impl(groups):
             forms.append(parse_enum(g))
         elif g.lead().t() is viuact.lexemes.Exception_def:
             forms.append(parse_exception_definition(g))
+        elif g.lead().t() is viuact.lexemes.Type:
+            forms.append(parse_record_definition(g))
         else:
             tok = g.lead().val().tok()
             raise viuact.errors.Unexpected_token(tok.at(), str(tok))

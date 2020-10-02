@@ -1791,6 +1791,43 @@ def emit_try(mod, body, st, result, expr):
 
     return result
 
+def emit_record_ctor(mod, body, st, result, expr):
+    record_type = expr.name()
+
+    body.append(Ctor(
+        of_type = 'struct',
+        slot = result,
+        value = '',
+    ))
+    st.type_of(result, viuact.typesystem.t.Value(
+        name = str(record_type.name()),
+    ))
+
+    with st.scoped() as sc:
+        field_name = sc.get_slot(None)
+        field_value = sc.get_slot(None)
+
+        for each in expr.fields():
+            r = emit_expr(
+                mod = mod,
+                body = body,
+                st = sc,
+                result = field_value,
+                expr = each.value(),
+            )
+            body.append(Ctor(
+                of_type = 'atom',
+                slot = field_name,
+                value = repr(str(each.name())),
+            ))
+            body.append(Verbatim('structinsert {} {} {}'.format(
+                result.to_string(),
+                field_name.to_string(),
+                field_value.to_string(),
+            )))
+
+    return result
+
 def emit_expr(mod, body, st, result, expr):
     if type(expr) is viuact.forms.Fn_call:
         return emit_fn_call(
@@ -1867,6 +1904,14 @@ def emit_expr(mod, body, st, result, expr):
         )
     if type(expr) is viuact.forms.Try:
         return emit_try(
+            mod = mod,
+            body = body,
+            st = st,
+            result = result,
+            expr = expr,
+        )
+    if type(expr) is viuact.forms.Record_ctor:
+        return emit_record_ctor(
             mod = mod,
             body = body,
             st = st,

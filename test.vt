@@ -29,23 +29,37 @@
 (exception Foo i8)
 (exception Bar)
 
+; Stolen from http://dev.realworldocaml.org/records.html
+(type service_info {
+    (val service_name   string)     ; eg, ssh
+    (val port           i16)        ; eg, 22
+    (val protocol       string)     ; eg, tcp
+})
+
 (val main () -> i8)
 (let main () {
-    (let n (option::None))
-    (let sa (option::Some 42))
-    (let si (option::Some 42))
-    (let ss (option::Some "Hello, World!"))
+    ; (let n (option::None))
+    ; (let sa (option::Some 42))
+    ; (let si (option::Some 42))
+    ; (let ss (option::Some "Hello, World!"))
 
-    ; (print_option n)
-    (map n print_stuff)
-    (map sa print_stuff)
-    (map si print_i8)
-    (map ss print_string)
+    ; ; (print_option n)
+    ; (map n print_stuff)
+    ; (map sa print_stuff)
+    ; (map si print_i8)
+    ; (map ss print_string)
 
-    (try (throw Foo "Hello, World!") (
-        (catch Bar (print 0))
-        (catch Foo x (print_i8 x))
-    ))
+    ; (try (throw Foo "Hello, World!") (
+    ;     (catch Bar (print 0))
+    ;     (catch Foo x (print_i8 x))
+    ; ))
+
+    (let sv_info (service_info {
+        (.service_name  "ssh")
+        (.port          22)
+        (.protocol      "tcp")
+    }))
+    (print sv_info)
 
     0
 })

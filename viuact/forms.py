@@ -360,6 +360,50 @@ class Catch_arm(Form):
     def expr(self):
         return self._expression
 
+class Record_definition(Form):
+    def __init__(self, tag, fields):
+        self._tag = tag
+        self._fields = fields
+
+    def tag(self):
+        return self._tag
+
+    def fields(self):
+        return self._fields
+
+class Record_field_definition(Form):
+    def __init__(self, name, type):
+        self._name = name  # viuact.lexmes.Name
+        self._type = type  # viuact.lexmes.Name
+
+    def name(self):
+        return self._name
+
+    def type(self):
+        return self._type
+
+class Record_ctor_field(Form):
+    def __init__(self, name, value):
+        self._name = name   # viuact.lexmes.Name
+        self._value = value # Form
+
+    def name(self):
+        return self._name
+
+    def value(self):
+        return self._value
+
+class Record_ctor(Form):
+    def __init__(self, name, fields):
+        self._name = name       # viuact.lexmes.Name
+        self._fields = fields   # [Record_ctor_field]
+
+    def name(self):
+        return self._name
+
+    def fields(self):
+        return self._fields
+
 
 Form.forms = [
     Fn,

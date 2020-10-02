@@ -53,6 +53,9 @@ class Path_resolution(Lexeme):
 class Arrow_right(Lexeme):
     pattern = re.compile(r'->')
 
+class Operator_dot(Lexeme):
+    pattern = re.compile(r'\.')
+
 class Let(Lexeme):
     pattern = re.compile(r'\blet\b')
 
@@ -82,6 +85,12 @@ class Try(Lexeme):
 
 class Catch(Lexeme):
     pattern = re.compile(r'\bcatch\b')
+
+class Type(Lexeme):
+    pattern = re.compile(r'\btype\b')
+
+class Struct(Lexeme):
+    pattern = re.compile(r'\bstruct\b')
 
 class Of(Lexeme):
     pattern = re.compile(r'\bof\b')
@@ -124,6 +133,7 @@ Lexeme.patterns = [
     Right_curly,
     Path_resolution,
     Arrow_right,
+    Operator_dot,
     Let,
     Val,
     If,
@@ -134,6 +144,8 @@ Lexeme.patterns = [
     Throw,
     Try,
     Catch,
+    Type,
+    Struct,
     Of,
     Bool_literal,
     Labelled_name,
@@ -156,4 +168,7 @@ class Curly_tag(Phantom):
     pass
 
 class Exception_name(Phantom):
+    pass
+
+class Record_ctor_field(Phantom):
     pass
