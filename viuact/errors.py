@@ -299,6 +299,23 @@ class Bind_of_exception_with_no_value(Type_error):
     def what(self):
         return '{}: {} to name {}'.format(super().what(), self.ex, self.to)
 
+class Bad_type_of_record_field(Type_error):
+    def __init__(self, pos, record, field, declared, actual):
+        super().__init__(pos)
+        self.record = record
+        self.field = field
+        self.declared = declared
+        self.actual = actual
+
+    def what(self):
+        fmt = 'bad type for field {f} of record {r}: declared {decl} != actual {act}'
+        return fmt.format(
+            f = self.field,
+            r = self.record,
+            decl = self.declared,
+            act = self.actual,
+        )
+
 
 ################################################################################
 # Errors that occur if the compiler as a bug.

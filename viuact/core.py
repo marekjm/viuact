@@ -1887,6 +1887,8 @@ def emit_record_ctor(mod, body, st, result, expr):
         name = str(record_type.name()),
     ))
 
+    record_definition = mod.record(record_type.name())
+
     with st.scoped() as sc:
         field_name = sc.get_slot(None)
         field_value = sc.get_slot(None)
@@ -1899,6 +1901,31 @@ def emit_record_ctor(mod, body, st, result, expr):
                 result = field_value,
                 expr = each.value(),
             )
+
+            r_t = sc.type_of(r)
+            # FIXME fix this ugliness and store field types properly, as types,
+            # and not as strings
+            field_t = str(record_definition['fields'][str(each.name())])
+            if field_t == 'i8':
+                field_t = Type.i8()
+            elif field_t == 'i16':
+                field_t = Type.i16()
+            else:
+                field_t = viuact.typesystem.t.Value(
+                    name = field_t,
+                )
+            try:
+                st.unify_types(field_t, r_t)
+            except viuact.typesystem.state.Cannot_unify:
+                raise viuact.errors.Bad_type_of_record_field(
+                    pos = each.value().first_token().at(),
+                    record = str(record_type.name()),
+                    field = str(each.name()),
+                    declared = field_t.to_string(),
+                    actual = r_t.to_string(),
+                )
+
+
             body.append(Ctor(
                 of_type = 'atom',
                 slot = field_name,
