@@ -56,6 +56,12 @@ class Arrow_right(Lexeme):
 class Operator_dot(Lexeme):
     pattern = re.compile(r'\.')
 
+class Operator_concat(Lexeme): # or double-dot? See "double dotted note" in musical notation.
+    pattern = re.compile(r'\.\.')
+
+class Operator_ellipsis(Lexeme):
+    pattern = re.compile(r'\.\.\.')
+
 class Let(Lexeme):
     pattern = re.compile(r'\blet\b')
 
@@ -133,6 +139,8 @@ Lexeme.patterns = [
     Right_curly,
     Path_resolution,
     Arrow_right,
+    Operator_ellipsis,
+    Operator_concat,
     Operator_dot,
     Let,
     Val,
