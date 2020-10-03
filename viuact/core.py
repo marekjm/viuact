@@ -22,19 +22,90 @@ def typeof(value):
 
 
 class Type:
+    class Int(viuact.typesystem.t.Value):
+        def cast_from(self, t):
+            signed_integer_types = (
+                'i8',
+                'i16',
+                'i32',
+                'i64',
+            )
+            unsigned_integer_types = (
+                'u8',
+                'u16',
+                'u32',
+                'u64',
+            )
+            integer_types = (signed_integer_types + unsigned_integer_types)
+            if t.to_string() not in integer_types:
+                return False
+
+            # Integers should be classified according to:
+            #
+            #   - signedness: signed and unsigned
+            #   - bit width: 1, 4, 8, 16, 32, 64
+            #   - endiannes: host, little, and big
+            #   - overflow behaviour: wraparound, trap, saturate
+            #
+            # For example, a UNIX socket port could be represented using an
+            # unsigned, 16-bit, big-endian, trapping integer.
+            #
+            # A PID counter could be represented using an unsigned, 64-bit,
+            # host-endian, wraparound integer.
+            this_t = self.to_string()
+            that_t = t.to_string()
+            same_subtype = lambda prefix: (this_t.startswith(prefix) ==
+                    that_t.startswith(prefix))
+            if not same_subtype('i'):
+                return False
+
+            bitwidth_this = int(self.to_string()[1:])
+            bitwidth_that = int(self.to_string()[1:])
+            return (bitwidth_this >= bitwidth_that)
+
     def string():
         return viuact.typesystem.t.Value(
             name = 'string',
         )
 
     def i8():
-        return viuact.typesystem.t.Value(
+        return Type.Int(
             name = 'i8',
         )
 
+    def i16():
+        return Type.Int(
+            name = 'i16',
+        )
+
+    def i32():
+        return Type.Int(
+            name = 'i32',
+        )
+
     def i64():
-        return viuact.typesystem.t.Value(
-            name = 'i8',
+        return Type.Int(
+            name = 'i64',
+        )
+
+    def u8():
+        return Type.Int(
+            name = 'u8',
+        )
+
+    def u16():
+        return Type.Int(
+            name = 'u16',
+        )
+
+    def u32():
+        return Type.Int(
+            name = 'u32',
+        )
+
+    def u64():
+        return Type.Int(
+            name = 'u64',
         )
 
     def bool():

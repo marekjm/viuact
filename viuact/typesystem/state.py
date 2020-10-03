@@ -232,7 +232,8 @@ def unify_impl(state, left, right):
             return viuact.typesystem.t.Void()
 
         # Function type will never unify with value type.
-        if type(left) is not type(right):
+        if (isinstance(left, viuact.typesystem.t.Value) and not
+                isinstance(right, viuact.typesystem.t.Value)):
             raise Cannot_unify(left, right)
 
         # If both concrete types are equal there is nothing to do, so let's just
@@ -249,7 +250,7 @@ def unify_impl(state, left, right):
             if len(lt) != len(rt):
                 # Types with the same name but different lengths of templates
                 # are really a compiler error since it should not allow such a
-                # situation to happen.
+                # situation to happen. FIXME disallow this
                 #
                 # We cannot have, for example, (('a) vec) and (('a 'b) vec)
                 # values in the same program.
@@ -262,6 +263,10 @@ def unify_impl(state, left, right):
                 name = left.name(),
                 templates = tuple(ut),
             )
+
+        if isinstance(left, viuact.typesystem.t.Value) and (left.name() != right.name()):
+            if left.cast_from(right):
+                return left
 
         if type(left) is viuact.typesystem.t.Fn:
             # lt = left.templates()

@@ -72,6 +72,9 @@ class Base:
     def polymorphic(self):
         return any(map(lambda _: _.polymorphic(), self.templates()))
 
+    def cast_from(self, t):
+        return False
+
 
 class Void(Base):
     def __init__(self, templates = ()):
@@ -94,6 +97,9 @@ class Void(Base):
 
     def polymorphic(self):
         return super().polymorphic()
+
+    def cast_from(self, _):
+        return True
 
     def concretise(self, blueprint):
         return Void(
