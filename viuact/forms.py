@@ -96,6 +96,18 @@ class Fn_call(Form):
     def arguments(self):
         return self._arguments
 
+class Operator_call(Form):
+    def __init__(self, operator, arguments):
+        super().__init__(operator.tok())
+        self._operator = operator   # viuact.lexemes.Lexeme
+        self._arguments = arguments # [Form]
+
+    def operator(self):
+        return self._operator
+
+    def arguments(self):
+        return self._arguments
+
 class Enum_ctor_path(Form):
     def __init__(self, field, name, module_prefix):
         super().__init__(field)

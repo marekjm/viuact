@@ -35,6 +35,11 @@
     (val port           i16)        ; eg, 22
     (val protocol       string)     ; eg, tcp
 })
+(val fazoom (service_info) -> void)
+(let fazoom (sv) {
+    (let s (.. sv.service_name " " sv.port "/" sv.protocol))
+    (print s)
+})
 
 (val main () -> i8)
 (let main () {
@@ -62,6 +67,7 @@
     (print sv_info)
     (print_string sv_info.protocol)
     (print sv_info)
+    (fazoom sv_info)
 
     0
 })

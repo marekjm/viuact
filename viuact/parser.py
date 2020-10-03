@@ -518,6 +518,16 @@ def parse_throw(group):
         value = value,
     )
 
+OPERATORS = (
+    viuact.lexemes.Operator_concat,
+)
+
+def parse_operator_call(group):
+    return viuact.forms.Operator_call(
+        operator = group.lead().val(),
+        arguments = [parse_expr(each) for each in group[1:]],
+    )
+
 def parse_expr(group):
     if type(group) is Group:
         if type(group.tag()) is viuact.lexemes.Curly_tag:
@@ -559,6 +569,8 @@ def parse_expr(group):
             )
         if group.lead().t() is viuact.lexemes.Operator_dot:
             return parse_record_field_access(group)
+        if group.lead().t() in OPERATORS:
+            return parse_operator_call(group)
         viuact.util.log.raw('unrecognised leader: {} ({})'.format(
             typeof(group.lead()),
             group.lead().t(),

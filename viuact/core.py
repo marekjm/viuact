@@ -1150,6 +1150,65 @@ def emit_fn_call(mod, body, st, result, form):
 
     return emit_direct_fn_call(mod, body, st, result, form)
 
+def emit_operator_concat(mod, body, st, result, expr):
+    if len(expr.arguments()) < 2:
+        raise viuact.errors.Invalid_arity(
+            pos = expr.operator().tok().at(),
+            s = str(expr.operator()),
+            kind = viuact.errors.Invalid_arity.OPERATOR,
+        ).note('expected at least 2 arguments, got {}'.format(
+            len(expr.arguments()),
+        ))
+
+    with st.scoped() as sc:
+        lhs_slot = sc.get_slot(None)
+        rhs_slot = sc.get_slot(None)
+
+        args = expr.arguments()
+
+        lhs_slot = emit_expr(
+            mod = mod,
+            body = body,
+            st = sc,
+            result = lhs_slot,
+            expr = args[0],
+        )
+        rhs_slot = emit_expr(
+            mod = mod,
+            body = body,
+            st = sc,
+            result = rhs_slot,
+            expr = args[1],
+        )
+        body.append(Verbatim('textconcat {} {} {}'.format(
+            result.to_string(),
+            lhs_slot.to_string(),
+            rhs_slot.to_string(),
+        )))
+
+        for each in args[2:]:
+            rhs_slot = emit_expr(
+                mod = mod,
+                body = body,
+                st = sc,
+                result = rhs_slot,
+                expr = each,
+            )
+            body.append(Verbatim('textconcat {} {} {}'.format(
+                result.to_string(),
+                result.to_string(),
+                rhs_slot.to_string(),
+            )))
+
+        st.type_of(result, Type.string())
+
+    return result
+
+def emit_operator_call(mod, body, st, result, expr):
+    if type(expr.operator()) is viuact.lexemes.Operator_concat:
+        return emit_operator_concat(mod, body, st, result, expr)
+    raise None
+
 def emit_enum_ctor_call(mod, body, st, result, form):
     from_module = form.to().module()
     enum_name = form.to().of_enum()
@@ -1993,6 +2052,14 @@ def emit_expr(mod, body, st, result, expr):
             st = st,
             result = result,
             form = expr,
+        )
+    if type(expr) is viuact.forms.Operator_call:
+        return emit_operator_call(
+            mod = mod,
+            body = body,
+            st = st,
+            result = result,
+            expr = expr,
         )
     if type(expr) is viuact.forms.Compound_expr:
         return emit_compound_expr(

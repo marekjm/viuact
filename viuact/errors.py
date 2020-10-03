@@ -114,6 +114,7 @@ class Invalid_arity(Emitter_error):
     FUNCTION = 'function'
     ENUM_CTOR = 'enum ctor'
     EX_CTOR = 'exception ctor'
+    OPERATOR = 'operator'
 
     def __init__(self, pos, s, kind = FUNCTION):
         super().__init__(pos)
