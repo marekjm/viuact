@@ -1180,6 +1180,11 @@ def emit_operator_concat(mod, body, st, result, expr):
             result = rhs_slot,
             expr = args[1],
         )
+        if sc.type_of(rhs_slot).to_string() != Type.string().to_string():
+            body.append(Verbatim('text {} {}'.format(
+                rhs_slot.to_string(),
+                rhs_slot.to_string(),
+            )))
         body.append(Verbatim('textconcat {} {} {}'.format(
             result.to_string(),
             lhs_slot.to_string(),
@@ -1194,6 +1199,11 @@ def emit_operator_concat(mod, body, st, result, expr):
                 result = rhs_slot,
                 expr = each,
             )
+            if sc.type_of(rhs_slot).to_string() != Type.string().to_string():
+                body.append(Verbatim('text {} {}'.format(
+                    rhs_slot.to_string(),
+                    rhs_slot.to_string(),
+                )))
             body.append(Verbatim('textconcat {} {} {}'.format(
                 result.to_string(),
                 result.to_string(),
@@ -1293,7 +1303,7 @@ def emit_primitive_literal(mod, body, st, result, expr):
     lit = expr.value()
     if type(lit) == viuact.lexemes.String:
         body.append(Ctor(
-            of_type = 'string',
+            of_type = 'text',
             slot = result,
             value = str(lit),
         ))
