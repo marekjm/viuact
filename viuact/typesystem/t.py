@@ -63,6 +63,9 @@ class Base:
                 templates,))
         self._templates = templates
 
+    def __eq__(self, other):
+        return (self.to_string() == other.to_string())
+
     def to_string(self):
         raise TypeError('{} type cannot be stringified'.format(type(self)))
 
