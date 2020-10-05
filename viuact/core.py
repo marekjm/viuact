@@ -1266,6 +1266,16 @@ def emit_arithmetic_operator(mod, body, st, result, expr):
         )))
 
         ret_t = sc.type_of(lhs_slot)
+        if not Type.Int.is_integer_type(ret_t):
+            raise viuact.errors.Type_mismatch(
+                pos = args[0].first_token().at(),
+                a = '<any integer type>',
+                b = ret_t.to_string(),
+            ).note('arithmetic operator {} requires integer operands'.format(
+                str(expr.operator().tok()),
+            ))
+
+        sc.unify_types(ret_t, sc.type_of(rhs_slot))
 
         for each in args[2:]:
             rhs_slot = emit_expr(
@@ -1275,6 +1285,7 @@ def emit_arithmetic_operator(mod, body, st, result, expr):
                 result = rhs_slot,
                 expr = each,
             )
+            sc.unify_types(ret_t, sc.type_of(rhs_slot))
             body.append(Verbatim('{} {} {} {}'.format(
                 op,
                 result.to_string(),
