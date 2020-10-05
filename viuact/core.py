@@ -23,21 +23,22 @@ def typeof(value):
 
 class Type:
     class Int(viuact.typesystem.t.Value):
+        SIGNED_INTEGER_TYPES = (
+            'i8',
+            'i16',
+            'i32',
+            'i64',
+        )
+        UNSIGNED_INTEGER_TYPES = (
+            'u8',
+            'u16',
+            'u32',
+            'u64',
+        )
+        INTEGER_TYPES = (SIGNED_INTEGER_TYPES + UNSIGNED_INTEGER_TYPES)
+
         def cast_from(self, t):
-            signed_integer_types = (
-                'i8',
-                'i16',
-                'i32',
-                'i64',
-            )
-            unsigned_integer_types = (
-                'u8',
-                'u16',
-                'u32',
-                'u64',
-            )
-            integer_types = (signed_integer_types + unsigned_integer_types)
-            if t.to_string() not in integer_types:
+            if t.to_string() not in Type.Int.INTEGER_TYPES:
                 return False
 
             # Integers should be classified according to:
@@ -62,6 +63,11 @@ class Type:
             bitwidth_this = int(self.to_string()[1:])
             bitwidth_that = int(self.to_string()[1:])
             return (bitwidth_this >= bitwidth_that)
+
+        @staticmethod
+        def is_integer_type(t):
+            tt = (I(viuact.typesystem.t.Value) | t)
+            return (tt.to_string() in Type.Int.INTEGER_TYPES)
 
     def string():
         return viuact.typesystem.t.Value(
