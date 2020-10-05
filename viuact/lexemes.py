@@ -62,6 +62,18 @@ class Operator_concat(Lexeme): # or double-dot? See "double dotted note" in musi
 class Operator_ellipsis(Lexeme):
     pattern = re.compile(r'\.\.\.')
 
+class Operator_plus(Lexeme):
+    pattern = re.compile(r'\+')
+
+class Operator_minus(Lexeme):
+    pattern = re.compile(r'\-')
+
+class Operator_star(Lexeme):
+    pattern = re.compile(r'\*')
+
+class Operator_solidus(Lexeme):
+    pattern = re.compile(r'/')
+
 class Let(Lexeme):
     pattern = re.compile(r'\blet\b')
 
@@ -142,6 +154,10 @@ Lexeme.patterns = [
     Operator_ellipsis,
     Operator_concat,
     Operator_dot,
+    Operator_plus,
+    Operator_minus,
+    Operator_star,
+    Operator_solidus,
     Let,
     Val,
     If,

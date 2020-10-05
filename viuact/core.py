@@ -1214,9 +1214,86 @@ def emit_operator_concat(mod, body, st, result, expr):
 
     return result
 
+def emit_arithmetic_operator(mod, body, st, result, expr):
+    if len(expr.arguments()) < 2:
+        raise viuact.errors.Invalid_arity(
+            pos = expr.operator().tok().at(),
+            s = str(expr.operator()),
+            kind = viuact.errors.Invalid_arity.OPERATOR,
+        ).note('expected at least 2 arguments, got {}'.format(
+            len(expr.arguments()),
+        ))
+
+    operator_ops = {
+        '+': 'add',
+        '-': 'sub',
+        '*': 'mul',
+        '/': 'div',
+    }
+    op = operator_ops[str(expr.operator().tok())]
+
+    with st.scoped() as sc:
+        lhs_slot = sc.get_slot(None)
+        rhs_slot = sc.get_slot(None)
+
+        args = expr.arguments()
+
+        lhs_slot = emit_expr(
+            mod = mod,
+            body = body,
+            st = sc,
+            result = lhs_slot,
+            expr = args[0],
+        )
+        rhs_slot = emit_expr(
+            mod = mod,
+            body = body,
+            st = sc,
+            result = rhs_slot,
+            expr = args[1],
+        )
+        body.append(Verbatim('{} {} {} {}'.format(
+            op,
+            result.to_string(),
+            lhs_slot.to_string(),
+            rhs_slot.to_string(),
+        )))
+
+        ret_t = sc.type_of(lhs_slot)
+
+        for each in args[2:]:
+            rhs_slot = emit_expr(
+                mod = mod,
+                body = body,
+                st = sc,
+                result = rhs_slot,
+                expr = each,
+            )
+            body.append(Verbatim('{} {} {} {}'.format(
+                op,
+                result.to_string(),
+                result.to_string(),
+                rhs_slot.to_string(),
+            )))
+
+        sc.deallocate_slot(lhs_slot)
+        sc.deallocate_slot(rhs_slot)
+
+        st.type_of(result, ret_t)
+
+    return result
+
 def emit_operator_call(mod, body, st, result, expr):
+    ARITHMETIC_OPERATORS = (
+        viuact.lexemes.Operator_plus,
+        viuact.lexemes.Operator_minus,
+        viuact.lexemes.Operator_star,
+        viuact.lexemes.Operator_solidus,
+    )
     if type(expr.operator()) is viuact.lexemes.Operator_concat:
         return emit_operator_concat(mod, body, st, result, expr)
+    elif type(expr.operator()) in ARITHMETIC_OPERATORS:
+        return emit_arithmetic_operator(mod, body, st, result, expr)
     raise None
 
 def emit_enum_ctor_call(mod, body, st, result, form):
@@ -1315,7 +1392,7 @@ def emit_primitive_literal(mod, body, st, result, expr):
             slot = result,
             value = str(lit),
         ))
-        st.type_of(result, Type.i8())
+        st.type_of(result, Type.i64())
         return result
     if type(lit) == viuact.lexemes.Bool_literal:
         body.append(Ctor(

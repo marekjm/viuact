@@ -520,6 +520,10 @@ def parse_throw(group):
 
 OPERATORS = (
     viuact.lexemes.Operator_concat,
+    viuact.lexemes.Operator_plus,
+    viuact.lexemes.Operator_minus,
+    viuact.lexemes.Operator_star,
+    viuact.lexemes.Operator_solidus,
 )
 
 def parse_operator_call(group):
