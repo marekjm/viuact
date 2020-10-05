@@ -1300,6 +1300,62 @@ def emit_arithmetic_operator(mod, body, st, result, expr):
 
     return result
 
+def emit_comparison_operator(mod, body, st, result, expr):
+    if len(expr.arguments()) != 2:
+        raise viuact.errors.Invalid_arity(
+            pos = expr.operator().tok().at(),
+            s = str(expr.operator()),
+            kind = viuact.errors.Invalid_arity.OPERATOR,
+        ).note('expected 2 arguments, got {}'.format(
+            len(expr.arguments()),
+        ))
+
+    operator_ops = {
+        '>':  'gt',
+        '>=': 'gte',
+        '<':  'lt',
+        '<=': 'lte',
+        '=':  'eq',
+        '!=': 'eq',
+    }
+    op = operator_ops[str(expr.operator().tok())]
+
+    with st.scoped() as sc:
+        lhs_slot = sc.get_slot(None)
+        rhs_slot = sc.get_slot(None)
+
+        args = expr.arguments()
+
+        lhs_slot = emit_expr(
+            mod = mod,
+            body = body,
+            st = sc,
+            result = lhs_slot,
+            expr = args[0],
+        )
+        rhs_slot = emit_expr(
+            mod = mod,
+            body = body,
+            st = sc,
+            result = rhs_slot,
+            expr = args[1],
+        )
+        body.append(Verbatim('{} {} {} {}'.format(
+            op,
+            result.to_string(),
+            lhs_slot.to_string(),
+            rhs_slot.to_string(),
+        )))
+        if str(expr.operator().tok()) == '!=':
+            body.append(Verbatim('not {}'.format(result.to_string())))
+
+        sc.deallocate_slot(lhs_slot)
+        sc.deallocate_slot(rhs_slot)
+
+        st.type_of(result, Type.bool())
+
+    return result
+
 def emit_operator_call(mod, body, st, result, expr):
     ARITHMETIC_OPERATORS = (
         viuact.lexemes.Operator_plus,
@@ -1307,10 +1363,20 @@ def emit_operator_call(mod, body, st, result, expr):
         viuact.lexemes.Operator_star,
         viuact.lexemes.Operator_solidus,
     )
+    CMP_OPERATORS = (
+        viuact.lexemes.Operator_lte,
+        viuact.lexemes.Operator_lt,
+        viuact.lexemes.Operator_gte,
+        viuact.lexemes.Operator_gt,
+        viuact.lexemes.Operator_neq,
+        viuact.lexemes.Operator_eq,
+    )
     if type(expr.operator()) is viuact.lexemes.Operator_concat:
         return emit_operator_concat(mod, body, st, result, expr)
     elif type(expr.operator()) in ARITHMETIC_OPERATORS:
         return emit_arithmetic_operator(mod, body, st, result, expr)
+    elif type(expr.operator()) in CMP_OPERATORS:
+        return emit_comparison_operator(mod, body, st, result, expr)
     raise None
 
 def emit_enum_ctor_call(mod, body, st, result, form):

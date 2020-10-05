@@ -524,6 +524,12 @@ OPERATORS = (
     viuact.lexemes.Operator_minus,
     viuact.lexemes.Operator_star,
     viuact.lexemes.Operator_solidus,
+    viuact.lexemes.Operator_lte,
+    viuact.lexemes.Operator_lt,
+    viuact.lexemes.Operator_gte,
+    viuact.lexemes.Operator_gt,
+    viuact.lexemes.Operator_neq,
+    viuact.lexemes.Operator_eq,
 )
 
 def parse_operator_call(group):

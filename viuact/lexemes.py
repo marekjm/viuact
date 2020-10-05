@@ -74,6 +74,24 @@ class Operator_star(Lexeme):
 class Operator_solidus(Lexeme):
     pattern = re.compile(r'/')
 
+class Operator_lte(Lexeme):
+    pattern = re.compile(r'<=')
+
+class Operator_lt(Lexeme):
+    pattern = re.compile(r'<')
+
+class Operator_gte(Lexeme):
+    pattern = re.compile(r'>=')
+
+class Operator_gt(Lexeme):
+    pattern = re.compile(r'>')
+
+class Operator_neq(Lexeme):
+    pattern = re.compile(r'!=')
+
+class Operator_eq(Lexeme):
+    pattern = re.compile(r'=')
+
 class Let(Lexeme):
     pattern = re.compile(r'\blet\b')
 
@@ -158,6 +176,12 @@ Lexeme.patterns = [
     Operator_minus,
     Operator_star,
     Operator_solidus,
+    Operator_lte,
+    Operator_lt,
+    Operator_gte,
+    Operator_gt,
+    Operator_neq,
+    Operator_eq,
     Let,
     Val,
     If,
