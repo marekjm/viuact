@@ -285,6 +285,17 @@ class Slot:
             register_set = register_set,
         )
 
+    def make_copy(self):
+        s = Slot(
+            name = self.name,
+            index = self.index,
+            register_set = self.register_set,
+        )
+        s._is_pointer = self.is_pointer()
+        s._is_disposable = self.is_disposable()
+        s._inhibit_dereference = self.inhibit_dereference()
+        return s
+
     def is_void(self):
         return (self.register_set == Register_set.VOID)
 
@@ -295,7 +306,7 @@ class Slot:
         return self._is_pointer
 
     def as_pointer(self, pointer = True):
-        s = Slot(self.name, self.index, self.register_set)
+        s = self.make_copy()
         s._is_pointer = pointer
         return s
 
@@ -303,7 +314,7 @@ class Slot:
         return self._is_disposable
 
     def as_disposable(self, disposable = True):
-        s = Slot(self.name, self.index, self.register_set)
+        s = self.make_copy()
         s._is_disposable = disposable
         return s
 
