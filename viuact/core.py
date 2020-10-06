@@ -951,16 +951,26 @@ def emit_builtin_call(mod, body, st, result, form):
                 mod = mod,
                 body = body,
                 st = sc,
-                result = (sc.get_disposable_slot() if result.is_void() else result),
+                result = (
+                    sc.get_disposable_slot().inhibit_dereference(result.inhibit_dereference())
+                    if result.is_void()
+                    else result
+                ),
                 expr = form.arguments()[0],
             )
-            if sc.type_of(slot) == viuact.typesystem.t.Void():
+            arg_t = sc.type_of(slot)
+            if arg_t == viuact.typesystem.t.Void():
                 raise viuact.errors.Read_of_void(
                     pos = form.arguments()[0].first_token().at(),
                     by = 'print function',
                 )
+
             # st.store(slot.to_string(), Type.void())
-            body.append(Print(slot, Print.PRINT))
+
+            is_pointer = (type(arg_t) is viuact.typesystem.t.Pointer)
+            dereference_freely = (not slot.inhibit_dereference())
+            deref = (is_pointer and dereference_freely)
+            body.append(Print(slot.as_pointer(deref), Print.PRINT))
             body.append(Verbatim(''))
 
         return slot
@@ -1239,10 +1249,14 @@ def emit_operator_concat(mod, body, st, result, expr):
             result = rhs_slot,
             expr = args[1],
         )
-        if sc.type_of(rhs_slot).to_string() != Type.string().to_string():
+        arg_t = sc.type_of(rhs_slot)
+        if arg_t.to_string() != Type.string().to_string():
+            is_pointer = (type(arg_t) is viuact.typesystem.t.Pointer)
+            dereference_freely = (not rhs_slot.inhibit_dereference())
+            deref = (is_pointer and dereference_freely)
             body.append(Verbatim('text {} {}'.format(
                 rhs_slot.to_string(),
-                rhs_slot.to_string(),
+                rhs_slot.as_pointer(deref).to_string(),
             )))
         body.append(Verbatim('textconcat {} {} {}'.format(
             result.to_string(),
@@ -1258,10 +1272,14 @@ def emit_operator_concat(mod, body, st, result, expr):
                 result = rhs_slot,
                 expr = each,
             )
-            if sc.type_of(rhs_slot).to_string() != Type.string().to_string():
+            arg_t = sc.type_of(rhs_slot)
+            if arg_t.to_string() != Type.string().to_string():
+                is_pointer = (type(arg_t) is viuact.typesystem.t.Pointer)
+                dereference_freely = (not rhs_slot.inhibit_dereference())
+                deref = (is_pointer and dereference_freely)
                 body.append(Verbatim('text {} {}'.format(
                     rhs_slot.to_string(),
-                    rhs_slot.to_string(),
+                    rhs_slot.as_pointer(deref).to_string(),
                 )))
             body.append(Verbatim('textconcat {} {} {}'.format(
                 result.to_string(),
@@ -1990,7 +2008,7 @@ def emit_name_ref(mod, body, st, result, expr):
             str(expr.name()),
         ))
         st.cancel_slot(result)
-        return st.slot_of(str(expr.name()))
+        return st.slot_of(str(expr.name())).inhibit_dereference(result.inhibit_dereference())
     else:
         slot = st.slot_of(str(expr.name()))
         # viuact.util.log.raw('move to {} from {} for name-ref to {}'.format(
@@ -2243,6 +2261,14 @@ def emit_record_field_access(mod, body, st, result, expr):
             expr = expr.base(),
         )
 
+        record_t = sc.type_of(base)
+        pointered_base = (type(record_t) is viuact.typesystem.t.Pointer)
+        record_definition = (
+            mod.record(record_t.to().name())
+            if pointered_base
+            else mod.record(record_t.name())
+        )
+
         field = sc.get_slot(None)
         body.append(Ctor(
             of_type = 'atom',
@@ -2253,20 +2279,15 @@ def emit_record_field_access(mod, body, st, result, expr):
         # such opportunities); copying is expensive
         body.append(Verbatim('structat {} {} {}'.format(
             result.to_string(),
-            base.to_string(),
+            (base.as_pointer() if pointered_base else base).to_string(),
             field.to_string(),
         )))
-        body.append(Verbatim('copy {} {}'.format(
-            result.to_string(),
-            result.as_pointer().to_string()
-        )))
 
-        viuact.util.log.raw('typeof base: {}'.format(base.to_string()))
-        record_t = sc.type_of(base)
-        record_definition = mod.record(record_t.name())
         field_t = viuact.typesystem.t.Value(
             name = str(record_definition['fields'][str(expr.field())]),
         )
+        if result.inhibit_dereference():
+            field_t = viuact.typesystem.t.Pointer(field_t)
 
         # FIXME register the type in case of templates
         st.type_of(result, field_t)
