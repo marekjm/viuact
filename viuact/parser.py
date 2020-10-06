@@ -73,11 +73,7 @@ def wrap_infix(tokens):
         i += 1
 
         is_path_resolution = (each.t() is viuact.lexemes.Path_resolution)
-        is_field_access = (
-                (each.t() is viuact.lexemes.Operator_dot)
-            and (type(tmp[-1]) is One)
-            and (type(tmp[-1].first()) is viuact.lexemes.Name)
-        )
+        is_field_access = (each.t() is viuact.lexemes.Operator_dot)
 
         do_wrap = (is_path_resolution or is_field_access)
 

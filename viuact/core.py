@@ -2171,9 +2171,6 @@ def emit_record_ctor(mod, body, st, result, expr):
 def emit_record_field_access(mod, body, st, result, expr):
     with st.scoped() as sc:
         base = sc.get_disposable_slot()
-        viuact.util.log.raw('base slot: {}'.format(
-            base.to_string(),
-        ))
         base = emit_expr(
             mod = mod,
             body = body,
@@ -2183,9 +2180,6 @@ def emit_record_field_access(mod, body, st, result, expr):
         )
 
         field = sc.get_slot(None)
-        viuact.util.log.raw('field slot: {}'.format(
-            field.to_string(),
-        ))
         body.append(Ctor(
             of_type = 'atom',
             slot = field,
@@ -2203,15 +2197,20 @@ def emit_record_field_access(mod, body, st, result, expr):
             result.as_pointer().to_string()
         )))
 
-        record_t = st.type_of(base)
+        viuact.util.log.raw('typeof base: {}'.format(base.to_string()))
+        record_t = sc.type_of(base)
         record_definition = mod.record(record_t.name())
         field_t = viuact.typesystem.t.Value(
             name = str(record_definition['fields'][str(expr.field())]),
         )
-        viuact.util.log.raw(record_definition)
 
         # FIXME register the type in case of templates
         st.type_of(result, field_t)
+        viuact.util.log.raw('field-access: {} is {} -> {}'.format(
+            result.to_string(),
+            field_t.to_string(),
+            st.type_of(result),
+        ))
     return result
 
 def emit_expr(mod, body, st, result, expr):
