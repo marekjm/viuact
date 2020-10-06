@@ -92,6 +92,9 @@ class Operator_neq(Lexeme):
 class Operator_eq(Lexeme):
     pattern = re.compile(r'=')
 
+class Operator_ampersand(Lexeme):
+    pattern = re.compile(r'&')
+
 class Let(Lexeme):
     pattern = re.compile(r'\blet\b')
 
@@ -182,6 +185,7 @@ Lexeme.patterns = [
     Operator_gt,
     Operator_neq,
     Operator_eq,
+    Operator_ampersand,
     Let,
     Val,
     If,

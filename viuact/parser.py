@@ -577,6 +577,17 @@ def parse_expr(group):
             return parse_record_field_access(group)
         if group.lead().t() in OPERATORS:
             return parse_operator_call(group)
+        if group.lead().t() is viuact.lexemes.Operator_ampersand:
+            if len(group) != 2:
+                raise viuact.errors.Invalid_arity(
+                    pos = G.resolve_position(group),
+                    s = '&',
+                    kind = viuact.errors.Invalid_arity.OPERATOR,
+                ).note('only one argument can be supplied to operator &')
+            return viuact.forms.Inhibit_dereference(
+                operator = group.lead().val(),
+                expression = parse_expr(group[1]),
+            )
         viuact.util.log.raw('unrecognised leader: {} ({})'.format(
             typeof(group.lead()),
             group.lead().t(),

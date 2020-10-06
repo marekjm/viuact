@@ -433,6 +433,14 @@ class Record_field_access(Form):
     def field(self):
         return self._field
 
+class Inhibit_dereference(Form):
+    def __init__(self, operator, expression):
+        super().__init__(operator.tok())
+        self._expr = expression
+
+    def expr(self):
+        return self._expr
+
 
 Form.forms = [
     Fn,

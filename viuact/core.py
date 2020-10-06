@@ -260,6 +260,31 @@ class Slot:
         # non-disposable one it if detects that it is required.
         self._is_disposable = False
 
+        # Viuact by default dereferences pointers. This has several interesting
+        # results: the printing is pretty by default, and pointers work like
+        # references.
+        #
+        # However, sometimes you do not want the dereference to take place, you
+        # want the real deal - the bare, naked, raw pointer. If that is the case
+        # then you have to use the ampersand operator in the expression that
+        # would be dereferenced to inhibit the default behaviour. The result
+        # slot will then be given to the expression's emitter with a note that
+        # the automatic dereference should not be performed.
+        #
+        # By the way, this is also how you create pointers in Viuact - by
+        # inhibiting the automatic dereference. Compare this code, which moves
+        # the value between variables:
+        #
+        #       (let a    42)
+        #       (let a'   a)
+        #
+        # with this code, where a' is a pointer to a:
+        #
+        #       (let a    42)
+        #       (let a'   (& a))
+        #
+        self._inhibit_dereference = False
+
     def __eq__(self, other):
         if type(other) is not Slot:
             raise TypeError('cannot compare Slot to {}: {}'.format(
@@ -308,6 +333,14 @@ class Slot:
     def as_pointer(self, pointer = True):
         s = self.make_copy()
         s._is_pointer = pointer
+        return s
+
+    def inhibit_dereference(self, inhibit = None):
+        if inhibit is None:
+            return self._inhibit_dereference
+
+        s = self.make_copy()
+        s._inhibit_dereference = T(bool) | inhibit
         return s
 
     def is_disposable(self):
@@ -829,6 +862,7 @@ class Move:
     MOVE = 'move'
     COPY = 'copy'
     DELETE = 'delete'
+    POINTER = 'ptr'
 
     @staticmethod
     def make_move(source, dest):
@@ -852,6 +886,14 @@ class Move:
             Move.DELETE,
             source,
             None,
+        )
+
+    @staticmethod
+    def make_pointer(source, dest):
+        return Move(
+            Move.POINTER,
+            source,
+            dest,
         )
 
     def __init__(self, of_type : str, source : Slot, dest : Slot):
@@ -1958,12 +2000,23 @@ def emit_name_ref(mod, body, st, result, expr):
         # ))
         t = st.type_of(slot)
         st.name_slot(result, str(expr.name()))
-        st.type_of(result, t)
-        st.deallocate_slot(slot)
-        body.append(Move.make_move(
-            source = slot,
-            dest = result,
-        ))
+        if result.inhibit_dereference():
+            # viuact.util.log.raw('name-ref creates a pointer: {} <- {}'.format(
+            #     result.to_string(),
+            #     slot.to_string(),
+            # ))
+            st.type_of(result, viuact.typesystem.t.Pointer(t))
+            body.append(Move.make_pointer(
+                source = slot,
+                dest = result,
+            ))
+        else:
+            st.type_of(result, t)
+            st.deallocate_slot(slot)
+            body.append(Move.make_move(
+                source = slot,
+                dest = result,
+            ))
         return result
 
 def emit_throw(mod, body, st, result, expr):
@@ -2329,6 +2382,16 @@ def emit_expr(mod, body, st, result, expr):
             st = st,
             result = result,
             expr = expr,
+        )
+    if type(expr) is viuact.forms.Inhibit_dereference:
+        viuact.util.log.raw('inhibiting dereference on: {}'.format(
+            result.to_string()))
+        return emit_expr(
+            mod = mod,
+            body = body,
+            st = st,
+            result = result.inhibit_dereference(True),
+            expr = expr.expr(),
         )
     viuact.util.log.fixme('failed to emit expression: {}'.format(
         typeof(expr)))

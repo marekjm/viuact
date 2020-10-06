@@ -158,6 +158,24 @@ class Value(Base):
         )
 
 
+class Pointer(Base):
+    def __init__(self, to):
+        super().__init__(())
+        self._to = to
+
+    def __repr__(self):
+        return '(pointer: [{}])'.format(self._to.to_string())
+
+    def to_string(self):
+        return '*{}'.format(self._to.to_string())
+
+    def name(self):
+        return 'pointer'
+
+    def to(self):
+        return self._to
+
+
 # Function types are used to describe functions. They do not have a name and are
 # described by the types of their formal parameters and return type.
 class Fn(Base):
