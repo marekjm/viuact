@@ -8,26 +8,26 @@
 ;     (with None (print "none"))
 ;     (with Some x' (print x')))))
 
-(val ('a) print_stuff ('a) -> 'a)
-(let print_stuff (x) (print x))
+; (val ('a) print_stuff ('a) -> 'a)
+; (let print_stuff (x) (print x))
 
-(val print_i8 (i8) -> i8)
-(let print_i8 (x) (print x))
+; (val print_i8 (i8) -> i8)
+; (let print_i8 (x) (print x))
 
-(val print_string (string) -> string)
-(let print_string (x) (print x))
+; (val print_string (string) -> string)
+; (let print_string (x) (print x))
 
-(val ('a 'b) map (
-    (('a) option)
-    (('a) -> 'b)
-) -> (('b) option))
-(let map (x fn) (match x (
-    (with None { (print "nothing") (option::None) })
-    (with Some x' (option::Some (fn x')))
-)))
+; (val ('a 'b) map (
+;     (('a) option)
+;     (('a) -> 'b)
+; ) -> (('b) option))
+; (let map (x fn) (match x (
+;     (with None { (print "nothing") (option::None) })
+;     (with Some x' (option::Some (fn x')))
+; )))
 
-(exception Foo i8)
-(exception Bar)
+; (exception Foo i8)
+; (exception Bar)
 
 ; Stolen from http://dev.realworldocaml.org/records.html
 (type service_info {
@@ -35,10 +35,18 @@
     (val port           i16)        ; eg, 22
     (val protocol       string)     ; eg, tcp
 })
-(val fazoom (service_info) -> void)
-(let fazoom (sv) {
-    (let s (.. sv.service_name " " sv.port "/" sv.protocol))
-    (print s)
+; (val fazoom (service_info) -> void)
+; (let fazoom (sv) {
+;     (let s (.. sv.service_name " " sv.port "/" sv.protocol))
+;     (print s)
+; })
+
+(type heh {
+    (val sv service_info)
+})
+
+(type wat {
+    (val x i64)
 })
 
 (val main () -> i64)
@@ -59,30 +67,59 @@
     ;     (catch Foo x (print_i8 x))
     ; ))
 
-    (let sv_info (service_info {
-        (.service_name  "ssh")
-        (.port          22)
-        (.protocol      "tcp")
+    ; (let sv_info (service_info {
+    ;     (.service_name  "ssh")
+    ;     (.port          22)
+    ;     (.protocol      "tcp")
+    ; }))
+    ; (print sv_info)
+    ; (print_string sv_info.protocol)
+    ; (print sv_info)
+    ; (fazoom sv_info)
+
+    ; (print (+ 0 1 2 3 4 5))
+    ; (print (- 0 1 2 3 4 5))
+    ; (print ( * 1 2 3 4 5))
+    ; (print (/ 80 10 4 2))
+
+    ; (if (< 0 1) (print "yep") (print "nope"))
+    ; (if (> 0 1) (print "yep") (print "nope"))
+    ; (if (= 0 1) (print "yep") (print "nope"))
+    ; (if (!= 0 1) (print "yep") (print "nope"))
+
+    ; (print (.. "< 0 1  := " (if (< 0 1) "yep" "nope")))
+    ; (print (.. "> 0 1  := " (if (> 0 1) "yep" "nope")))
+    ; (print (.. "= 0 1  := " (if (= 0 1) "yep" "nope")))
+    ; (print (.. "!= 0 1 := " (if (!= 0 1) "yep" "nope")))
+
+    (let h (heh {
+        (.sv (service_info {
+            (.service_name  "nice")
+            (.port          69)
+            (.protocol      "tcp")
+        }))
     }))
-    (print sv_info)
-    (print_string sv_info.protocol)
-    (print sv_info)
-    (fazoom sv_info)
+    (let sv (& h.sv))
+    (print (& sv))
+    (print sv)
+    (print (.. "pointer: " (& sv)))
+    (print (.. "value:   " sv))
 
-    (print (+ 0 1 2 3 4 5))
-    (print (- 0 1 2 3 4 5))
-    (print ( * 1 2 3 4 5))
-    (print (/ 80 10 4 2))
+    ; (print (& h.sv))
+    ; (print sv)
+    ; (print sv.service_name)
+    ; (print h.sv.service_name)
+    ; (print h.sv.port)
+    ; (print h.sv.protocol)
 
-    (if (< 0 1) (print "yep") (print "nope"))
-    (if (> 0 1) (print "yep") (print "nope"))
-    (if (= 0 1) (print "yep") (print "nope"))
-    (if (!= 0 1) (print "yep") (print "nope"))
+    ; (let i  42)     ; i is an i64
+    ; (let i' (& i))  ; i' is a pointer to i64
+    ; (let x  (&* i')); x is an i64
 
-    (print (.. "< 0 1  := " (if (< 0 1) "yep" "nope")))
-    (print (.. "> 0 1  := " (if (> 0 1) "yep" "nope")))
-    (print (.. "= 0 1  := " (if (= 0 1) "yep" "nope")))
-    (print (.. "!= 0 1 := " (if (!= 0 1) "yep" "nope")))
+    ; (let w (wat {
+    ;     (.x 0)
+    ; }))
+    ; (print w.x)
 
     0
 })
