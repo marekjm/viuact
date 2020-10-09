@@ -2606,17 +2606,22 @@ def cc(source_root, source_file, module_name, forms, output_directory):
 
     function_bodies = {}
 
-    print(';')
-    if mod.name() == EXEC_MODULE:
-        print('; Function definitions')
-    else:
-        print('; Function definitions for module {}'.format(mod.name()))
-    print(';')
+    os.makedirs(output_directory, exist_ok = True)
+    with open(os.path.join(output_directory, output_file), 'w') as ofstream:
+        viuact.util.log.raw('?', ofstream)
 
-    for each in filter(lambda x: type(x) is viuact.forms.Fn, forms):
-        out = cc_fn(mod, each)
-        print()
-        print('.function: {}'.format(out.main.name))
-        for line in out.main.body:
-            print('    {}'.format(line.to_string()))
-        print('.end')
+        print = lambda s: ofstream.write('{}\n'.format(s))
+        print(';')
+        if mod.name() == EXEC_MODULE:
+            print('; Function definitions')
+        else:
+            print('; Function definitions for module {}'.format(mod.name()))
+        print(';')
+
+        for each in filter(lambda x: type(x) is viuact.forms.Fn, forms):
+            out = cc_fn(mod, each)
+            print('')
+            print('.function: {}'.format(out.main.name))
+            for line in out.main.body:
+                print('    {}'.format(line.to_string()))
+            print('.end')
