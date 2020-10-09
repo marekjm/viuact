@@ -170,10 +170,6 @@ class Module_info:
             'return': return_type,
             'template_parameters': template_parameters,
         }
-        # viuact.util.log.print('module info [{}]: local fn sig {}'.format(
-        #     self._name,
-        #     n,
-        # ))
         return self
 
     def signature(self, fn_name):
@@ -677,7 +673,6 @@ class State:
         key = slot.to_string()
         if (slot.index, slot.register_set,) not in self._allocated_slots:
             raise KeyError(slot.to_string())
-        # viuact.util.log.raw('type-of: {} <- {}'.format(key, t))
         return self._types.store(key, t)
 
     def _get_type_of(self, slot):
@@ -692,7 +687,6 @@ class State:
         if (slot.index, slot.register_set,) not in self._allocated_slots:
             raise viuact.errors.Read_of_untyped_slot(slot)
         t = self._types.load(key)
-        # viuact.util.log.raw('type-of: {} -> {}'.format(key, t))
         return t
 
     def type_of(self, slot, t = None):
@@ -1084,15 +1078,7 @@ def emit_direct_fn_call(mod, body, st, result, form):
             ))
         raise e
 
-    # viuact.util.log.raw('call to {}: signature = {}'.format(
-    #     called_fn_name,
-    #     signature,
-    # ))
     type_signature = mod.signature(called_fn_name)
-    # viuact.util.log.raw('call to {}: type sig =  {}'.format(
-    #     called_fn_name,
-    #     type_signature,
-    # ))
 
     args = []
     if True:
@@ -2003,10 +1989,10 @@ def emit_name_ref(mod, body, st, result, expr):
         ))
         raise None
     if result.is_disposable():
-        viuact.util.log.raw('cancelled disposable slot {} for name-ref to {}'.format(
-            result.to_string(),
-            str(expr.name()),
-        ))
+        # viuact.util.log.raw('cancelled disposable slot {} for name-ref to {}'.format(
+        #     result.to_string(),
+        #     str(expr.name()),
+        # ))
         st.cancel_slot(result)
         return st.slot_of(str(expr.name())).inhibit_dereference(result.inhibit_dereference())
     else:
@@ -2291,11 +2277,6 @@ def emit_record_field_access(mod, body, st, result, expr):
 
         # FIXME register the type in case of templates
         st.type_of(result, field_t)
-        viuact.util.log.raw('field-access: {} is {} -> {}'.format(
-            result.to_string(),
-            field_t.to_string(),
-            st.type_of(result),
-        ))
     return result
 
 def emit_expr(mod, body, st, result, expr):
@@ -2405,8 +2386,6 @@ def emit_expr(mod, body, st, result, expr):
             expr = expr,
         )
     if type(expr) is viuact.forms.Inhibit_dereference:
-        viuact.util.log.raw('inhibiting dereference on: {}'.format(
-            result.to_string()))
         return emit_expr(
             mod = mod,
             body = body,
@@ -2419,7 +2398,7 @@ def emit_expr(mod, body, st, result, expr):
     raise None
 
 def cc_fn(mod, fn):
-    viuact.util.log.print('cc.fn: {}::{}/{}'.format(
+    viuact.util.log.debug('cc.fn: {}::{}/{}'.format(
         mod.name(),
         fn.name(),
         len(fn.parameters()),
@@ -2543,7 +2522,7 @@ def cc_type(mod, form):
             pt = tuple(parameter_types),
             templates = (),
         )
-    viuact.util.log.raw('cannot compile type from: {} [{}]'.format(
+    viuact.util.log.error('cannot compile type from: {} [{}]'.format(
         str(form),
         typeof(form),
     ))
@@ -2553,7 +2532,7 @@ def cc_type(mod, form):
 def cc(source_root, source_file, module_name, forms, output_directory):
     output_file = os.path.normpath(os.path.splitext(source_file)[0] + '.asm')
 
-    viuact.util.log.print('cc: [{}]/{} -> {}/{}'.format(
+    viuact.util.log.debug('cc: [{}]/{} -> {}/{}'.format(
         source_root,
         source_file[len(source_root) + 1:],
         output_directory,
@@ -2608,8 +2587,6 @@ def cc(source_root, source_file, module_name, forms, output_directory):
 
     os.makedirs(output_directory, exist_ok = True)
     with open(os.path.join(output_directory, output_file), 'w') as ofstream:
-        viuact.util.log.raw('?', ofstream)
-
         print = lambda s: ofstream.write('{}\n'.format(s))
         print(';')
         if mod.name() == EXEC_MODULE:

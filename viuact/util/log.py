@@ -1,6 +1,15 @@
+import os
 import sys
 
 import viuact.util.colors
+
+
+def means_enabled(value):
+    if value is None:
+        return False
+    if value in ('true', 'on', '1',):
+        return True
+    return False
 
 
 def raw(*args):
@@ -47,6 +56,8 @@ def error(s, path = None, pos = None):
     ))
 
 def debug(s, path = None, pos = None):
+    if not means_enabled(os.environ.get('VIUACT_DEBUG')):
+        return
     sys.stderr.write('{}: {}\n'.format(
         make_prefix('debug', path, pos),
         s,

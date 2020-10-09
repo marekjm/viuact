@@ -323,11 +323,6 @@ def parse_enum_ctor_call(group):
                 break
             to = to[1]
 
-    # viuact.util.log.raw('parse.enum_ctor_call.field:      {}'.format(enum_field))
-    # viuact.util.log.raw('parse.enum_ctor_call.enum:       {}'.format(enum_name))
-    # viuact.util.log.raw('parse.enum_ctor_call.mod_prefix: {}'.format(
-    #     list(map(str, module_prefix))))
-
     if len(group) > 2:
         raise viuact.errors.Invalid_arity(
             group.first_token(),
@@ -350,12 +345,6 @@ def parse_enum_ctor_call(group):
 def parse_record_field_access(group):
     base = group[1]
     field = group[2].val()
-
-    viuact.util.log.raw('access to field {} of {} [{}]'.format(
-        str(field),
-        str(base),
-        typeof(base),
-    ))
 
     return viuact.forms.Record_field_access(
         base = parse_expr(base),
@@ -387,7 +376,6 @@ def parse_fn_call(group):
                 G.resolve_position(name),
                 typeof(last),
             ).note('expected function or enum constructor name')
-        viuact.util.log.raw('last: {} => {}'.format(typeof(last), str(last)))
         raise viuact.errors.Fail(G.resolve_position(name),
             'module paths are not implemented')
     elif type(name) is Element:
@@ -412,7 +400,6 @@ def parse_fn_call(group):
 
     if args and type(args[0]) is viuact.forms.Record_ctor:
         if len(args) > 1:
-            viuact.util.log.raw(name)
             raise viuact.errors.Record_ctor_received_more_than_one_argument(
                 name.first_token().at(),
                 str(name.name()),
@@ -682,16 +669,6 @@ def parse_val_fn(group):
     parameter_list = list(map(parse_type, parameter_list))
     return_type = parse_type(return_type)
 
-    fmt = 'type of {}: ({}) -> {}'
-    if template_parameters:
-        fmt += ' [with {}]'
-    viuact.util.log.note(fmt.format(
-        str(name),
-        ', '.join(map(lambda a: a.to_string(), parameter_list)),
-        return_type.to_string(),
-        ', '.join(map(lambda a: a.to_string(), template_parameters)),
-    ))
-
     return viuact.forms.Val_fn_spec(
         name = name,
         template_parameters = template_parameters,
@@ -721,7 +698,6 @@ def parse_val(group):
     if len(group) == is_fn:
         return parse_val_fn(group)
 
-    viuact.util.log.raw('{}'.format(group.val()))
     raise None
 
 def parse_enum_field(group):
