@@ -2529,13 +2529,14 @@ def cc_type(mod, form):
     raise viuact.errors.Internal_compiler_error()
 
 
-def cc(source_root, source_file, module_name, forms, output_directory):
-    output_file = os.path.normpath(os.path.splitext(source_file)[0] + '.asm')
+def cc(source_root, source_file, module_name, forms, build_directory):
+    base_output_file = (os.path.splitext(source_file)[0] + '.asm')
+    output_file = os.path.normpath(base_output_file)
 
     viuact.util.log.debug('cc: [{}]/{} -> {}/{}'.format(
         source_root,
-        source_file[len(source_root) + 1:],
-        output_directory,
+        source_file,
+        build_directory,
         output_file,
     ))
 
@@ -2585,8 +2586,10 @@ def cc(source_root, source_file, module_name, forms, output_directory):
 
     function_bodies = {}
 
+    output_directory = os.path.split(os.path.join(build_directory, output_file))[0]
     os.makedirs(output_directory, exist_ok = True)
-    with open(os.path.join(output_directory, output_file), 'w') as ofstream:
+
+    with open(os.path.join(build_directory, output_file), 'w') as ofstream:
         print = lambda s: ofstream.write('{}\n'.format(s))
         print(';')
         if mod.name() == EXEC_MODULE:

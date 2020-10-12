@@ -16,7 +16,8 @@ HELP = '''{NAME}
     {executable} - compile Viuact source code into Viua VM assembly language
 
 {SYNOPSIS}
-    {exec_tool} --mode %arg(mode) %arg(file).vt
+    {exec_tool} src/%arg(file).vt
+    {exec_blank} -r src src/%arg(file).vt
     {exec_blank} --version
     {exec_blank} --help
 
@@ -35,6 +36,15 @@ HELP = '''{NAME}
     %opt(--env)
         %text
         Display information about the environment that the compiler will use.
+
+    %opt(-r)
+        %text
+        Override source root inferred by the compiler.
+
+        %text
+        Use this option if the compiler incorrectly infers the source root (ie,
+        the directory which is the root of a module structure for Viuact
+        program).
 
     %opt(-t), %opt(--tokenise)
         %text
@@ -142,6 +152,91 @@ def report_error(source_file_name, e, human = True):
     for each in e.fallout():
         report_error(source_file_name, e, human)
 
+def parse_options(args):
+    options = {
+        'source_root': '.',
+        'stop_after_tokenisation': False,
+        'stop_after_parsing': False,
+    }
+    source_file = ''
+
+    if len(args) == 0:
+        # not enough arguments
+        exit(1)
+
+    source_file = args[-1]
+
+    if len(args) == 1:
+        return (options, source_file,)
+
+    i = 0
+    while i < (len(args) - 1):  # -1 because skip the source file
+        each = args[i]
+
+        if each == '-r':
+            i += 1
+            options['source_root'] = args[i]
+        elif each in ('-t', '--tokenise',):
+            options['stop_after_tokenisation'] = True
+        elif each in ('-p', '--parse',):
+            options['stop_after_parsing'] = True
+
+        i += 1
+
+    return (options, source_file,)
+
+DEFAULT_SOURCE_ROOT = '.'
+
+SOURCE_KIND_EXEC = 'exec'
+SOURCE_KIND_LINK = 'link'
+
+def get_source_location(options, raw_path):
+    working_directory = (os.getcwd() + os.path.sep)
+
+    source_root = options['source_root']
+    source_root = (os.path.normpath(os.path.abspath(source_root))
+            + os.path.sep)
+    source_root = (source_root.replace(working_directory, '') or
+            DEFAULT_SOURCE_ROOT)
+
+    used_path = os.path.normpath(os.path.abspath(raw_path))
+    used_path = used_path.replace(working_directory, '')
+    # print('used: {}'.format(used_path))
+
+    if options['source_root'] != DEFAULT_SOURCE_ROOT:
+        return (
+            os.path.normpath(source_root),
+            os.path.normpath(used_path.replace(source_root, '')),
+        )
+
+    parts = used_path.split(os.path.sep)
+    parts.reverse()
+    # print('part: {}'.format(parts))
+
+    source_file_parts = [parts[0]]
+    for each in parts[1:]:
+        if each[0].islower():
+            break
+        source_file_parts.append(each)
+    source_file_parts.reverse()
+
+    source_file = os.path.sep.join(source_file_parts)
+
+    source_root = parts[len(source_file_parts):]
+    source_root.reverse()
+    source_root = os.path.sep.join(source_root)
+
+    return (
+        os.path.normpath(source_root),
+        os.path.normpath(source_file),
+    )
+
+def determine_source_kind(source_file):
+    file_name = os.path.split(source_file)[1]
+    if (file_name[0].isupper() or file_name == 'mod.vt'):
+        return SOURCE_KIND_LINK
+    return SOURCE_KIND_EXEC
+
 def main(executable_name, args):
     if '--version' in args:
         print('{} version {} ({})'.format(
@@ -160,63 +255,41 @@ def main(executable_name, args):
         )
         exit(0)
 
-    source_file_arg_index = 0
-    stop_after_tokenisation = False
-    stop_after_parsing = False
-    if args[source_file_arg_index] in ('-t', '--tokenise', '-p', '--parse',):
-        stop_after_tokenisation = (
-            args[source_file_arg_index] in ('-t', '--tokenise',))
-        stop_after_parsing = (
-            args[source_file_arg_index] in ('-p', '--parse',))
-        source_file_arg_index = 1
+    options, source_file = parse_options(args)
 
-    source_file = args[source_file_arg_index]
-    if not os.path.isfile(source_file):
+    source_root, source_file = get_source_location(options, source_file)
+    source_kind = determine_source_kind(source_file)
+
+    # print('file: {}'.format(source_file))
+    # print('root: {}'.format(source_root))
+    # print('kind: {}'.format(source_kind))
+
+    source_full_path = os.path.join(source_root, source_file)
+    if not os.path.isfile(source_full_path):
         viuact.util.log.error('not a file: {}'.format(
-            viuact.util.colors.colorise_repr('white', source_file)))
+            viuact.util.colors.colorise_repr('white', source_full_path)))
         exit(1)
 
     source_text = ''
-    with open(source_file, 'r') as ifstream:
+    with open(source_full_path, 'r') as ifstream:
         source_text = ifstream.read()
-
 
     ############################################################################
     # LEXICAL AND SYNTACTICAL ANALYSIS
     #   a.k.a. lexing and parsing
     try:
         tokens = viuact.lexer.lex(source_text)
-        if stop_after_tokenisation:
+        if options['stop_after_tokenisation']:
             print(json.dumps(viuact.lexer.to_data(tokens), indent = 2))
             exit(0)
 
         forms = viuact.parser.parse(tokens)
-        if stop_after_parsing:
+        if options['stop_after_parsing']:
             print(json.dumps(viuact.parser.to_data(forms), indent = 2))
             exit(0)
 
         module_name = viuact.core.EXEC_MODULE
         output_directory = 'build/_default'
-
-        source_file = os.path.normpath(source_file)
-
-        DEFAULT_SOURCE_ROOT = '.'
-        source_root = os.path.normpath(
-            args[source_file_arg_index + 1]
-            if len(args) > (source_file_arg_index + 1) else
-            DEFAULT_SOURCE_ROOT
-        )
-        if (not os.path.isabs(source_file)) and source_root == DEFAULT_SOURCE_ROOT:
-            source_file = os.path.join(DEFAULT_SOURCE_ROOT, source_file)
-
-        if not source_file.startswith(source_root):
-            raise viuact.errors.Fail(
-                (0, 0,), 'source file not in source root'
-            ).note(
-                'source file: {}'.format(source_file)
-            ).note(
-                'source root: {}'.format(source_root)
-            )
 
         viuact.core.cc(
             source_root,
