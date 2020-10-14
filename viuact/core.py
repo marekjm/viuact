@@ -2406,7 +2406,7 @@ def cc_fn(mod, fn):
 
     fn_name = '{}/{}'.format(fn.name(), len(fn.parameters()))
     main_fn_name = (
-        '{}::{}/{}'.format(mod.name(), fn_name)
+        '{}::{}'.format(mod.name(), fn_name)
         if mod.name() != EXEC_MODULE else
         fn_name)
     signature = mod.signature(fn_name)
