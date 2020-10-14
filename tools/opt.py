@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import os
+import subprocess
 import sys
 
 import viuact.util.help
+import viuact.util.log
 
 
 HELP = '''{NAME}
@@ -40,6 +42,15 @@ HELP = '''{NAME}
 EXECUTABLE = 'viuact-opt'
 
 
+SOURCE_KIND_EXEC = 'exec'
+SOURCE_KIND_LINK = 'link'
+
+def determine_source_kind(source_file):
+    file_name = os.path.split(source_file)[1]
+    if (file_name[0].isupper() or file_name == 'mod.asm'):
+        return SOURCE_KIND_LINK
+    return SOURCE_KIND_EXEC
+
 def main(executable_name, args):
     if '--version' in args:
         print('{} version {} ({})'.format(
@@ -57,6 +68,41 @@ def main(executable_name, args):
             text = HELP,
         )
         exit(0)
+
+    source_path = args[-1]
+    if not os.path.isfile(source_path):
+        viuact.util.log.error('not a file: {}'.format(
+            viuact.util.colors.colorise_repr('white', source_path)))
+        exit(1)
+
+    assembler_args = [
+        'viua-asm',
+        '-Wunused-value',
+        '-Wunused-register',
+    ]
+
+    extension = 'bc'
+    if determine_source_kind(source_path) == SOURCE_KIND_LINK:
+        assembler_args.append('-c')
+        extension = 'module'
+
+    output_path = '{}.{}'.format(
+        source_path.rsplit('.', maxsplit = 1)[0],
+        extension,
+    )
+    assembler_args.extend(['-o', output_path])
+
+    assembler_args.append(source_path)
+
+    viuact.util.log.debug(' '.join(assembler_args))
+
+    assembler_run = subprocess.Popen(
+        args = tuple(assembler_args),
+    )
+    ret = assembler_run.wait()
+    if ret != 0:
+        viuact.util.log.error('assembly rejected')
+        exit(1)
 
 
 main(sys.argv[0], sys.argv[1:])
