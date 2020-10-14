@@ -2529,6 +2529,28 @@ def cc_type(mod, form):
     raise viuact.errors.Internal_compiler_error()
 
 
+def signature_to_string(full_name, sig):
+    tp = sig['template_parameters']
+    fp = sig['parameters']
+    rt = sig['return']
+
+    fmt = '(val {name} ({fp}) -> {rt})'
+    if tp:
+        fmt = '(val ({tp}) {name} ({fp}) -> {rt})'
+
+    template_parameters = ' '.join(map(lambda x: x.to_string(), tp))
+
+    formal_parameters = ' '.join(map(lambda x: x.to_string(), fp))
+    return_type = rt.to_string()
+
+    return fmt.format(
+        tp = template_parameters,
+        name = full_name.split('/')[0],
+        fp = formal_parameters,
+        rt = return_type,
+    )
+
+
 def cc(source_root, source_file, module_name, forms, build_directory):
     base_output_file = (os.path.splitext(source_file)[0] + '.asm')
     output_file = os.path.normpath(base_output_file)
@@ -2600,7 +2622,12 @@ def cc(source_root, source_file, module_name, forms, build_directory):
 
         for each in filter(lambda x: type(x) is viuact.forms.Fn, forms):
             out = cc_fn(mod, each)
+
             print('')
+
+            sig = mod.signature(out.main.name.split('::')[-1])
+            print('; {}'.format(signature_to_string(out.main.name, sig)))
+
             print('.function: {}'.format(out.main.name))
             for line in out.main.body:
                 print('    {}'.format(line.to_string()))
