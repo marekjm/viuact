@@ -291,8 +291,9 @@ def main(executable_name, args):
         module_name = (
             viuact.core.EXEC_MODULE
             if (source_kind == SOURCE_KIND_EXEC) else
-            os.path.split(source_file)[0].replace('/', '::')
+            source_file.rsplit('.', maxsplit = 1)[0].replace('/', '::')
         )
+
         output_directory = 'build/_default'
 
         viuact.core.cc(
