@@ -4,6 +4,8 @@
 
 .*
 
+*.asm
+
 !.issue
 .issue/*
 !.issue/objects
