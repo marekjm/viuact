@@ -804,6 +804,40 @@ def parse_record_definition(group):
         fields = fields,
     )
 
+def flatten_module_path(path):
+    if type(path) is Element:
+        return [path.val()]
+
+    if type(path.lead().val()) is not viuact.lexemes.Path_resolution:
+        raise viuact.errors.Unexpected_token(
+            path.lead().val().tok().at(),
+            str(path.lead().val()),
+        )
+
+    base = path[1]
+    member = path[2]
+
+    flat = []
+    flat.extend(flatten_module_path(base))
+    flat.extend(flatten_module_path(member))
+
+    return flat
+
+def parse_import(group):
+    module_name = group[1]
+
+    module = None
+    if type(module_name) is Element:
+        module = [module_name.val()]
+    elif type(module_name) is Group:
+        module = flatten_module_path(module_name)
+
+    viuact.util.log.raw(module)
+
+    return viuact.forms.Import(
+        module = module,
+    )
+
 def parse_impl(groups):
     forms = []
 
@@ -818,9 +852,14 @@ def parse_impl(groups):
             forms.append(parse_exception_definition(g))
         elif g.lead().t() is viuact.lexemes.Type:
             forms.append(parse_record_definition(g))
+        elif g.lead().t() is viuact.lexemes.Import:
+            forms.append(parse_import(g))
         else:
             tok = g.lead().val().tok()
-            raise viuact.errors.Unexpected_token(tok.at(), str(tok))
+            raise viuact.errors.Unexpected_token(
+                tok.at(),
+                str(tok),
+            ).note('token does not create a valid top-level construct')
 
     return forms
 

@@ -441,6 +441,17 @@ class Inhibit_dereference(Form):
     def expr(self):
         return self._expr
 
+class Import(Form):
+    def __init__(self, module):
+        super().__init__(module[0].tok())
+        self._module = module  # [viuact.lexemes.Mod_name]
+
+    def module(self):
+        return self._module
+
+    def path(self):
+        return '::'.join(map(str, self.module()))
+
 
 Form.forms = [
     Fn,
