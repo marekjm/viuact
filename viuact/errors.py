@@ -366,3 +366,10 @@ class Read_of_untyped_slot(Internal_compiler_error):
 
     def __str__(self):
         return '{}: {}'.format(self.what(), self.slot.to_string())
+
+class Feature_not_implemented(Internal_compiler_error):
+    def __init__(self, feature):
+        self.feature = feature
+
+    def __str__(self):
+        return '{}: {}'.format(self.what(), self.feature)
