@@ -125,6 +125,12 @@ class Try(Lexeme):
 class Catch(Lexeme):
     pattern = re.compile(r'\bcatch\b')
 
+class Trait(Lexeme):
+    pattern = re.compile(r'\btrait\b')
+
+class Class(Lexeme):
+    pattern = re.compile(r'\bclass\b')
+
 class Type(Lexeme):
     pattern = re.compile(r'\btype\b')
 
@@ -134,8 +140,32 @@ class Struct(Lexeme):
 class Of(Lexeme):
     pattern = re.compile(r'\bof\b')
 
+class As(Lexeme):
+    pattern = re.compile(r'\bas\b')
+
+class For(Lexeme):
+    pattern = re.compile(r'\bfor\b')
+
 class Tail(Lexeme):
     pattern = re.compile(r'\btailcall\b')
+
+class Actor(Lexeme):
+    pattern = re.compile(r'\bactor\b')
+
+class Module(Lexeme):
+    pattern = re.compile(r'\bmodule\b')
+
+class Import(Lexeme):
+    pattern = re.compile(r'\bimport\b')
+
+class Export(Lexeme):
+    pattern = re.compile(r'\bexport\b')
+
+class Static(Lexeme):
+    pattern = re.compile(r'\bstatic\b')
+
+class Void(Lexeme):
+    pattern = re.compile(r'\bvoid\b')
 
 class Drop(Lexeme):
     pattern = re.compile(r'\b_\b')
@@ -196,9 +226,19 @@ Lexeme.patterns = [
     Throw,
     Try,
     Catch,
+    Class,
+    Trait,
     Type,
     Struct,
     Of,
+    As,
+    For,
+    Tail,
+    Actor,
+    Module,
+    Import,
+    Static,
+    Void,
     Bool_literal,
     Labelled_name,
     Template_parameter,
