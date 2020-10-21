@@ -160,10 +160,6 @@ def parse_options(args):
     }
     source_file = ''
 
-    if len(args) == 0:
-        # not enough arguments
-        exit(1)
-
     source_file = args[-1]
 
     if len(args) == 1:
@@ -254,6 +250,11 @@ def main(executable_name, args):
             text = HELP,
         )
         exit(0)
+
+    if len(args) == 0:
+        viuact.util.log.error('not source file given')
+        viuact.util.log.note('use --help to learn about correct invocation')
+        exit(1)
 
     options, source_file = parse_options(args)
 
