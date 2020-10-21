@@ -2551,10 +2551,37 @@ def signature_to_string(full_name, sig):
 
     return fmt.format(
         tp = template_parameters,
-        name = full_name.split('/')[0],
+        name = full_name,
         fp = formal_parameters,
         rt = return_type,
     )
+
+INDENT = '    '
+
+def signature_of_enum_to_string(name, sig, indent):
+    fmt = '(enum {} (\n{}\n))'
+
+    fields = []
+    for f, v in sorted(sig['fields'].items(), key = lambda x: x[1]['index']):
+        if v['field'].bare():
+            fields.append((INDENT * (indent + 1)) + '{}'.format(f))
+        else:
+            fields.append((INDENT * (indent + 1)) + '({} {})'.format(f, v['field'].value()))
+
+    return fmt.format(name, '\n'.join(fields))
+
+def signature_of_record_to_string(name, sig, indent):
+    fmt = '(type {} {{\n{}\n}})'
+
+    fields = []
+    viuact.util.log.raw(sig)
+    for f, v in sig['fields'].items():
+        fields.append((INDENT * (indent + 1)) + '(val {} {})'.format(
+            f,
+            str(v),
+        ))
+
+    return fmt.format(name, '\n'.join(fields))
 
 
 def cc(source_root, source_file, module_name, forms, build_directory):
@@ -2612,8 +2639,6 @@ def cc(source_root, source_file, module_name, forms, build_directory):
             parameters = each.parameters(),
         )
 
-    function_bodies = {}
-
     output_directory = os.path.split(os.path.join(build_directory, output_file))[0]
     os.makedirs(output_directory, exist_ok = True)
 
@@ -2632,9 +2657,41 @@ def cc(source_root, source_file, module_name, forms, build_directory):
             print('')
 
             sig = mod.signature(out.main.name.split('::')[-1])
-            print('; {}'.format(signature_to_string(out.main.name, sig)))
+            print('; {}'.format(signature_to_string(out.main.name.split('/')[0], sig)))
 
             print('.function: {}'.format(out.main.name))
             for line in out.main.body:
                 print('    {}'.format(line.to_string()))
             print('.end')
+
+    src_interface_file = '{}.vti'.format(source_file.rsplit('.', maxsplit=1)[0])
+    out_interface_file = '{}.vti'.format(output_file.rsplit('.', maxsplit=1)[0])
+    if os.path.isfile(os.path.join(source_root, src_interface_file)):
+        shutil.copyfile(
+            src = os.path.join(source_root, src_interface_file),
+            dst = os.path.join(build_directory, out_interface_file),
+        )
+        return
+
+    out_interface_path = os.path.join(build_directory, out_interface_file)
+    with open(out_interface_path, 'w') as ofstream:
+        print = lambda s: ofstream.write('{}\n'.format(s))
+        print(';')
+        print('; This interface file was automatically generated.')
+        print(';')
+
+        print('')
+        for each in mod.enums():
+            sig = mod.enum(each)
+            print(signature_of_enum_to_string(each, sig, 0))
+
+        print('')
+        for each in mod.records():
+            sig = mod.record(each)
+            print(signature_of_record_to_string(each, sig, 0))
+
+        print('')
+        for each in mod.fns(local = True):
+            fn, _ = each
+            sig = mod.signature(fn)
+            print(signature_to_string(sig['base_name'], sig))
