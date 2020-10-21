@@ -209,6 +209,9 @@ class Module_info:
         # FIXME error checking
         return self._enums[str(name)]
 
+    def enums(self):
+        return list(self._enums.keys())
+
     def make_record(self, name, fields):
         self._records[str(name)] = {
             'fields': {
@@ -220,6 +223,9 @@ class Module_info:
 
     def record(self, name):
         return self._records[str(name)]
+
+    def records(self):
+        return list(self._records.keys())
 
     def make_exception(self, tag, value):
         self._exceptions[str(tag)] = value
