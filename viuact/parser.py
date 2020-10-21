@@ -832,8 +832,6 @@ def parse_import(group):
     elif type(module_name) is Group:
         module = flatten_module_path(module_name)
 
-    viuact.util.log.raw(module)
-
     return viuact.forms.Import(
         module = module,
     )

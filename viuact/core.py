@@ -37,6 +37,8 @@ class Module_info:
         self._records = {}
         self._exceptions = {}
 
+        self._imports = {}
+
     def name(self):
         return self._name
 
@@ -138,7 +140,6 @@ class Module_info:
     def make_import(self, path):
         def find_file_impl(path, extension):
             ld_path = viuact.env.library_path().split(':')
-            viuact.util.log.debug(', '.join(ld_path))
 
             file_name = '{}.{}'.format(path.replace('::', '/'), extension)
 
@@ -154,8 +155,20 @@ class Module_info:
         interface_file = find_interface_file(path)
         viuact.util.log.raw(interface_file)
 
-        raise viuact.errors.Feature_not_implemented('module imports')
+        source_text = ''
+        with open(interface_file, 'r') as ifstream:
+            source_text = ifstream.read()
 
+        tokens = viuact.lexer.lex(source_text)
+        forms = viuact.parser.parse(tokens)
+        mod = cc_impl_prepare_module(path, interface_file, forms)
+
+        self._imports[path] = mod
+
+        return path
+
+    def imported(self, path):
+        return self._imports[path]
 
 class Scope:
     def __init__(self, state):
@@ -875,8 +888,9 @@ def cc(source_root, source_file, module_name, forms, build_directory):
     os.makedirs(output_directory, exist_ok = True)
 
     cc_impl_save_implementation(mod, fns, build_directory, output_file)
-    cc_impl_save_interface(
-        mod,
-        (source_file, output_file,),
-        (source_root, build_directory,),
-    )
+    if module_name != EXEC_MODULE:
+        cc_impl_save_interface(
+            mod,
+            (source_file, output_file,),
+            (source_root, build_directory,),
+        )
