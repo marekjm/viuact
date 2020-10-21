@@ -2584,17 +2584,7 @@ def signature_of_record_to_string(name, sig, indent):
     return fmt.format(name, '\n'.join(fields))
 
 
-def cc(source_root, source_file, module_name, forms, build_directory):
-    base_output_file = (os.path.splitext(source_file)[0] + '.asm')
-    output_file = os.path.normpath(base_output_file)
-
-    viuact.util.log.debug('cc: [{}]/{} -> {}/{}'.format(
-        source_root,
-        source_file,
-        build_directory,
-        output_file,
-    ))
-
+def cc_impl_prepare_module(module_name, source_file, forms):
     mod = Module_info(module_name, source_file)
 
     for each in filter(lambda x: type(x) is viuact.forms.Enum, forms):
@@ -2639,9 +2629,18 @@ def cc(source_root, source_file, module_name, forms, build_directory):
             parameters = each.parameters(),
         )
 
-    output_directory = os.path.split(os.path.join(build_directory, output_file))[0]
-    os.makedirs(output_directory, exist_ok = True)
+    return mod
 
+def cc_impl_emit_functions(mod, forms):
+    fns = []
+
+    for each in filter(lambda x: type(x) is viuact.forms.Fn, forms):
+        out = cc_fn(mod, each)
+        fns.append({ 'name': out.main.name, 'out': out, 'raw': each, })
+
+    return fns
+
+def cc_impl_save_implementation(mod, fns, build_directory, output_file):
     with open(os.path.join(build_directory, output_file), 'w') as ofstream:
         print = lambda s: ofstream.write('{}\n'.format(s))
         print(';')
@@ -2651,8 +2650,8 @@ def cc(source_root, source_file, module_name, forms, build_directory):
             print('; Function definitions for module {}'.format(mod.name()))
         print(';')
 
-        for each in filter(lambda x: type(x) is viuact.forms.Fn, forms):
-            out = cc_fn(mod, each)
+        for each in fns:
+            out = each['out']
 
             print('')
 
@@ -2663,6 +2662,10 @@ def cc(source_root, source_file, module_name, forms, build_directory):
             for line in out.main.body:
                 print('    {}'.format(line.to_string()))
             print('.end')
+
+def cc_impl_save_interface(mod, file_paths, roots):
+    source_file, output_file = file_paths
+    source_root, build_directory = roots
 
     src_interface_file = '{}.vti'.format(source_file.rsplit('.', maxsplit=1)[0])
     out_interface_file = '{}.vti'.format(output_file.rsplit('.', maxsplit=1)[0])
@@ -2695,3 +2698,27 @@ def cc(source_root, source_file, module_name, forms, build_directory):
             fn, _ = each
             sig = mod.signature(fn)
             print(signature_to_string(sig['base_name'], sig))
+
+def cc(source_root, source_file, module_name, forms, build_directory):
+    base_output_file = (os.path.splitext(source_file)[0] + '.asm')
+    output_file = os.path.normpath(base_output_file)
+
+    viuact.util.log.debug('cc: [{}]/{} -> {}/{}'.format(
+        source_root,
+        source_file,
+        build_directory,
+        output_file,
+    ))
+
+    mod = cc_impl_prepare_module(module_name, source_file, forms)
+    fns = cc_impl_emit_functions(mod, forms)
+
+    output_directory = os.path.split(os.path.join(build_directory, output_file))[0]
+    os.makedirs(output_directory, exist_ok = True)
+
+    cc_impl_save_implementation(mod, fns, build_directory, output_file)
+    cc_impl_save_interface(
+        mod,
+        (source_file, output_file,),
+        (source_root, build_directory,),
+    )
