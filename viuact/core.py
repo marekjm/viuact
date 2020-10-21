@@ -3,6 +3,7 @@ import hashlib
 import os
 
 import viuact.util.log
+import viuact.env
 import viuact.forms
 import viuact.typesystem.t
 import viuact.typesystem.state
@@ -133,6 +134,27 @@ class Module_info:
     def exception(self, name):
         # FIXME error checking
         return self._exceptions[str(name)]
+
+    def make_import(self, path):
+        def find_file_impl(path, extension):
+            ld_path = viuact.env.library_path().split(':')
+            viuact.util.log.debug(', '.join(ld_path))
+
+            file_name = '{}.{}'.format(path.replace('::', '/'), extension)
+
+            for each in ld_path:
+                candidate = os.path.join(each, file_name)
+                if os.path.isfile(candidate):
+                    return candidate
+
+            return None
+
+        find_interface_file = lambda p: find_file_impl(p, 'vti')
+
+        interface_file = find_interface_file(path)
+        viuact.util.log.raw(interface_file)
+
+        raise viuact.errors.Feature_not_implemented('module imports')
 
 
 class Scope:
@@ -712,6 +734,16 @@ def signature_of_record_to_string(name, sig, indent):
 
 def cc_impl_prepare_module(module_name, source_file, forms):
     mod = Module_info(module_name, source_file)
+
+    for each in filter(lambda x: type(x) is viuact.forms.Import, forms):
+        try:
+            mod.make_import(each.path())
+        except Exception:
+            viuact.util.log.error('during import of {}'.format(
+                viuact.util.colors.colorise_repr('white', each.path())
+            ))
+            raise
+
 
     for each in filter(lambda x: type(x) is viuact.forms.Enum, forms):
         mod.make_enum(
