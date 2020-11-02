@@ -1,24 +1,24 @@
 ; This is a oneline comment.
 
 
-(val ('a) log ('a) i8)
+(val ('a) log ('a) -> i64)
 (let log (x) {
     (print x)
     0
 })
 
-(val ('a) logl ('a) i8)
+(val ('a) logl ('a) -> i64)
 (let logl (~x) {
     (print x)
     0
 })
 
-(enum ('a) option (
+(enum option (
     (Some 'a)
     None
 ))
 
-(val () main () i8)
+(val main () -> i64)
 (let main () {
     (log "Hello, World!")
 
