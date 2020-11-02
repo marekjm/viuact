@@ -51,9 +51,6 @@ class Module_info:
             )
 
         self._functions[n] = {
-            'local': True,
-            'from': (None, None,),  # module name, containing file
-            'parameters': parameters,
             'base_name': str(name),
             'arity': len(parameters),
         }
@@ -63,9 +60,10 @@ class Module_info:
         # ))
         return self
 
-    def make_fn_signature(self, name, parameters, return_type, template_parameters):
+    def make_fn_signature(self, name, parameters, return_type, template_parameters, local = True):
         n = '{}/{}'.format(str(name), len(parameters))
         self._function_signatures[n] = {
+            'local': local,  # True: local, False: imported
             'parameters': parameters,
             'base_name': str(name),
             'arity': len(parameters),
@@ -73,6 +71,12 @@ class Module_info:
             'template_parameters': template_parameters,
         }
         return self
+
+    def is_fn_defined(self, name):
+        return (name in self._functions)
+
+    def signatures(self):
+        return list(self._function_signatures.keys())
 
     def signature(self, fn_name):
         return self._function_signatures[fn_name]

@@ -220,6 +220,18 @@ class Name_ref(Form):
     def name(self):
         return self._name
 
+class Name_path(Form):
+    def __init__(self, mod, name):
+        super().__init__(name.tok())
+        self._mod = mod    # [viuact.lexemes.Mod_name]
+        self._name = name  # viuact.lexemes.Name
+
+    def mod(self):
+        return self._mod
+
+    def name(self):
+        return self._name
+
 class Let_binding(Form):
     def __init__(self, name, value):
         super().__init__(name.tok())

@@ -1,10 +1,11 @@
 import viuact.forms
 from viuact.ops import (
     Register_set,
-    Slot,
+    Call,
     Ctor,
     Move,
     Print,
+    Slot,
     Verbatim,
 )
 
@@ -231,28 +232,81 @@ def emit_indirect_fn_call(mod, body, st, result, form):
 
     return result
 
+def get_fn_candidates(form, mod):
+    viuact.util.log.raw('fn candidates for: {} ({})'.format(
+        form.to(),
+        typeof(form.to()),
+    ))
+
+    basic_name = (
+           (type(form.to()) is viuact.lexemes.Name)
+        or (type(form.to()) is viuact.forms.Name_ref)
+    )
+    if basic_name:
+        base_name = str(form.to().name().tok())
+        called_fn_name = '{name}/{arity}'.format(
+            name = base_name,
+            arity = len(form.arguments()),
+        )
+
+        candidates = list(filter(
+            lambda each: (each.split('/')[0] == base_name),
+            mod.signatures(),
+        ))
+        if not candidates:
+            raise viuact.errors.Unknown_function(
+                form.to().name().tok().at(),
+                called_fn_name,
+            )
+
+        candidates = list(map(lambda each: mod.signature(each), candidates))
+
+        viuact.util.log.raw('candidates: {}'.format(candidates))
+        return candidates, mod, called_fn_name, called_fn_name
+
+    if type(form.to()) is viuact.forms.Name_path:
+        called_mod_path = '::'.join(map(str, form.to().mod()))
+        viuact.util.log.raw('called mod path = {}'.format(called_mod_path))
+
+        called_mod = mod.imported(called_mod_path)
+        viuact.util.log.raw('called mod = {}'.format(called_mod))
+
+        base_name = str(form.to().name().tok())
+        called_fn_name = '{name}/{arity}'.format(
+            name = base_name,
+            arity = len(form.arguments()),
+        )
+
+        viuact.util.log.raw('x', called_fn_name)
+        viuact.util.log.raw('y', list(map(type, called_mod.signatures())))
+        candidates = list(filter(
+            lambda each: (each.split('/')[0] == base_name),
+            called_mod.signatures(),
+        ))
+        viuact.util.log.raw('z', candidates)
+        if not candidates:
+            raise viuact.errors.Unknown_function(
+                form.to().name().tok().at(),
+                called_fn_name,
+            )
+
+        candidates = list(map(lambda each: called_mod.signature(each), candidates))
+
+        return candidates, called_mod, called_fn_name, '{}::{}'.format(
+            called_mod_path,
+            called_fn_name,
+        )
+
+    raise None
+
 def emit_direct_fn_call(mod, body, st, result, form):
     if str(form.to().name()) in BUILTIN_FUNCTIONS:
         return emit_builtin_call(mod, body, st, result, form)
 
-    base_name = str(form.to().name().tok())
-    called_fn_name = '{name}/{arity}'.format(
-        name = base_name,
-        arity = len(form.arguments()),
-    )
-
-    candidates = list(filter(
-        lambda each: each[1]['base_name'] == base_name,
-        mod.fns(),
-    ))
-    if not candidates:
-        raise viuact.errors.Unknown_function(
-            form.to().name().tok().at(),
-            called_fn_name,
-        )
+    candidates, called_mod, called_fn_name, full_name = get_fn_candidates(form, mod)
 
     signature = (lambda x: (x[0] if x else None))(list(filter(
-        lambda each: each[1]['arity'] == len(form.arguments()),
+        lambda each: each['arity'] == len(form.arguments()),
         candidates
     )))
     if signature is None:
@@ -267,11 +321,16 @@ def emit_direct_fn_call(mod, body, st, result, form):
             ))
         raise e
 
-    type_signature = mod.signature(called_fn_name)
+    type_signature = called_mod.signature(called_fn_name)
+    if (called_mod.name() == mod.name()) and not mod.is_fn_defined(called_fn_name):
+        raise viuact.errors.Call_to_undefined_function(
+            form.to().name().tok().at(),
+            called_fn_name,
+        )
 
     args = []
     if True:
-        parameters = signature[1]['parameters']
+        parameters = signature['parameters']
         arguments = form.arguments()
 
         need_labelled = list(filter(
@@ -370,7 +429,7 @@ def emit_direct_fn_call(mod, body, st, result, form):
         st.type_of(result, return_t)
 
     body.append(Call(
-        to = called_fn_name,
+        to = full_name,
         slot = result,
         kind = Call.Kind.Synchronous,
     ))

@@ -2,6 +2,8 @@ import viuact.errors
 import viuact.lexemes
 import viuact.forms
 
+from viuact.util.type_annotations import T, I, Alt
+
 
 def strip_comments(tokens):
     return list(filter(
