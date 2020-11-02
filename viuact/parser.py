@@ -283,7 +283,7 @@ def group(tokens):
                 s.popped().tok().at(),
                 s.popped(),
             ).note('expected {}'.format(repr(
-                '}' if sentinels.top() is viuact.lexemes.Right_curly else ')'
+                '}' if s.top() is viuact.lexemes.Right_curly else ')'
             )))
         groups.append(g)
 
