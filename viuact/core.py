@@ -174,6 +174,9 @@ class Module_info:
     def imported(self, path):
         return self._imports[path]
 
+    def imports(self):
+        return list(self._imports.keys())
+
 class Scope:
     def __init__(self, state):
         self.state = state
@@ -818,6 +821,9 @@ def cc_impl_emit_functions(mod, forms):
 def cc_impl_save_implementation(mod, fns, build_directory, output_file):
     with open(os.path.join(build_directory, output_file), 'w') as ofstream:
         print = lambda s: ofstream.write('{}\n'.format(s))
+        for each in mod.imports():
+            print('.import: [[static]] {}'.format(each))
+
         print(';')
         if mod.name() == EXEC_MODULE:
             print('; Function definitions')

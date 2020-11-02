@@ -372,14 +372,17 @@ def parse_fn_call(group):
         if last.t() is viuact.lexemes.Enum_ctor_name:
             return parse_enum_ctor_call(group)
         elif last.t() is viuact.lexemes.Name:
-            pass
+            path = flatten_module_path(group)
+            mod, name = path[:-1], path[-1]
+            name = viuact.forms.Name_path(
+                mod = mod,
+                name = name,
+            )
         else:
             raise viuact.errors.Unexpected_token(
                 G.resolve_position(name),
                 typeof(last),
             ).note('expected function or enum constructor name')
-        raise viuact.errors.Fail(G.resolve_position(name),
-            'module paths are not implemented')
     elif type(name) is Element:
         name = parse_expr(name)
     else:
@@ -810,20 +813,26 @@ def flatten_module_path(path):
     if type(path) is Element:
         return [path.val()]
 
-    if type(path.lead().val()) is not viuact.lexemes.Path_resolution:
-        raise viuact.errors.Unexpected_token(
-            path.lead().val().tok().at(),
-            str(path.lead().val()),
-        )
+    path = T(Group) | path
+    path = path.val()
 
-    base = path[1]
-    member = path[2]
+    if len(path) == 1:
+        path = T(Group) | path[0]
+        return flatten_module_path(path)
 
-    flat = []
-    flat.extend(flatten_module_path(base))
-    flat.extend(flatten_module_path(member))
+    if len(path) == 3:
+        name = (T(Element) | path[2]).val()
 
-    return flat
+        op = (T(Element) | path[0]).val()
+        (T(viuact.lexemes.Path_resolution) | op)  # ensure op is ::
+
+        base = flatten_module_path(path[1])
+
+        base.append(name)
+
+        return base
+
+    raise path
 
 def parse_import(group):
     module_name = group[1]
