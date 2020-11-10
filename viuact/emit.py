@@ -382,7 +382,13 @@ def emit_direct_fn_call(mod, body, st, result, form):
             parameter_types.append(each.concretise(tmp))
         elif type(each) is viuact.typesystem.t.Fn:
             parameter_types.append(each.concretise(tmp))
+        elif type(each) is viuact.typesystem.t.Template:
+            parameter_types.append(tmp[viuact.typesystem.t.Template(each.name()[1:])])
         else:
+            viuact.util.log.raw('ICE: bad parameter type in call to {}: {}'.format(
+                full_name,
+                typeof(each),
+            ))
             raise None
 
     for i, arg in enumerate(args):
