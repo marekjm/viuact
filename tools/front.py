@@ -69,9 +69,13 @@ HELP = '''{NAME}
         Here's how you would go about compiling the canonical "Hello, World!"
         program:
 
-            %fg(white)$ cat hello.lisp
-            %fg(white)(let main () (print "Hello, World!"))
-            %fg(white)$ viuact cc --mode exec hello.lisp
+            %fg(white)$ cat hello.vt
+            %fg(white)(val main () -> i64)
+            %fg(white)(let main () {{
+            %fg(white)    (print "Hello, World!")
+            %fg(white)    0
+            %fg(white)}})
+            %fg(white)$ viuact cc hello.vt
             %fg(white)$ viuact opt build/_default/hello.asm
             %fg(white)$ viua-vm build/_default/hello.bc
             %fg(white)Hello, World!
