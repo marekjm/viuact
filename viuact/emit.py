@@ -4,11 +4,21 @@ import viuact.forms
 from viuact.ops import (
     Register_set,
     Call,
+    Cmp,
+    Comment,
     Ctor,
+    If,
+    Jump,
+    Marker,
     Move,
     Print,
     Slot,
     Verbatim,
+)
+from viuact.util.type_annotations import (
+    Alt,
+    I,
+    T,
 )
 
 

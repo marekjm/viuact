@@ -46,14 +46,6 @@ HELP = '''{NAME}
         the directory which is the root of a module structure for Viuact
         program).
 
-    %opt(-t), %opt(--tokenise)
-        %text
-        Stop after tokenisation and output JSON dump to standard output.
-
-    %opt(-p), %opt(--parse)
-        %text
-        Stop after parsing and output JSON dump to standard output.
-
 {EXAMPLES}
     %text
     To produce an executable (executable with Viua VM) file from a file
@@ -71,6 +63,7 @@ HELP = '''{NAME}
 
     %fg(man_se)THE CANONICAL PROGRAM%r
 
+        %fg(source)(val main () -> i64)
         %fg(source)(let main () {{
         %fg(source)    (print "Hello, World!")
         %fg(source)    0
@@ -78,6 +71,7 @@ HELP = '''{NAME}
 
     %fg(man_se)CONDITIONAL EXECUTION - IF%r
 
+        %fg(source)(val main () -> i64)
         %fg(source)(let main () {{
         %fg(source)    (let x true)
         %fg(source)    (let result (if x "It's true!" "It's false..."))
@@ -87,38 +81,38 @@ HELP = '''{NAME}
 
     %fg(man_se)CONDITIONAL EXECUTION - MATCH%r
 
-        %fg(source)(enum Maybe (
-        %fg(source)    (Some _)
+        %fg(source)(enum option (
+        %fg(source)    (Some 'a)
         %fg(source)    None
         %fg(source)))
 
+        %fg(source)(val main () -> i64)
         %fg(source)(let main () {{
-        %fg(source)    (let answer (Maybe.Some 42))
+        %fg(source)    (let answer (option::Some 42))
         %fg(source)    (print (match answer (
-        %fg(source)        (with Maybe.Some value {{
-        %fg(source)            (let value' (Std.String.to_string value))
-        %fg(source)            (Std.String.concat "The answer is: " value')
-        %fg(source)        }})
-        %fg(source)        (with Maybe.None "Only questions..."))))
+        %fg(source)        ; only contructor names needed since the compiler
+        %fg(source)        ; knows the type at this point
+        %fg(source)        (with Some value (.. "The answer is: " value))
+        %fg(source)        (with None       "Only questions..."))))
         %fg(source)    0
         %fg(source)}})
 
     %fg(man_se)CALLING FUNCTIONS%r
 
+        %fg(source)(val ('a) greet ('a) -> string)
         %fg(source)(let greet (someone) {{
-        %fg(source)    ; Ensure someone is a string.
-        %fg(source)    (let someone' (Std.String.to_string someone))
-
-        %fg(source)    (let greeting (Std.String.concat "Hello, " someone'))
-        %fg(source)    (let greeting (Std.String.concat greeting "!"))
+        %fg(source)    ; Construct and print the greeting...
+        %fg(source)    (let greeting (.. "Hello, " someone "!"))
         %fg(source)    (print greeting)
-
-        %fg(source)    ; Use the greeting string as the return value.
+        %fg(source)    ; ...then use it as the return value.
         %fg(source)    greeting
         %fg(source)}})
 
         %fg(source)(let main () {{
+        %fg(source)    ; the 'a parameter is polymorphic so accepts strings and
+        %fg(source)    ; integers
         %fg(source)    (greet "World")
+        %fg(source)    (greet 42)
         %fg(source)    0
         %fg(source)}})
 

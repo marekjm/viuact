@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import viuact.util.log
+
 
 class Template:
     def __init__(self, name):
@@ -57,8 +59,15 @@ class Template:
 #
 class Base:
     def __init__(self, templates = ()):
-        if not all(map(lambda _: (type(_) in (Template, Value, Fn,)),
-            templates)):
+        def is_valid_template_variable(t):
+            if type(t) in (Template, Value, Fn,):
+                return True
+            if isinstance(t, Value):
+                return True
+            return False
+        if not all(map(is_valid_template_variable, templates)):
+            viuact.util.log.raw('types: {}'.format(' '.join(list(
+                map(lambda _: str(type(_)), templates)))))
             raise TypeError('invalid template variable list: {}'.format(
                 templates,))
         self._templates = templates
