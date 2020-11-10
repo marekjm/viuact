@@ -1,3 +1,5 @@
+import hashlib
+
 import viuact.forms
 from viuact.ops import (
     Register_set,
