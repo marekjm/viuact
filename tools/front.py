@@ -7,6 +7,7 @@ import shutil
 import sys
 
 import viuact.util.help
+import viuact.env
 
 
 HELP = '''{NAME}
@@ -153,13 +154,18 @@ KNOWN_TOOLS = (
 )
 
 DEFAULT_CORE_DIR = '.'
-CORE_DIR = os.environ.get('VIUACT_CORE_DIR', DEFAULT_CORE_DIR)
+CORE_DIR = viuact.env.core_directory(DEFAULT_CORE_DIR)
 def get_core_exec_path(executable):
     is_development = (CORE_DIR == '.')
     return os.path.join(os.path.expanduser(CORE_DIR), {
         'cc': ('tools/cc.py' if is_development else 'viuact-cc'),
         'fmt': ('tools/format.py' if is_development else 'viuact-format'),
         'opt': ('tools/opt.py' if is_development else 'viuact-opt'),
+        # Note that `switch' tool should be somewhat independent of the compiler
+        # version. It is a tool for switching compiler versions, similar to
+        # OCaml's opam.
+        # FIXME Maybe detect switch tool as special and exempt it from
+        # VIUACT_CORE_DIR set by the user or itself.
         'switch': ('tools/switch.py' if is_development else 'viuact-switch'),
     }.get(executable))
 
@@ -185,60 +191,36 @@ def main(executable_name, args):
             text = HELP,
         )
     elif arg == '--env':
-        print('VIUACT_CORE_DIR: {}'.format(
-            os.environ.get('VIUACT_CORE_DIR', '(none)'),
+        print('VIUACT_CORE_DIR:   {}'.format(
+            CORE_DIR
         ))
-        print('DEFAULT_OUTPUT_DIRECTORY: {}'.format(
-            viuact.env.DEFAULT_OUTPUT_DIRECTORY,
+        print('VIUACT_OUTPUT_DIR: {}'.format(
+            viuact.env.output_directory()
         ))
-        print('STDLIB_HEADERS_DIRECTORY: {}'.format(
-            viuact.env.STDLIB_HEADERS_DIRECTORY,
-        ))
-        if viuact.env.VIUACT_LIBRARY_PATH:
+        if True:
+            path = viuact.env.library_path().split(':')
             prefix = 'VIUACT_LIBRARY_PATH:'
             print('{} {}'.format(
                 prefix,
-                viuact.env.VIUACT_LIBRARY_PATH[0],
+                path[0],
             ))
-            for each in viuact.env.VIUACT_LIBRARY_PATH[1:]:
+            for each in path[1:]:
                 print('{} {}'.format(
                     (len(prefix) * ' '),
                     each,
                 ))
-        print('VIUA_LIBRARY_PATH: {}'.format(
-            '\n'.join(map(lambda each: (
-                '{}{}'.format(
-                    (' ' * (len('VIUA_LIBRARY_PATH') + 2)),
-                    each,
-                )),
-                os.environ.get('VIUA_LIBRARY_PATH').split(':'))).strip(),
-        ))
-        print('VIUA_ASM_PATH: {}'.format(
-            viuact.env.VIUA_ASM_PATH,
-        ))
-        if viuact.env.VIUACT_ASM_FLAGS:
-            prefix = 'VIUACT_ASM_FLAGS:'
-            print('{} {}'.format(
-                prefix,
-                viuact.env.VIUACT_ASM_FLAGS[0],
-            ))
-            for each in viuact.env.VIUACT_ASM_FLAGS[1:]:
-                print('{} {}'.format(
-                    (len(prefix) * ' '),
-                    each,
-                ))
-        if viuact.env.VIUACT_DUMP_INTERMEDIATE:
-            prefix = 'VIUACT_DUMP_INTERMEDIATE:'
-            print('{} {}'.format(
-                prefix,
-                viuact.env.VIUACT_DUMP_INTERMEDIATE[0],
-            ))
-            for each in viuact.env.VIUACT_DUMP_INTERMEDIATE[1:]:
-                print('{} {}'.format(
-                    (len(prefix) * ' '),
-                    each,
-                ))
-    elif arg.startswith('--'):
+        # if viuact.env.VIUACT_DUMP_INTERMEDIATE:
+        #     prefix = 'VIUACT_DUMP_INTERMEDIATE:'
+        #     print('{} {}'.format(
+        #         prefix,
+        #         viuact.env.VIUACT_DUMP_INTERMEDIATE[0],
+        #     ))
+        #     for each in viuact.env.VIUACT_DUMP_INTERMEDIATE[1:]:
+        #         print('{} {}'.format(
+        #             (len(prefix) * ' '),
+        #             each,
+        #         ))
+    elif arg.startswith('--') or arg.startswith('-'):
         sys.stderr.write('error: unknown option: {}\n'.format(arg))
         exit(1)
     elif arg not in KNOWN_TOOLS:

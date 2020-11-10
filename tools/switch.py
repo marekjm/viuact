@@ -16,7 +16,7 @@ HELP = '''{NAME}
     {exec_tool} <%fg(man_const)tool%r> [%arg(option)...] [%arg(arg)]
     {exec_blank} --help
     {exec_blank} create [%arg(option)] %arg(name)
-    {exec_blank} if     [%arg(option)] $arg(name)
+    {exec_blank} if     [%arg(option)] %arg(name)
     {exec_blank} init
     {exec_blank} ls     [%arg(option)]
     {exec_blank} rm     %arg(name)
@@ -210,7 +210,7 @@ def main(executable_name, args):
         )
         exit(0)
 
-    switch_tool = item_or(args, 1, 'show')
+    switch_tool = item_or(args, 0, 'show')
 
     switch_root_exists = os.path.isdir(Env_switch.root_path())
     if (switch_tool != 'init') and not switch_root_exists:
@@ -229,7 +229,7 @@ def main(executable_name, args):
     )
 
     if switch_tool == 'create':
-        switch_name = item_or(args, 2)
+        switch_name = item_or(args, 1)
         if switch_name is None:
             sys.stderr.write(
                 'error: name for a new switch is required\n')
@@ -372,12 +372,18 @@ def main(executable_name, args):
             print('true' if is_active else 'false')
         exit(0)
     elif switch_tool == 'init':
-        if switch_root_exists:
+        force = (item_or(args, 1, None) in ('-f', '--force',))
+        if switch_root_exists and not force:
             sys.stderr.write('warning: switch root already exists\n')
-            # exit(0)
+            exit(1)
 
         root_path = Env_switch.root_path()
         init_path = os.path.join(root_path, 'init')
+
+        if switch_root_exists:
+            sys.stderr.write('warning: reinitialising switch root: {}\n'.format(
+                root_path,
+            ))
 
         share_path = os.path.expanduser('~/.local/share/viuact/switch/init')
 

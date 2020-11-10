@@ -289,7 +289,7 @@ def main(executable_name, args):
             source_file.rsplit('.', maxsplit = 1)[0].replace('/', '::')
         )
 
-        output_directory = 'build/_default'
+        output_directory = viuact.env.output_directory()
 
         viuact.core.cc(
             source_root,
