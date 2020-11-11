@@ -84,10 +84,10 @@ class Module_info:
     def fns(self, local = None, imported = None):
         res = []
         for k, v in self._functions.items():
-            if (local is None) or (local is True and v['local']):
+            if (local is None) or (local is True and v.get('local', False)):
                 res.append((k, v,))
                 continue
-            if (imported is None) or (imported is True and not v['local']):
+            if (imported is None) or (imported is True and not v.get('local', False)):
                 res.append((k, v,))
                 continue
         return res
