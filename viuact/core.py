@@ -157,7 +157,6 @@ class Module_info:
         find_interface_file = lambda p: find_file_impl(p, 'vti')
 
         interface_file = find_interface_file(path)
-        viuact.util.log.raw(interface_file)
 
         source_text = ''
         with open(interface_file, 'r') as ifstream:
