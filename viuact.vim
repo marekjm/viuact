@@ -83,6 +83,7 @@ syntax keyword viuactFunction       print
 
 syntax keyword viuactStatement      module skipwhite nextgroup=viuactModuleName
 syntax keyword viuactStatement      import skipwhite nextgroup=viuactModuleName
+syntax keyword viuactStatement      trait skipwhite nextgroup=viuactModuleName
 syntax keyword viuactStatement      let val skipwhite nextgroup=viuactIdentifier
 
 syntax keyword viuactConditional    if match
@@ -90,7 +91,7 @@ syntax keyword viuactConditional    with skipwhite nextgroup=viuactModuleName
 
 syntax keyword viuactLabel          default
 
-syntax keyword viuactKeyword        of in do return
+syntax keyword viuactKeyword        for of in do return
 
 syntax keyword viuactException      try
 syntax keyword viuactException      catch throw skipwhite nextgroup=viuactModuleName
