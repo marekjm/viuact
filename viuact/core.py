@@ -8,7 +8,7 @@ import viuact.forms
 import viuact.typesystem.t
 import viuact.typesystem.state
 
-from viuact.emit import (emit_expr,)
+from viuact.emit import (emit_expr, mangle_fn_base_name,)
 from viuact.ops import (
     Register_set,
     Slot,
@@ -836,9 +836,10 @@ def cc_impl_save_implementation(mod, fns, build_directory, output_file):
             print('')
 
             sig = mod.signature(out.main.name.split('::')[-1])
-            print('; {}'.format(signature_to_string(out.main.name.split('/')[0], sig)))
+            name, arity = out.main.name.split('/')
+            print('; {}'.format(signature_to_string(name, sig)))
 
-            print('.function: {}'.format(out.main.name))
+            print('.function: {}/{}'.format(mangle_fn_base_name(name), arity))
             for line in out.main.body:
                 print('    {}'.format(line.to_string()))
             print('.end')

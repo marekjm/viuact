@@ -212,6 +212,14 @@ class Primitive_literal(Form):
     def value(self):
         return self._value
 
+class Raw_slot(Form):
+    def __init__(self, slot, tok):
+        super().__init__(tok)
+        self._slot = slot  # Slot
+
+    def slot(self):
+        return self._slot
+
 class Name_ref(Form):
     def __init__(self, name):
         super().__init__(name.tok())

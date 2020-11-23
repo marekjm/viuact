@@ -134,6 +134,12 @@ def typeof(value):
     return str(type(value))[8:-2]
 
 
+def mangle_fn_base_name(name):
+    if name == '=':
+        return '__op_eq'
+    return name
+
+
 def emit_builtin_call(mod, body, st, result, form):
     if str(form.to().name()) == 'print':
         if len(form.arguments()) != 1:
@@ -260,6 +266,10 @@ def get_fn_candidates(form, mod):
             name = base_name,
             arity = len(form.arguments()),
         )
+        mangled_fn_name = '{name}/{arity}'.format(
+            name = mangle_fn_base_name(base_name),
+            arity = len(form.arguments()),
+        )
 
         candidates = list(filter(
             lambda each: (each.split('/')[0] == base_name),
@@ -274,7 +284,7 @@ def get_fn_candidates(form, mod):
         candidates = list(map(lambda each: mod.signature(each), candidates))
 
         viuact.util.log.raw('candidates: {}'.format(candidates))
-        return candidates, mod, called_fn_name, called_fn_name
+        return candidates, mod, called_fn_name, mangled_fn_name
 
     if type(form.to()) is viuact.forms.Name_path:
         called_mod_path = '::'.join(map(str, form.to().mod()))
@@ -286,6 +296,10 @@ def get_fn_candidates(form, mod):
         base_name = str(form.to().name().tok())
         called_fn_name = '{name}/{arity}'.format(
             name = base_name,
+            arity = len(form.arguments()),
+        )
+        mangled_fn_name = '{name}/{arity}'.format(
+            name = mangle_fn_base_name(base_name),
             arity = len(form.arguments()),
         )
 
@@ -306,7 +320,7 @@ def get_fn_candidates(form, mod):
 
         return candidates, called_mod, called_fn_name, '{}::{}'.format(
             called_mod_path,
-            called_fn_name,
+            mangled_fn_name,
         )
 
     raise None
@@ -633,6 +647,7 @@ def emit_comparison_operator(mod, body, st, result, expr):
             len(expr.arguments()),
         ))
 
+    op_name = str(expr.operator().tok())
     operator_ops = {
         '>':  'gt',
         '>=': 'gte',
@@ -641,7 +656,7 @@ def emit_comparison_operator(mod, body, st, result, expr):
         '=':  'eq',
         '!=': 'eq',
     }
-    op = operator_ops[str(expr.operator().tok())]
+    op = operator_ops[op_name]
 
     with st.scoped() as sc:
         lhs_slot = sc.get_slot(None)
@@ -663,17 +678,60 @@ def emit_comparison_operator(mod, body, st, result, expr):
             result = rhs_slot,
             expr = args[1],
         )
-        body.append(Verbatim('{} {} {} {}'.format(
-            op,
-            result.to_string(),
-            lhs_slot.to_string(),
-            rhs_slot.to_string(),
-        )))
+
+        l_t = sc.type_of(lhs_slot)
+        r_t = sc.type_of(rhs_slot)
+
+        # If we are on the happy path, the operator implementation is a built-in
+        # one, so we can just emit a suitable assembly instruction and call it a
+        # day. On the other hand, if we are NOT on the happy path, we have to
+        # invoke a more elaborate machinery and check if a function implementing
+        # the operator is available for given types.
+        happy_path = True
+
+        if (type(l_t) is not Type.Int) or (type(r_t) is not Type.Int):
+            if l_t == Type.string() and r_t == Type.string():
+                op = 'texteq'
+            else:
+                fmt = 'overloaded use of operator {op} on: {lhs} {op} {rhs}'
+                viuact.util.log.warning(fmt.format(
+                    op = op_name,
+                    lhs = sc.type_of(lhs_slot).to_string(),
+                    rhs = sc.type_of(rhs_slot).to_string(),
+                ))
+                happy_path = False
+
+        if happy_path:
+            body.append(Verbatim('{} {} {} {}'.format(
+                op,
+                result.to_string(),
+                lhs_slot.to_string(),
+                rhs_slot.to_string(),
+            )))
+        else:
+            synthesised_call = viuact.forms.Fn_call(
+                to = viuact.forms.Name_ref(expr.operator()),
+                arguments = [
+                    viuact.forms.Raw_slot(lhs_slot, args[0].first_token()),
+                    viuact.forms.Raw_slot(rhs_slot, args[1].first_token()),
+                ],
+                kind = viuact.forms.Fn_call.Kind.Call,
+            )
+
+            res = emit_direct_fn_call(
+                mod = mod,
+                body = body,
+                st = sc,
+                result = result,
+                form = synthesised_call,
+            )
+
         if str(expr.operator().tok()) == '!=':
             body.append(Verbatim('not {}'.format(result.to_string())))
 
-        sc.deallocate_slot(lhs_slot)
-        sc.deallocate_slot(rhs_slot)
+        if happy_path:
+            sc.deallocate_slot(lhs_slot)
+            sc.deallocate_slot(rhs_slot)
 
         st.type_of(result, Type.bool())
 
@@ -1659,6 +1717,8 @@ def emit_expr(mod, body, st, result, expr):
             result = result.inhibit_dereference(True),
             expr = expr.expr(),
         )
+    if type(expr) is viuact.forms.Raw_slot:
+        return expr.slot()
     viuact.util.log.fixme('failed to emit expression: {}'.format(
         typeof(expr)))
     raise None

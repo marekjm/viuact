@@ -611,7 +611,16 @@ def parse_fn_parameter(group):
 
 def parse_fn(group):
     name = group[1]
-    if name.t() is not viuact.lexemes.Name:
+
+    valid_fn_name_types = (
+        # Obviously, a simple name is valid.
+        viuact.lexemes.Name,
+
+        # Let's start with the very basics and allow programmers to overload
+        # equality. It should be pretty useful and hard to misuse.
+        viuact.lexemes.Operator_eq,
+    )
+    if name.t() not in valid_fn_name_types:
         raise viuact.errors.Unexpected_token(
             pos = name.val().tok().at(),
             s = str(name.val()),
