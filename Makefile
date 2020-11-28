@@ -26,11 +26,6 @@ all: test
 clean:
 	@rm -rf $(OUTPUT_DIR)/
 
-test:
-	@mkdir -p $(BUILD_DIR)
-	rm -r $(BUILD_DIR)
-	python3 ./tests.py --all
-
 install:
 	@mkdir -p $(BIN_DIR)
 	@mkdir -p $(LIB_DIR)
@@ -58,7 +53,9 @@ install:
 	cp -Rv switch/init/* $(SWITCH_TEMPLATE_DIR)/init/
 
 watch-test:
-	find . -name '*.py' | entr -c make test
+	touch trigger.test-suite
+	(ls -1 test-suite.py trigger.test-suite ; find ./tests -type f) |\
+		entr -cs ./run_tests.sh
 
 watch-install:
 	( \

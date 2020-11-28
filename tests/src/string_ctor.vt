@@ -1,0 +1,6 @@
+(val main () -> i64)
+(let main () {
+    (let s "Hello, World!")
+    (print s)
+    0
+})
