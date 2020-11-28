@@ -97,6 +97,21 @@ class Invalid_sentinel(Lexer_error):
 
 
 ################################################################################
+# Errors that occur during module preparation.
+#
+class Mismatched_val_and_let_function(Parser_error):
+    def __init__(self, pos, fn_val, fn_let):
+        super().__init__(pos)
+        self.bad = 'implementation of {} follows specification of {}'.format(
+            fn_let,
+            fn_val,
+        )
+
+    def what(self):
+        return '{}: {}'.format(super().what(), self.bad)
+
+
+################################################################################
 # Errors that occur during code emission.
 #
 class Emitter_error(Error):

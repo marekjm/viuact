@@ -789,21 +789,33 @@ def cc_impl_prepare_module(module_name, source_file, forms):
             value = each.value(),
         )
 
-    for each in filter(lambda x: type(x) is viuact.forms.Val_fn_spec, forms):
-        mod.make_fn_signature(
-            name = each.name(),
-            parameters = [cc_type(mod, t) for t in each.parameter_types()],
-            return_type = cc_type(mod, each.return_type()),
-            template_parameters = [
-                cc_type(mod, t) for t in each.template_parameters()],
-        )
+    i = 0
+    while i < len(forms):
+        fn_spec = forms[i]
+        i += 1
 
-    for each in forms:
-        if type(each) is not viuact.forms.Fn:
+        if type(fn_spec) is not viuact.forms.Val_fn_spec:
             continue
+
+        fn_impl = forms[i]
+
+        if str(fn_spec.name()) != str(fn_impl.name()):
+            raise viuact.errors.Mismatched_val_and_let_function(
+                fn_impl.first_token().at(),
+                fn_impl.name(),
+                fn_spec.name(),
+            )
+
+        mod.make_fn_signature(
+            name = fn_spec.name(),
+            parameters = [cc_type(mod, t) for t in fn_spec.parameter_types()],
+            return_type = cc_type(mod, fn_spec.return_type()),
+            template_parameters = [
+                cc_type(mod, t) for t in fn_spec.template_parameters()],
+        )
         mod.make_fn(
-            name = each.name(),
-            parameters = each.parameters(),
+            name = fn_impl.name(),
+            parameters = fn_impl.parameters(),
         )
 
     return mod
