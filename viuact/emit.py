@@ -401,6 +401,10 @@ def emit_direct_fn_call(mod, body, st, result, form):
     tmp = {}
     for each in type_signature['template_parameters']:
         tmp[viuact.typesystem.t.Template(each.name()[1:])] = st.register_template_variable(each)
+    viuact.util.log.debug('fn.call: polymorphic blueprint = {}'.format(
+        tmp,
+    ))
+
     for each in type_signature['parameters']:
         if type(each) is viuact.typesystem.t.Value:
             parameter_types.append(each.concretise(tmp))
@@ -414,7 +418,11 @@ def emit_direct_fn_call(mod, body, st, result, form):
                 typeof(each),
             ))
             raise None
+    viuact.util.log.debug('fn.call: parameter types = {}'.format(
+        ' '.join(map(lambda _: _.to_string(), parameter_types)),
+    ))
 
+    argument_types = []
     for i, arg in enumerate(args):
         body.append(Verbatim('; for argument {}'.format(i)))
         slot = st.get_slot(name = None)
@@ -439,7 +447,7 @@ def emit_direct_fn_call(mod, body, st, result, form):
             arg_t = st.type_of(slot)
 
             try:
-                st.unify_types(param_t, arg_t)
+                argument_types.append(st.unify_types(param_t, arg_t))
             except viuact.typesystem.state.Cannot_unify:
                 raise viuact.errors.Bad_argument_type(
                     arg.first_token().at(),
@@ -453,12 +461,28 @@ def emit_direct_fn_call(mod, body, st, result, form):
             # reporting?
             sc.deallocate_slot(slot)
 
-    return_t = type_signature['return'].concretise(tmp)
+    viuact.util.log.debug('fn.call: argument types = {}'.format(
+        ' '.join(map(lambda _: _.to_string(), argument_types)),
+    ))
+    # viuact.util.log.debug('fn.call: type state = ↲')
+    # st._types.dump()
 
     # Only set type of the result is not a void register (it does not make sense
     # to assign type to a void).
     if not result.is_void():
-        st.type_of(result, return_t)
+        return_t = type_signature['return'].concretise(tmp)
+        viuact.util.log.debug('fn.call: return_t = {}'.format(
+            return_t.to_string(),
+        ))
+
+        result_t = return_t
+        if return_t.polymorphic():
+            result_t = st._types.variable(return_t)
+
+        viuact.util.log.debug('fn.call: result_t = {}'.format(
+            result_t.to_string(),
+        ))
+        st.type_of(result, result_t)
 
     body.append(Call(
         to = full_name,

@@ -584,11 +584,19 @@ def cc_fn(mod, fn):
         fn_name)
     signature = mod.signature(fn_name)
 
+    viuact.util.log.debug('cc.fn:   {}'.format(
+        signature_to_string(fn_name, signature)
+    ))
+
     types = viuact.typesystem.state.State()
     blueprint = {}
     for each in signature['template_parameters']:
         t = viuact.typesystem.t.Template(each.name()[1:])
         blueprint[t] = types.register_type(t)
+
+    if blueprint:
+        viuact.util.log.debug('cc.fn: blueprint = {}'.format(blueprint))
+
     st = State(fn = main_fn_name, types = types)
 
     main_fn = Fn_cc(main_fn_name)
@@ -634,7 +642,12 @@ def cc_fn(mod, fn):
 
     try:
         return_t = signature['return'].concretise(blueprint)
-        st.unify_types(return_t, st.type_of(result))
+        result_t = st.type_of(result)
+        viuact.util.log.debug('cc.fn: return_t = {}'.format(
+            return_t.to_string()))
+        viuact.util.log.debug('cc.fn: result_t = {}'.format(
+            result_t.to_string()))
+        st.unify_types(return_t, result_t)
     except viuact.typesystem.state.Cannot_unify:
         raise viuact.errors.Bad_returned_type(
             (0, 0,),  # FIXME add position
@@ -662,6 +675,8 @@ def cc_fn(mod, fn):
         st.actual_pressure(Register_set.LOCAL),
     )))
     main_fn.append(Verbatim('return'))
+
+    viuact.util.log.debug('------ 8< ------')
 
     return out
 
