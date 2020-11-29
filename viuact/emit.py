@@ -1620,8 +1620,7 @@ def emit_record_field_access(mod, body, st, result, expr):
         field_t = viuact.typesystem.t.Value(
             name = str(record_definition['fields'][str(expr.field())]),
         )
-        if result.inhibit_dereference():
-            field_t = viuact.typesystem.t.Pointer(field_t)
+        field_t = viuact.typesystem.t.Pointer(field_t)
 
         # FIXME register the type in case of templates
         st.type_of(result, field_t)
