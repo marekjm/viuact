@@ -539,15 +539,27 @@ def emit_operator_concat(mod, body, st, result, expr):
             result = rhs_slot,
             expr = args[1],
         )
-        arg_t = sc.type_of(rhs_slot)
-        if arg_t.to_string() != Type.string().to_string():
-            is_pointer = (type(arg_t) is viuact.typesystem.t.Pointer)
+
+        lhs_t = sc.type_of(lhs_slot)
+        if lhs_t != Type.string():
+            is_pointer = (type(lhs_t) is viuact.typesystem.t.Pointer)
+            dereference_freely = (not lhs_slot.inhibit_dereference())
+            deref = (is_pointer and dereference_freely)
+            body.append(Verbatim('text {} {}'.format(
+                lhs_slot.to_string(),
+                lhs_slot.as_pointer(deref).to_string(),
+            )))
+
+        rhs_t = sc.type_of(rhs_slot)
+        if rhs_t != Type.string():
+            is_pointer = (type(rhs_t) is viuact.typesystem.t.Pointer)
             dereference_freely = (not rhs_slot.inhibit_dereference())
             deref = (is_pointer and dereference_freely)
             body.append(Verbatim('text {} {}'.format(
                 rhs_slot.to_string(),
                 rhs_slot.as_pointer(deref).to_string(),
             )))
+
         body.append(Verbatim('textconcat {} {} {}'.format(
             result.to_string(),
             lhs_slot.to_string(),
@@ -1332,7 +1344,7 @@ def emit_name_ref(mod, body, st, result, expr):
         return emit_fn_ref(mod, body, st, result, expr)
 
     if result.is_void():
-        viuact.util.log.raw('void slot for name-ref to {}'.format(
+        viuact.util.log.error('void slot for name-ref to {}'.format(
             str(expr.name()),
         ))
         raise None
@@ -1345,24 +1357,25 @@ def emit_name_ref(mod, body, st, result, expr):
         return st.slot_of(str(expr.name())).inhibit_dereference(result.inhibit_dereference())
     else:
         slot = st.slot_of(str(expr.name()))
-        # viuact.util.log.raw('move to {} from {} for name-ref to {}'.format(
-        #     result.to_string(),
-        #     slot.to_string(),
-        #     str(expr.name()),
-        # ))
         t = st.type_of(slot)
-        st.name_slot(result, str(expr.name()))
         if result.inhibit_dereference():
-            # viuact.util.log.raw('name-ref creates a pointer: {} <- {}'.format(
-            #     result.to_string(),
-            #     slot.to_string(),
-            # ))
+            viuact.util.log.debug('name-ref of {} creates a pointer: {} <- {}'.format(
+                str(expr.name()),
+                result.to_string(),
+                slot.to_string(),
+            ))
             st.type_of(result, viuact.typesystem.t.Pointer(t))
             body.append(Move.make_pointer(
                 source = slot,
                 dest = result,
             ))
         else:
+            viuact.util.log.debug('name-ref of {} moves a value: to {} from {}'.format(
+                str(expr.name()),
+                result.to_string(),
+                slot.to_string(),
+            ))
+            st.name_slot(result, str(expr.name()))
             st.type_of(result, t)
             st.deallocate_slot(slot)
             body.append(Move.make_move(
