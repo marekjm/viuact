@@ -150,7 +150,7 @@ class State:
                 return t.name(human_readable)
             else:
                 return self.stringify_type(self.variable(t), human_readable)
-        elif type(t) is viuact.typesystem.t.Value:
+        elif isinstance(t, viuact.typesystem.t.Value):
             ts = [self.stringify_type(each, human_readable) for each in t.templates()]
             if ts:
                 return '(({}) {})'.format(
