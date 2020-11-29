@@ -1769,6 +1769,8 @@ def emit_expr(mod, body, st, result, expr):
         )
     if type(expr) is viuact.forms.Raw_slot:
         return expr.slot()
+    if type(expr) is viuact.forms.Drop:
+        return Slot.make_void()
     viuact.util.log.fixme('failed to emit expression: {}'.format(
         typeof(expr)))
     raise None

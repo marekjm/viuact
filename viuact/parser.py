@@ -430,6 +430,8 @@ def parse_simple_expr(elem):
         return viuact.forms.Primitive_literal(value = elem.val())
     if elem.t() is viuact.lexemes.Name:
         return viuact.forms.Name_ref(name = elem.val())
+    if elem.t() is viuact.lexemes.Drop:
+        return viuact.forms.Drop(elem.lead())
     viuact.util.log.fixme('failed to parse simple expression: {} {}'.format(
         typeof(elem.lead()), elem.lead()))
     raise None  # parse simple expressions

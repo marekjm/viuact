@@ -479,6 +479,10 @@ class Import(Form):
     def path(self):
         return '::'.join(map(str, self.module()))
 
+class Drop(Form):
+    def __init__(self, drop):
+        super().__init__(drop.tok())
+
 
 Form.forms = [
     Fn,
