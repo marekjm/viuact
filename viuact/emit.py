@@ -145,9 +145,11 @@ def emit_builtin_call(mod, body, st, result, form):
         if len(form.arguments()) != 1:
             raise viuact.errors.Invalid_arity(
                 form.to().name().tok().at(),
-                expected = 1,
-                got = len(form.arguments()),
-            )
+                s = 'print',
+            ).note('expected {} argument(s), got {}'.format(
+                1,
+                len(form.arguments()),
+            ))
         with st.scoped() as sc:
             arg = form.arguments()[0]
             slot = emit_expr(
@@ -186,7 +188,7 @@ def emit_indirect_fn_call(mod, body, st, result, form):
     if len(fn_t.parameter_types()) != len(form.arguments()):
         e = viuact.errors.Invalid_arity(
             form.to().name().tok().at(),
-            'from variable {}'.format(name),
+            s = 'from variable {}'.format(name),
         ).note('expected {} argument(s), got {}'.format(
             len(fn_t.parameters()),
             len(form.arguments()),
