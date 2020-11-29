@@ -1,0 +1,3 @@
+Hello, World!
+Hello, 42!
+Hello, true!

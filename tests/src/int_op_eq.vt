@@ -1,0 +1,7 @@
+(val main () -> i64)
+(let main () {
+    (let a 42)
+    (let b 42)
+    (print (= a b))
+    0
+})

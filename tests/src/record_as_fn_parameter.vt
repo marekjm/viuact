@@ -1,0 +1,20 @@
+; Stolen from http://dev.realworldocaml.org/records.html
+(type service_info {
+    (val service_name string) ; eg, ssh
+    (val port         i16)    ; eg, 22
+    (val protocol     string) ; eg, tcp
+})
+
+(val to_string (service_info) -> string)
+(let to_string (si) (.. si.service_name ": " si.protocol "/" si.port))
+
+(val main () -> i64)
+(let main () {
+    (let si (service_info {
+        (.service_name "ssh")
+        (.port         22)
+        (.protocol     "tcp")
+    }))
+    (print (to_string si))
+    0
+})

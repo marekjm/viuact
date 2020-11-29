@@ -1,0 +1,7 @@
+(val main () -> i64)
+(let main () {
+    (let a "Hello, ")
+    (let b "World!")
+    (print (.. a b))
+    0
+})
