@@ -809,16 +809,29 @@ def cc_impl_prepare_module(module_name, source_file, forms):
         fn_spec = forms[i]
         i += 1
 
+        if type(fn_spec) is viuact.forms.Fn:
+            raise viuact.errors.No_signature_for_function(
+                fn_spec.first_token().at(),
+                fn_spec.name(),
+            )
+
         if type(fn_spec) is not viuact.forms.Val_fn_spec:
             continue
 
         fn_impl = forms[i]
+        i += 1
+
+        if type(fn_impl) is not viuact.forms.Fn:
+            raise viuact.errors.Signature_with_no_implementation(
+                fn_spec.first_token().at(),
+                fn_spec.to_string(),
+            )
 
         if str(fn_spec.name()) != str(fn_impl.name()):
             raise viuact.errors.Mismatched_val_and_let_function(
                 fn_impl.first_token().at(),
-                fn_impl.name(),
                 fn_spec.name(),
+                fn_impl.name(),
             )
 
         mod.make_fn_signature(

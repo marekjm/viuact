@@ -108,6 +108,14 @@ class Mismatched_val_and_let_function(Parser_error):
         )
 
     def what(self):
+        return self.bad
+
+class Signature_with_no_implementation(Parser_error):
+    def __init__(self, pos, fn_val):
+        super().__init__(pos)
+        self.bad = fn_val
+
+    def what(self):
         return '{}: {}'.format(super().what(), self.bad)
 
 

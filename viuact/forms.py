@@ -291,6 +291,13 @@ class Val_fn_spec(Form):
     def return_type(self):
         return self._return_type
 
+    def to_string(self):
+        return '{} ({}) -> {}'.format(
+            self.name(),
+            ' '.join(map(lambda _: _.to_string(), self.parameter_types())),
+            self.return_type().to_string(),
+        )
+
 class Type_name(Form):
     def __init__(self, name, template_parameters):
         super().__init__(name.tok())
