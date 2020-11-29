@@ -149,6 +149,7 @@ def emit_builtin_call(mod, body, st, result, form):
                 got = len(form.arguments()),
             )
         with st.scoped() as sc:
+            arg = form.arguments()[0]
             slot = emit_expr(
                 mod = mod,
                 body = body,
@@ -158,7 +159,7 @@ def emit_builtin_call(mod, body, st, result, form):
                     if result.is_void()
                     else result
                 ),
-                expr = form.arguments()[0],
+                expr = arg,
             )
             arg_t = sc.type_of(slot)
             if arg_t == viuact.typesystem.t.Void():
@@ -541,6 +542,10 @@ def emit_operator_concat(mod, body, st, result, expr):
         )
 
         lhs_t = sc.type_of(lhs_slot)
+        viuact.util.log.debug('op.concat: 1st [{}] arg_t = {}'.format(
+            lhs_slot.to_string(),
+            lhs_t.to_string(),
+        ))
         if lhs_t != Type.string():
             is_pointer = (type(lhs_t) is viuact.typesystem.t.Pointer)
             dereference_freely = (not lhs_slot.inhibit_dereference())
@@ -551,6 +556,10 @@ def emit_operator_concat(mod, body, st, result, expr):
             )))
 
         rhs_t = sc.type_of(rhs_slot)
+        viuact.util.log.debug('op.concat: 2nd [{}] arg_t = {}'.format(
+            rhs_slot.to_string(),
+            rhs_t.to_string(),
+        ))
         if rhs_t != Type.string():
             is_pointer = (type(rhs_t) is viuact.typesystem.t.Pointer)
             dereference_freely = (not rhs_slot.inhibit_dereference())
@@ -566,7 +575,7 @@ def emit_operator_concat(mod, body, st, result, expr):
             rhs_slot.to_string(),
         )))
 
-        for each in args[2:]:
+        for i, each in enumerate(args[2:]):
             rhs_slot = emit_expr(
                 mod = mod,
                 body = body,
@@ -575,7 +584,12 @@ def emit_operator_concat(mod, body, st, result, expr):
                 expr = each,
             )
             arg_t = sc.type_of(rhs_slot)
-            if arg_t.to_string() != Type.string().to_string():
+            viuact.util.log.debug('op.concat: {}th [{}] arg_t = {}'.format(
+                (i + 3),
+                rhs_slot.to_string(),
+                arg_t.to_string(),
+            ))
+            if arg_t != Type.string():
                 is_pointer = (type(arg_t) is viuact.typesystem.t.Pointer)
                 dereference_freely = (not rhs_slot.inhibit_dereference())
                 deref = (is_pointer and dereference_freely)
