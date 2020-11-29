@@ -1,3 +1,6 @@
+import viuact.util.colors
+
+
 ################################################################################
 # Base classes for user errors, i.e. errors triggered by invalid user code.
 #
@@ -346,6 +349,27 @@ class Bad_type_of_record_field(Type_error):
             r = self.record,
             decl = self.declared,
             act = self.actual,
+        )
+
+class Unknown_enum(Emitter_error):
+    def __init__(self, pos, e):
+        super().__init__(pos)
+        self.bad = e
+
+    def what(self):
+        return '{}: {}'.format(super().what(), self.bad)
+
+class Invalid_enum_field(Emitter_error):
+    def __init__(self, pos, e, f):
+        super().__init__(pos)
+        self.bad = (e, f,)
+
+    def what(self):
+        enum_name, field_name = self.bad
+        return '{}: enum {} has no field {}'.format(
+            super().what(),
+            viuact.util.colors.colorise_wrap('white', enum_name),
+            viuact.util.colors.colorise_wrap('white', field_name),
         )
 
 

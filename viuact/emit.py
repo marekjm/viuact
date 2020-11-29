@@ -815,13 +815,26 @@ def emit_enum_ctor_call(mod, body, st, result, form):
     enum_name = form.to().of_enum()
     enum_field = form.to().field()
 
-    enum = (
-        mod.module(from_module).enum(enum_name)
-        if from_module else
-        mod.enum(enum_name)
-    )
+    try:
+        enum = (
+            mod.module(from_module).enum(enum_name)
+            if from_module else
+            mod.enum(enum_name)
+        )
+    except KeyError:
+        raise viuact.errors.Unknown_enum(
+            enum_name.tok().at(),
+            enum_name,
+        )
 
-    field = enum['fields'][str(enum_field)]
+    try:
+        field = enum['fields'][str(enum_field)]
+    except KeyError:
+        raise viuact.errors.Invalid_enum_field(
+            enum_field.tok().at(),
+            enum_name,
+            enum_field,
+        )
 
     # FIXME embed typing requirement into the list...
     ts = []
