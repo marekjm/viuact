@@ -106,8 +106,8 @@ class Mismatched_val_and_let_function(Parser_error):
     def __init__(self, pos, fn_val, fn_let):
         super().__init__(pos)
         self.bad = 'implementation of {} follows specification of {}'.format(
-            fn_let,
-            fn_val,
+            viuact.util.colors.colorise_wrap('white', fn_let),
+            viuact.util.colors.colorise_wrap('white', fn_vet),
         )
 
     def what(self):
@@ -151,7 +151,7 @@ class Invalid_arity(Emitter_error):
         return '{} in call to {} {}'.format(
             super().what(),
             self.kind,
-            self.bad,
+            viuact.util.colors.colorise_wrap('white', self.bad),
         )
 
 class Unknown_function(Emitter_error):
@@ -177,7 +177,11 @@ class Missing_argument(Emitter_error):
         self.arg = arg
 
     def what(self):
-        return '{} for function {}: {}'.format(super().what(), self.fn, self.arg)
+        return '{} for function {}: {}'.format(
+            super().what(),
+            viuact.util.colors.colorise_wrap('white', self.fn),
+            viuact.util.colors.colorise_wrap('white', self.arg),
+        )
 
 class Missing_positional_argument(Missing_argument):
     pass
@@ -191,7 +195,8 @@ class No_signature_for_function(Emitter_error):
         self.fn = fn
 
     def what(self):
-        return '{} {}'.format(super().what(), self.fn)
+        return '{} {}'.format(super().what(),
+                viuact.util.colors.colorise_wrap('white', self.fn))
 
 class Missing_with_clause(Emitter_error):
     def __init__(self, pos, tag, for_enum):
@@ -202,8 +207,8 @@ class Missing_with_clause(Emitter_error):
     def what(self):
         return '{} for tag {} when matching over enum {}'.format(
             super().what(),
-            repr(self.tag),
-            repr(self.for_enum),
+            viuact.util.colors.colorise_wrap('white', self.tag),
+            viuact.util.colors.colorise_wrap('white', self.for_enum),
         )
 
 class Duplicated_with_clause(Emitter_error):
@@ -215,8 +220,8 @@ class Duplicated_with_clause(Emitter_error):
     def what(self):
         return '{} for tag {} when matching over enum {}'.format(
             super().what(),
-            repr(self.tag),
-            repr(self.for_enum),
+            viuact.util.colors.colorise_wrap('white', self.tag),
+            viuact.util.colors.colorise_wrap('white', self.for_enum),
         )
 
 class Mismatched_with_clauses(Emitter_error):
@@ -227,7 +232,7 @@ class Mismatched_with_clauses(Emitter_error):
     def what(self):
         return '{} when matching over enum {}'.format(
             super().what(),
-            repr(self.for_enum),
+            viuact.util.colors.colorise_wrap('white', self.for_enum),
         )
 
 class Read_of_unbound_variable(Emitter_error):
@@ -236,7 +241,8 @@ class Read_of_unbound_variable(Emitter_error):
         self.variable = variable
 
     def what(self):
-        return '{}: {}'.format(super().what(), self.variable)
+        return '{}: {}'.format(super().what(),
+                viuact.util.colors.colorise_wrap('white', self.variable))
 
 class Record_ctor_received_more_than_one_argument(Emitter_error):
     def __init__(self, pos, name, no_of_args):
@@ -246,7 +252,7 @@ class Record_ctor_received_more_than_one_argument(Emitter_error):
 
     def what(self):
         return 'record constructor for {} expects 1 argument, but received {}'.format(
-            self.name,
+            viuact.util.colors.colorise_wrap('white', self.name),
             self.no_of_args,
         )
 
@@ -272,9 +278,9 @@ class Bad_returned_type(Type_error):
     def what(self):
         return '{w} from {fn}: returned {ret} != declared {decl}'.format(
             w = super().what(),
-            fn = self.fn,
-            decl = self.declared,
-            ret = self.returned,
+            fn = viuact.util.colors.colorise_wrap('white', self.fn),
+            decl = viuact.util.colors.colorise_wrap('white', self.declared),
+            ret = viuact.util.colors.colorise_wrap('white', self.returned),
         )
 
 class Bad_argument_type(Type_error):
@@ -290,9 +296,9 @@ class Bad_argument_type(Type_error):
         return fmt.format(
             w = super().what(),
             i = self.index,
-            fn = self.fn,
-            decl = self.declared,
-            act = self.actual,
+            fn = viuact.util.colors.colorise_wrap('white', self.fn),
+            decl = viuact.util.colors.colorise_wrap('white', self.declared),
+            act = viuact.util.colors.colorise_wrap('white', self.actual),
         )
 
 class If_arms_return_different_types(Type_error):
@@ -332,7 +338,11 @@ class Bind_of_exception_with_no_value(Type_error):
         self.to = to
 
     def what(self):
-        return '{}: {} to name {}'.format(super().what(), self.ex, self.to)
+        return '{}: {} to name {}'.format(
+            super().what(),
+            viuact.util.colors.colorise_wrap('white', self.ex),
+            viuact.util.colors.colorise_wrap('white', self.to),
+        )
 
 class Unknown_exception(Emitter_error):
     def __init__(self, pos, e):
@@ -356,10 +366,10 @@ class Bad_type_of_record_field(Type_error):
     def what(self):
         fmt = 'bad type for field {f} of record {r}: declared {decl} != actual {act}'
         return fmt.format(
-            f = self.field,
-            r = self.record,
-            decl = self.declared,
-            act = self.actual,
+            f = viuact.util.colors.colorise_wrap('white', self.field),
+            r = viuact.util.colors.colorise_wrap('white', self.record),
+            decl = viuact.util.colors.colorise_wrap('white', self.declared),
+            act = viuact.util.colors.colorise_wrap('white', self.actual),
         )
 
 class Unknown_enum(Emitter_error):
@@ -368,7 +378,8 @@ class Unknown_enum(Emitter_error):
         self.bad = e
 
     def what(self):
-        return '{}: {}'.format(super().what(), self.bad)
+        return '{}: {}'.format(super().what(),
+                viuact.util.colors.colorise_wrap('white', self.bad))
 
 class Invalid_enum_field(Emitter_error):
     def __init__(self, pos, e, f):
