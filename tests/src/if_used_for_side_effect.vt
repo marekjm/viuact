@@ -1,0 +1,8 @@
+(val main () -> i64)
+(let main () {
+    ; If the conditional instruction is used not as a way to choose between two
+    ; alternatives, but to guard an expression the canonical way is to execute
+    ; an expression in the true arm, and let the false arm be a drop token.
+    (if true (print "Well, yes, my good man.") _)
+    0
+})

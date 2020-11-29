@@ -1,0 +1,9 @@
+(val greeter (string) -> string)
+(let greeter (target) (print (.. "Hello, " target "!")))
+
+(val main () -> i64)
+(let main () {
+    (let fn greeter)
+    (fn "World")
+    0
+})

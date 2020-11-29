@@ -1,0 +1,18 @@
+(enum example (Foo Bar))
+
+(val to_string (example) -> string)
+(let to_string (x) (match x (
+    ; There is no need to repeat the full type name since the compiler knows it.
+    ; Only the field name is relevant here.
+    (with Foo "Foo")
+    (with Bar "Bar")
+)))
+
+(val main () -> i64)
+(let main () {
+    (let x (example::Foo))
+    (print (to_string x))
+
+    (print (to_string (example::Bar)))
+    0
+})

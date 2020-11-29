@@ -1,0 +1,9 @@
+(val exclaim (bool) -> string)
+(let exclaim (x) (if x "Oh yeah!" "Hell no!"))
+
+(val main () -> i64)
+(let main () {
+    (print (exclaim true))
+    (print (exclaim false))
+    0
+})
