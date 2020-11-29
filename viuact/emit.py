@@ -1476,7 +1476,14 @@ def emit_catch_arm(mod, body, st, result, expr):
         st.get_slot(name = str(expr.name()))
     )
 
-    ex_t = mod.exception(str(expr.tag()))
+    try:
+        ex_t = mod.exception(str(expr.tag()))
+    except KeyError:
+        raise viuact.errors.Unknown_exception(
+            expr.tag().tok().at(),
+            expr.tag(),
+        )
+
     if (not expr.bare()) and ex_t is None:
         raise viuact.errors.Bind_of_exception_with_no_value(
             expr.first_token().at(),

@@ -334,6 +334,17 @@ class Bind_of_exception_with_no_value(Type_error):
     def what(self):
         return '{}: {} to name {}'.format(super().what(), self.ex, self.to)
 
+class Unknown_exception(Emitter_error):
+    def __init__(self, pos, e):
+        super().__init__(pos)
+        self.bad = e
+
+    def what(self):
+        return '{}: {}'.format(
+            super().what(),
+            viuact.util.colors.colorise_wrap('white', self.bad),
+        )
+
 class Bad_type_of_record_field(Type_error):
     def __init__(self, pos, record, field, declared, actual):
         super().__init__(pos)
