@@ -1,0 +1,32 @@
+(enum example (
+    Foo
+    Bar
+    Baz
+    Foom
+    Boom
+    Quax
+    Quux
+))
+
+(val to_string (example) -> string)
+(let to_string (x) (match x (
+    ; There is no need to repeat the full type name since the compiler knows it.
+    ; Only the field name is relevant here.
+    ;
+    ; If handling all alternatives explicitly is not needed, the catch-all arm
+    ; can be used and the match expression will default to it.
+    (with Foo "Foo")
+    (with Bar "Bar")
+    (with _ "something else")
+)))
+
+(val main () -> i64)
+(let main () {
+    (let x (example::Foo))
+    (print (to_string x))
+
+    (print (to_string (example::Bar)))
+    (print (to_string (example::Quux)))
+
+    0
+})
