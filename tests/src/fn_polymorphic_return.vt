@@ -1,3 +1,5 @@
+; This function is polymorphic over 'a. It receives a parameter of type 'a and
+; returns a value of type 'a (the unchanged argument).
 (val ('a) pass ('a) -> 'a)
 (let pass (what) what)
 
@@ -5,5 +7,8 @@
 (let main () {
     (let a (pass 42))
     (print (+ a 0))
+
+    (let b (pass "Hello, "))
+    (print (.. b "World!"))
     0
 })
