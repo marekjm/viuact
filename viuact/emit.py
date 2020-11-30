@@ -1160,7 +1160,7 @@ def emit_match(mod, body, st, result, expr):
                 if_false = (
                     labelled_arms[i + 1]['cond_label']
                     if (i < (len(labelled_arms) - 1)) else
-                    done_label
+                    '+1'
                 ),
             ))
 
