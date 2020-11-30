@@ -1,0 +1,18 @@
+(enum option (
+    (Some 'a)
+    None
+))
+
+(val report (((string) option)) -> void)
+(let report (x) (print (match x (
+    (with Some value value)
+    (with None "nothing")))))
+
+(val main () -> i64)
+(let main () {
+    (let s (option::Some "Hello, World!"))
+    (let n (option::None))
+    (report s)
+    (report n)
+    0
+})
