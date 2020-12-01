@@ -298,7 +298,7 @@ def emit_indirect_fn_call(mod, body, st, result, form):
 
 def get_fn_candidates(form, mod):
     viuact.util.log.raw('fn candidates for: {} ({})'.format(
-        form.to(),
+        form.callee_name(),
         typeof(form.to()),
     ))
 
@@ -530,6 +530,7 @@ def emit_direct_fn_call(mod, body, st, result, form):
         ))
         st.type_of(result, result_t)
 
+    full_name = type_signature['abi_name']
     body.append(Call(
         to = full_name,
         slot = result,

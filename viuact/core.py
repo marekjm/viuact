@@ -8,7 +8,7 @@ import viuact.forms
 import viuact.typesystem.t
 import viuact.typesystem.state
 
-from viuact.emit import (emit_expr, mangle_fn_base_name,)
+from viuact.emit import (emit_expr,)
 from viuact.ops import (
     Register_set,
     Slot,
@@ -23,7 +23,6 @@ EXEC_MODULE = '<main>'
 
 def typeof(value):
     return str(type(value))[8:-2]
-
 
 class Module_info:
     def __init__(self, name, source_file):
@@ -42,7 +41,7 @@ class Module_info:
     def name(self):
         return self._name
 
-    def make_fn(self, name, parameters):
+    def make_fn(self, name, abi_name, parameters):
         n = '{}/{}'.format(name, len(parameters))
         if n not in self._function_signatures:
             raise viuact.errors.No_signature_for_function(
@@ -52,6 +51,7 @@ class Module_info:
 
         self._functions[n] = {
             'base_name': str(name),
+            'abi_name': abi_name,
             'arity': len(parameters),
         }
         # viuact.util.log.print('module info [{}]: visible local fn {}'.format(
@@ -60,17 +60,41 @@ class Module_info:
         # ))
         return self
 
+    @staticmethod
+    def mangle_to_abi_name(name, pt, rt):
+        base_name = '{}/{}'.format(name, len(pt))
+
+        def mangle_type_name(tn):
+            if type(tn) is viuact.typesystem.t.Value and not tn.polymorphic():
+                return 'C{}{}'.format(len(tn.name()), tn.name())
+            elif type(tn) is viuact.typesystem.t.Void:
+                return 'C4void'
+            raise None
+
+        pt_names = map(mangle_type_name, pt)
+
+        abi_name = 'F{}{}_{}_{}/{}'.format(
+            len(str(name)),
+            name,
+            '_'.join(pt_names),
+            mangle_type_name(rt),
+            len(pt),
+        )
+        return abi_name
+
     def make_fn_signature(self, name, parameters, return_type, template_parameters, local = True):
         n = '{}/{}'.format(str(name), len(parameters))
-        self._function_signatures[n] = {
+        sig = {
             'local': local,  # True: local, False: imported
             'parameters': parameters,
             'base_name': str(name),
+            'abi_name': self.mangle_to_abi_name(name, parameters, return_type),
             'arity': len(parameters),
             'return': return_type,
             'template_parameters': template_parameters,
         }
-        return self
+        self._function_signatures[n] = sig
+        return sig
 
     def is_fn_defined(self, name):
         return (name in self._functions)
@@ -91,6 +115,25 @@ class Module_info:
                 res.append((k, v,))
                 continue
         return res
+
+    def fns_named(self, name, local = None, imported = None):
+        res = []
+        for k, v in self._functions.items():
+            if (local is None) or (local is True and v.get('local', False)):
+                res.append((k, v,))
+                continue
+            if (imported is None) or (imported is True and not v.get('local', False)):
+                res.append((k, v,))
+                continue
+        viuact.util.log.raw(res)
+        flat = []
+        for k, v in res:
+            for each in v:
+                if each['base_name'] == name:
+                    flat.append((k, each,))
+        viuact.util.log.raw(flat)
+
+        return list(filter(lambda x: x['base_name'] == name, flat))
 
     def make_enum(self, name, fields, template_parameters):
         if len(template_parameters) > 1:
@@ -164,7 +207,7 @@ class Module_info:
 
         tokens = viuact.lexer.lex(source_text)
         forms = viuact.parser.parse(tokens)
-        mod = cc_impl_prepare_module(path, interface_file, forms)
+        mod, _ = cc_impl_prepare_module(path, interface_file, forms)
 
         self._imports[path] = mod
 
@@ -570,7 +613,7 @@ class CC_out:
         self.nested = {}
 
 
-def cc_fn(mod, fn):
+def cc_fn(mod, signature, fn):
     viuact.util.log.debug('cc.fn: {}::{}/{}'.format(
         mod.name(),
         fn.name(),
@@ -582,7 +625,6 @@ def cc_fn(mod, fn):
         '{}::{}'.format(mod.name(), fn_name)
         if mod.name() != EXEC_MODULE else
         fn_name)
-    signature = mod.signature(fn_name)
 
     viuact.util.log.debug('cc.fn:   {}'.format(
         signature_to_string(fn_name, signature)
@@ -804,6 +846,8 @@ def cc_impl_prepare_module(module_name, source_file, forms):
             value = each.value(),
         )
 
+    funs = []
+
     i = 0
     while i < len(forms):
         fn_spec = forms[i]
@@ -834,7 +878,7 @@ def cc_impl_prepare_module(module_name, source_file, forms):
                 fn_impl.name(),
             )
 
-        mod.make_fn_signature(
+        sig = mod.make_fn_signature(
             name = fn_spec.name(),
             parameters = [cc_type(mod, t) for t in fn_spec.parameter_types()],
             return_type = cc_type(mod, fn_spec.return_type()),
@@ -843,17 +887,24 @@ def cc_impl_prepare_module(module_name, source_file, forms):
         )
         mod.make_fn(
             name = fn_impl.name(),
+            abi_name = sig['abi_name'],
             parameters = fn_impl.parameters(),
         )
+        funs.append((sig, fn_spec, fn_impl))
 
-    return mod
+    return mod, funs
 
 def cc_impl_emit_functions(mod, forms):
     fns = []
 
-    for each in filter(lambda x: type(x) is viuact.forms.Fn, forms):
-        out = cc_fn(mod, each)
-        fns.append({ 'name': out.main.name, 'out': out, 'raw': each, })
+    for sig, spec, impl in forms:
+        out = cc_fn(mod, sig, impl)
+        fns.append({
+            'name': out.main.name,
+            'sig': sig,
+            'out': out,
+            'raw': impl,
+        })
 
     return fns
 
@@ -875,11 +926,15 @@ def cc_impl_save_implementation(mod, fns, build_directory, output_file):
 
             print('')
 
-            sig = mod.signature(out.main.name.split('::')[-1])
+            sig = each['sig']
             name, arity = out.main.name.split('/')
             print('; {}'.format(signature_to_string(name, sig)))
 
-            print('.function: {}/{}'.format(mangle_fn_base_name(name), arity))
+            final_name = (
+                '{}/{}'.format(sig['base_name'], sig['arity'])
+                if name == 'main' else
+                sig['abi_name'])
+            print('.function: {}'.format(final_name))
             for line in out.main.body:
                 print('    {}'.format(line.to_string()))
             print('.end')
@@ -931,8 +986,8 @@ def cc(source_root, source_file, module_name, forms, build_directory):
         output_file,
     ))
 
-    mod = cc_impl_prepare_module(module_name, source_file, forms)
-    fns = cc_impl_emit_functions(mod, forms)
+    mod, funs = cc_impl_prepare_module(module_name, source_file, forms)
+    fns = cc_impl_emit_functions(mod, funs)
 
     output_directory = os.path.split(os.path.join(build_directory, output_file))[0]
     os.makedirs(output_directory, exist_ok = True)
