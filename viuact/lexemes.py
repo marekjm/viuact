@@ -53,7 +53,7 @@ class Path_resolution(Lexeme):
 class Arrow_right(Lexeme):
     pattern = re.compile(r'->')
 
-class Operator_dot(Lexeme):
+class Operator_dot(Lexeme): # used for record field access
     pattern = re.compile(r'\.')
 
 class Operator_concat(Lexeme): # or double-dot? See "double dotted note" in musical notation.
@@ -93,6 +93,7 @@ class Operator_eq(Lexeme):
     pattern = re.compile(r'=')
 
 class Operator_ampersand(Lexeme):
+    # used to create pointers and prevent automatic dereference
     pattern = re.compile(r'&')
 
 class Let(Lexeme):
