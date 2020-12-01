@@ -1376,7 +1376,12 @@ def emit_name_ref(mod, body, st, result, expr):
         viuact.util.log.error('void slot for name-ref to {}'.format(
             str(expr.name()),
         ))
-        raise None
+        raise viuact.errors.Destination_cannot_be_void(
+            pos = expr.name().tok().at(),
+            s = 'name-ref to {} variable'.format(
+                viuact.util.colors.colorise_wrap('white', str(expr.name())),
+            ),
+        )
     if result.is_disposable():
         # viuact.util.log.raw('cancelled disposable slot {} for name-ref to {}'.format(
         #     result.to_string(),
