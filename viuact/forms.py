@@ -90,6 +90,17 @@ class Fn_call(Form):
         self._arguments = arguments     # [form]
         self._kind = kind               # Kind
 
+    def callee_name(self):
+        callee = self.to()
+        if type(callee) is Name_path:
+            return '{}::{}'.format(
+                '::'.join(map(str, callee.mod())),
+                callee.name(),
+            )
+        elif type(callee) is Name_ref:
+            return str(callee.name())
+        raise None
+
     def to(self):
         return self._to
 

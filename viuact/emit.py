@@ -141,7 +141,7 @@ def mangle_fn_base_name(name):
 
 
 def emit_builtin_call(mod, body, st, result, form):
-    if str(form.to().name()) == 'print':
+    if form.callee_name() == 'print':
         if len(form.arguments()) != 1:
             raise viuact.errors.Invalid_arity(
                 form.to().name().tok().at(),
@@ -497,7 +497,7 @@ def emit_direct_fn_call(mod, body, st, result, form):
     return result
 
 def emit_fn_call(mod, body, st, result, form):
-    if str(form.to().name()) in BUILTIN_FUNCTIONS:
+    if str(form.callee_name()) in BUILTIN_FUNCTIONS:
         return emit_builtin_call(mod, body, st, result, form)
 
     base_name = str(form.to().name().tok())
