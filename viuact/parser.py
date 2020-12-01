@@ -372,7 +372,7 @@ def parse_fn_call(group):
         if last.t() is viuact.lexemes.Enum_ctor_name:
             return parse_enum_ctor_call(group)
         elif last.t() is viuact.lexemes.Name:
-            path = flatten_module_path(group)
+            path = flatten_module_path(name)
             mod, name = path[:-1], path[-1]
             name = viuact.forms.Name_path(
                 mod = mod,
@@ -843,7 +843,7 @@ def flatten_module_path(path):
 
         return base
 
-    raise path
+    raise None
 
 def parse_import(group):
     module_name = group[1]
