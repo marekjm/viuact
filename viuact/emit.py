@@ -24,6 +24,7 @@ from viuact.util.type_annotations import (
 
 BUILTIN_FUNCTIONS = (
     'print',
+    'Copy::copy',
 )
 
 
@@ -179,6 +180,48 @@ def emit_builtin_call(mod, body, st, result, form):
             body.append(Verbatim(''))
 
         return slot
+    elif form.callee_name() == 'Copy::copy':
+        if len(form.arguments()) != 1:
+            raise viuact.errors.Invalid_arity(
+                form.to().name().tok().at(),
+                s = 'Copy::copy',
+            ).note('expected {} argument(s), got {}'.format(
+                1,
+                len(form.arguments()),
+            ))
+        with st.scoped() as sc:
+            arg = form.arguments()[0]
+            slot = emit_expr(
+                mod = mod,
+                body = body,
+                st = sc,
+                result = sc.get_disposable_slot(),
+                expr = arg,
+            )
+            arg_t = sc.type_of(slot)
+            if arg_t == viuact.typesystem.t.Void():
+                raise viuact.errors.Read_of_void(
+                    pos = form.arguments()[0].first_token().at(),
+                    by = 'Copy::copy function',
+                )
+
+            is_pointer = (type(arg_t) is viuact.typesystem.t.Pointer)
+            dereference_freely = (not slot.inhibit_dereference())
+            deref = (is_pointer and dereference_freely)
+
+            if deref:
+                st.store(result.to_string(), arg_t.to())
+            else:
+                st.store(result.to_string(), arg_t)
+
+            body.append(Move.make_copy(
+                source = slot.as_pointer(deref),
+                dest = result,
+            ))
+            body.append(Verbatim(''))
+
+        return slot
+    raise None
 
 def emit_indirect_fn_call(mod, body, st, result, form):
     name = str(form.to().name())
