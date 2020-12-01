@@ -27,6 +27,33 @@ def lex(text):
             i += 1
             continue
 
+        if text[i:].startswith('(*'):
+            balance = 1
+            n = (i + 2)
+
+            while balance:
+                if text[n:].startswith('(*'):
+                    balance += 1
+                    n += 2
+                elif text[n:].startswith('*)'):
+                    balance -= 1
+                    n += 2
+                else:
+                    n += 1
+
+            s = text[i:n]
+            tokens.append(viuact.lexemes.Comment(token = viuact.lexemes.Token(
+                pos = (position_line, position_char,),
+                text = s,
+            )))
+
+            position_line += s.count('\n')
+            position_char = (len(s) - s.rfind('\n') - 1)
+            position_offset = n
+            i = n
+
+            continue
+
         if text[i] == ';':
             n = text.find('\n', i + 1)
 

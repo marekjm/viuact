@@ -1,4 +1,4 @@
-; Exception types have to be defined before they can be thrown or caught.
+(* Exception types have to be defined before they can be thrown or caught. *)
 (exception Serious_error)
 
 (val get_value (bool) -> string)
