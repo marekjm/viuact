@@ -1,0 +1,3 @@
+Hello, World! (through a copy of a pointer)
+Hello, World! (through a pointer)
+Hello, World! (the original one)

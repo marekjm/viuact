@@ -1,0 +1,2 @@
+Hello, World! (the original one)
+Hello, World! (a copy)

@@ -1,0 +1,18 @@
+(val main () -> i64)
+(let main () {
+    (let a "Hello, World!")
+    (let p (& a))
+    (let b (Copy::copy p))
+
+    (print (.. b " (through a copy of a pointer)"))
+    (print (.. p " (through a pointer)"))
+
+    (*
+     * This must be executed last, because the operator would consume the value
+     * in the variable "a" and the pointers would become expired. It would be
+     * nice if the compiler tracked expiring pointers...
+     *)
+    (print (.. a " (the original one)"))
+
+    0
+})
