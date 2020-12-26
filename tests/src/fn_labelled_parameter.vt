@@ -1,0 +1,8 @@
+(val hello ((~who string)) -> void)
+(let hello (~who) (print (.. "Hello, " who "!")))
+
+(val main () -> i64)
+(let main () {
+    (hello (~who "World"))
+    0
+})

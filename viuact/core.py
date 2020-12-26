@@ -610,7 +610,7 @@ def cc_fn(mod, fn):
             str(each)
         )
         dest = st.get_slot(label)
-        param = signature['parameters'][i].concretise(blueprint)
+        param = signature['parameters'][i][1].concretise(blueprint)
         st.type_of(dest, param)
         main_fn.append(Move.make_move(
             source = source,
@@ -710,11 +710,19 @@ def cc_type(mod, form):
             pt = tuple(parameter_types),
             templates = (),
         )
+
     viuact.util.log.error('cannot compile type from: {} [{}]'.format(
         str(form),
         typeof(form),
     ))
     raise viuact.errors.Internal_compiler_error()
+
+def cc_parameter_type(mod, form):
+    if type(form) is viuact.forms.Type_name:
+        return (None, cc_type(mod, form),)
+    elif type(form) is viuact.forms.Argument_bind:
+        return (form.name(), cc_type(mod, form.val()),)
+    raise None
 
 
 INDENT = '    '
@@ -730,7 +738,11 @@ def signature_to_string(full_name, sig):
 
     template_parameters = ' '.join(map(lambda x: x.to_string(), tp))
 
-    formal_parameters = ' '.join(map(lambda x: x.to_string(), fp))
+    formal_parameters = ' '.join(map(lambda x: (
+        x[1].to_string()
+        if x[0] is None
+        else '({} {})'.format(x[0], x[1].to_string())
+    ), fp))
     return_type = rt.to_string()
 
     return fmt.format(
@@ -836,7 +848,7 @@ def cc_impl_prepare_module(module_name, source_file, forms):
 
         mod.make_fn_signature(
             name = fn_spec.name(),
-            parameters = [cc_type(mod, t) for t in fn_spec.parameter_types()],
+            parameters = [cc_parameter_type(mod, t) for t in fn_spec.parameter_types()],
             return_type = cc_type(mod, fn_spec.return_type()),
             template_parameters = [
                 cc_type(mod, t) for t in fn_spec.template_parameters()],

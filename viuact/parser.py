@@ -670,6 +670,38 @@ def parse_type(group):
         )
     raise None
 
+def parse_parameter_type(group):
+    if type(group) is Element:
+        return viuact.forms.Type_name(
+            name = group.val(),
+            template_parameters = [],
+        )
+    if type(group) is Group and len(group) == 2:
+        if type(group[0]) is Group:
+            return viuact.forms.Type_name(
+                name = group[1].val(),
+                template_parameters = [parse_type(each) for each in group[0]],
+            )
+        elif type(group[0]) is Element and group[0].val().t() is viuact.lexemes.Labelled_name:
+            return viuact.forms.Argument_bind(
+                name = group[0].val(),
+                value = parse_type(group[1]),
+            )
+        viuact.util.log.raw(typeof(group[0]))
+        raise None
+    if type(group) is Group and len(group) == 3:
+        parameter_types = []
+        for x in group[0]:
+            parameter_types.append(parse_type(x))
+
+        return_type = parse_type(group[2])
+
+        return viuact.forms.Fn_type(
+            return_type = return_type,
+            parameter_types = [parse_parameter_type(x) for x in group[0]],
+        )
+    raise None
+
 def parse_val_fn(group):
     offset = (0 if len(group) == 5 else 1)
     template_parameters = (group[offset + 0] if offset else [])
@@ -682,7 +714,7 @@ def parse_val_fn(group):
 
     name = name.val()
     template_parameters = list(map(parse_type, template_parameters))
-    parameter_list = list(map(parse_type, parameter_list))
+    parameter_list = list(map(parse_parameter_type, parameter_list))
     return_type = parse_type(return_type)
 
     return viuact.forms.Val_fn_spec(

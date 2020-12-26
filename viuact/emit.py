@@ -387,9 +387,17 @@ def emit_direct_fn_call(mod, body, st, result, form):
             called_fn_name,
         )
         for each in candidates:
-            e.note('candidate: {}({})'.format(
-                each[1]['base_name'],
-                ' '.join(map(lambda p: str(p.name()), each[1]['parameters'])),
+            param_to_string = lambda p: (
+                viuact.util.colors.colorise('white', p[1].name())
+                if p[0] is None else
+                '({} {})'.format(str(p[0]), viuact.util.colors.colorise('white',
+                    p[1].name()))
+            )
+            e.note('candidate: {} ({}) -> {}'.format(
+                each['base_name'],
+                ' '.join(map(param_to_string, each['parameters'])),
+                viuact.util.colors.colorise('white',
+                    each['return'].to_string()),
             ))
         raise e
 
@@ -400,16 +408,28 @@ def emit_direct_fn_call(mod, body, st, result, form):
             called_fn_name,
         )
 
+    viuact.util.log.debug('fn.call: sig = {}'.format(type_signature))
+
     args = []
     if True:
         parameters = signature['parameters']
         arguments = form.arguments()
 
         need_labelled = list(filter(
-            lambda a: type(a) is viuact.forms.Labelled_parameter,
+            lambda a: type(a[0]) is viuact.lexemes.Labelled_name,
             parameters))
         need_positional = list(filter(
-            lambda a: type(a) is viuact.forms.Named_parameter, parameters))
+            lambda a: type(a[0]) is not viuact.lexemes.Labelled_name, parameters))
+
+        viuact.util.log.debug('fn.call: {} need positional: {}'.format(
+            full_name,
+            ' '.join(map(lambda _: _[1].name(), need_positional)),
+        ))
+        viuact.util.log.debug('fn.call: {} need labelled: {}'.format(
+            full_name,
+            ' '.join(map(lambda _: '({} {})'.format(str(_[0]), _[1].name()),
+            need_labelled)),
+        ))
 
         got_labelled = dict(
             map(lambda a: ( str(a.name()), a.val(), ),
@@ -418,10 +438,14 @@ def emit_direct_fn_call(mod, body, st, result, form):
         got_positional = list(filter(
             lambda a: type(a) is not viuact.forms.Argument_bind, arguments))
 
-        # print('positional:', need_positional, '=>', got_positional)
-        # print('labelled:',
-        #     list(map(lambda a: str(a.name()), need_labelled)),
-        #     '=>', got_labelled)
+        viuact.util.log.debug('fn.call: {} got positional: {}'.format(
+            full_name,
+            got_positional,
+        ))
+        viuact.util.log.debug('fn.call: {} got labelled: {}'.format(
+            full_name,
+            got_labelled,
+        ))
 
         if len(got_positional) < len(need_positional):
             raise viuact.errors.Missing_positional_argument(
@@ -429,17 +453,17 @@ def emit_direct_fn_call(mod, body, st, result, form):
                 called_fn_name,
                 need_positional[len(got_positional)],
             )
-        for l in need_labelled:
-            if str(l.name()) not in got_labelled:
+        for param_name, param_value in need_labelled:
+            if str(param_name) not in got_labelled:
                 raise viuact.errors.Missing_labelled_argument(
                     form.to().name().tok().at(),
                     called_fn_name,
-                    l,
+                    str(param_name),
                 )
 
         args = got_positional[:]
-        for a in need_labelled:
-            args.append(got_labelled[str(a.name())])
+        for a, _ in need_labelled:
+            args.append(got_labelled[str(a)])
 
     body.append(Verbatim('frame %{} arguments'.format(len(form.arguments()))))
 
@@ -451,7 +475,7 @@ def emit_direct_fn_call(mod, body, st, result, form):
         tmp,
     ))
 
-    for each in type_signature['parameters']:
+    for _, each in type_signature['parameters']:
         if type(each) is viuact.typesystem.t.Value:
             parameter_types.append(each.concretise(tmp))
         elif type(each) is viuact.typesystem.t.Fn:
@@ -513,7 +537,7 @@ def emit_direct_fn_call(mod, body, st, result, form):
     # viuact.util.log.debug('fn.call: type state = ↲')
     # st._types.dump()
 
-    # Only set type of the result is not a void register (it does not make sense
+    # Only set type if the result is not a void register (it does not make sense
     # to assign type to a void).
     if not result.is_void():
         return_t = type_signature['return'].concretise(tmp)
@@ -1393,14 +1417,17 @@ def emit_fn_ref(mod, body, st, result, expr):
     tmp = {}
     for each in fn_sig['template_parameters']:
         tmp[viuact.typesystem.t.Template(each.name()[1:])] = st.register_template_variable(each)
-    for each in fn_sig['parameters']:
-        if type(each) is viuact.typesystem.t.Value:
-            parameter_types.append(each.concretise(tmp))
-        elif type(each) is viuact.typesystem.t.Fn:
-            parameter_types.append(each.concretise(tmp))
-        elif type(each) is viuact.typesystem.t.Template:
-            parameter_types.append(each.concretise(tmp))
+    for param_name, param_t in fn_sig['parameters']:
+        if type(param_t) is viuact.typesystem.t.Value:
+            parameter_types.append(param_t.concretise(tmp))
+        elif type(param_t) is viuact.typesystem.t.Fn:
+            parameter_types.append(param_t.concretise(tmp))
+        elif type(param_t) is viuact.typesystem.t.Template:
+            parameter_types.append(param_t.concretise(tmp))
         else:
+            viuact.util.log.error('bad parameter type in function sig: {}'.format(
+                typeof(param_t)
+            ))
             raise None
 
     st.type_of(result, viuact.typesystem.t.Fn(
