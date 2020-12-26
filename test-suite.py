@@ -161,11 +161,11 @@ def run_test_case(test_case, test_counter, pad_test_counter, verbose):
 
     print(' [ {} ]'.format(colorise(COLOR_OK, 'ok')))
     if verbose:
-        print('  cc  [{}] to {}'.format(
+        print('    cc  [{}] to {}'.format(
             colorise(COLOR_OK, 'ok'),
             asm_file,
         ))
-        print('  asm [{}] to {}'.format(
+        print('    asm [{}] to {}'.format(
             colorise(COLOR_OK, 'ok'),
             bc_file,
         ))
