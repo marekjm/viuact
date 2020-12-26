@@ -6,6 +6,8 @@
 
 *.asm
 
+build/_default/*
+
 !.issue
 .issue/*
 !.issue/objects
