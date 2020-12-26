@@ -387,9 +387,11 @@ def emit_direct_fn_call(mod, body, st, result, form):
             called_fn_name,
         )
         for each in candidates:
-            e.note('candidate: {}({})'.format(
-                each[1]['base_name'],
-                ' '.join(map(lambda p: str(p.name()), each[1]['parameters'])),
+            e.note('candidate: {} ({}) -> {}'.format(
+                viuact.util.colors.colorise('white', '{}/{}'.format(
+                    each['base_name'], each['arity'])),
+                ' '.join(map(lambda p: str(p.name()), each['parameters'])),
+                each['return'].to_string(),
             ))
         raise e
 
@@ -406,7 +408,7 @@ def emit_direct_fn_call(mod, body, st, result, form):
         arguments = form.arguments()
 
         need_labelled = list(filter(
-            lambda a: type(a) is viuact.forms.Labelled_parameter,
+            lambda a: type(a[1]) is viuact.forms.Labelled_parameter,
             parameters))
         need_positional = list(filter(
             lambda a: type(a) is viuact.forms.Named_parameter, parameters))
@@ -451,7 +453,7 @@ def emit_direct_fn_call(mod, body, st, result, form):
         tmp,
     ))
 
-    for each in type_signature['parameters']:
+    for _, each in type_signature['parameters']:
         if type(each) is viuact.typesystem.t.Value:
             parameter_types.append(each.concretise(tmp))
         elif type(each) is viuact.typesystem.t.Fn:
