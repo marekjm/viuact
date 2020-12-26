@@ -175,7 +175,7 @@ def main(args):
     test_name_pad = max(map(lambda _: len(_), tests_to_run))
 
     fail_fast = True
-    verbose = False
+    verbose = True
 
     suite_result = 0
 

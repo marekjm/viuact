@@ -71,7 +71,22 @@ class Module_info:
                 return 'C4void'
             raise None
 
-        pt_names = map(mangle_type_name, pt)
+        def mangle_parameter_type_name(tn):
+            label, value = tn
+            if type(value) is viuact.typesystem.t.Value and not value.polymorphic():
+                if label is not None:
+                    return 'Cl{}{}{}{}'.format(
+                        # lose the ~ leading the label
+                        (len(str(label)) - 1),
+                        str(label)[1:],
+                        len(value.name()),
+                        value.name(),
+                    )
+                else:
+                    return 'C{}{}'.format(len(value.name()), value.name())
+            raise None
+
+        pt_names = map(mangle_parameter_type_name, pt)
 
         abi_name = 'F{}{}_{}_{}/{}'.format(
             len(str(name)),
