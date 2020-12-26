@@ -197,6 +197,21 @@ class Missing_positional_argument(Missing_argument):
 class Missing_labelled_argument(Missing_argument):
     pass
 
+class Too_many_positional_arguments(Emitter_error):
+    def __init__(self, pos, fn, arg):
+        super().__init__(pos)
+        self.fn = fn
+        self.arg = arg
+
+    def what(self):
+        expected, got = self.arg
+        return '{} for function {}: expected {}, but got {}'.format(
+            super().what(),
+            viuact.util.colors.colorise_wrap('white', self.fn),
+            viuact.util.colors.colorise('white', expected),
+            viuact.util.colors.colorise('white', got),
+        )
+
 class No_signature_for_function(Emitter_error):
     def __init__(self, pos, fn):
         super().__init__(pos)

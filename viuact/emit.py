@@ -228,20 +228,62 @@ def emit_indirect_fn_call(mod, body, st, result, form):
     fn_slot = st.slot_of(name)
     fn_t = st.type_of(fn_slot)
 
+    called_fn_name = 'from variable {}'.format(name)
     if len(fn_t.parameter_types()) != len(form.arguments()):
         e = viuact.errors.Invalid_arity(
             form.to().name().tok().at(),
-            s = 'from variable {}'.format(name),
+            s = called_fn_name,
         ).note('expected {} argument(s), got {}'.format(
-            len(fn_t.parameter_types()),
-            len(form.arguments()),
-        ))
+            viuact.util.colors.colorise('white', len(fn_t.parameter_types())),
+            viuact.util.colors.colorise('white', len(form.arguments())),
+        )).note('function signature: {}'.format(fn_t.to_string()))
         raise e
 
     body.append(Verbatim('frame %{} arguments'.format(len(form.arguments()))))
 
+    args = []
+    if True:
+        parameters = list(map(lambda _: (_.name(), _.t(),), fn_t.parameter_types()))
+        arguments = form.arguments()
+
+        need_labelled = list(filter(
+            lambda a: type(a[0]) is viuact.lexemes.Labelled_name,
+            parameters))
+        need_positional = list(filter(
+            lambda a: type(a[0]) is not viuact.lexemes.Labelled_name, parameters))
+
+        got_labelled = dict(
+            map(lambda a: ( str(a.name()), a.val(), ),
+            filter(lambda a: type(a) is viuact.forms.Argument_bind,
+            arguments)))
+        got_positional = list(filter(
+            lambda a: type(a) is not viuact.forms.Argument_bind, arguments))
+
+        if len(got_positional) < len(need_positional):
+            raise viuact.errors.Missing_positional_argument(
+                form.to().name().tok().at(),
+                called_fn_name,
+                need_positional[len(got_positional)],
+            ).note('function signature: {}'.format(fn_t.to_string()))
+        if len(got_positional) > len(need_positional):
+            raise viuact.errors.Too_many_positional_arguments(
+                form.to().name().tok().at(),
+                called_fn_name,
+                (len(need_positional), len(got_positional),),
+            ).note('function signature: {}'.format(fn_t.to_string()))
+        for param_name, param_value in need_labelled:
+            if str(param_name) not in got_labelled:
+                raise viuact.errors.Missing_labelled_argument(
+                    form.to().name().tok().at(),
+                    called_fn_name,
+                    str(param_name),
+                ).note('function signature: {}'.format(fn_t.to_string()))
+
+        args = got_positional[:]
+        for a, _ in need_labelled:
+            args.append(got_labelled[str(a)])
+
     parameter_types = fn_t.parameter_types()
-    args = form.arguments()
     for i, arg in enumerate(args):
         body.append(Verbatim('; for argument {}'.format(i)))
         arg_slot = st.get_slot(name = None)
@@ -270,11 +312,16 @@ def emit_indirect_fn_call(mod, body, st, result, form):
             except viuact.typesystem.state.Cannot_unify:
                 raise viuact.errors.Bad_argument_type(
                     arg.first_token().at(),
-                    name,
-                    (i + 1),
+                    called_fn_name,
+                    (
+                        viuact.util.colors.colorise_wrap('white',
+                            param_t.name())
+                        if param_t.name() is not None else
+                        viuact.util.colors.colorise('white', (i + 1))
+                    ),
                     st._types.stringify_type(param_t, human_readable = True),
                     st._types.stringify_type(arg_t, human_readable = True),
-                )
+                ).note('function signature: {}'.format(fn_t.to_string()))
 
             # FIXME Maybe mark the slot as moved in some way to aid with error
             # reporting?
@@ -421,16 +468,6 @@ def emit_direct_fn_call(mod, body, st, result, form):
         need_positional = list(filter(
             lambda a: type(a[0]) is not viuact.lexemes.Labelled_name, parameters))
 
-        viuact.util.log.debug('fn.call: {} need positional: {}'.format(
-            full_name,
-            ' '.join(map(lambda _: _[1].name(), need_positional)),
-        ))
-        viuact.util.log.debug('fn.call: {} need labelled: {}'.format(
-            full_name,
-            ' '.join(map(lambda _: '({} {})'.format(str(_[0]), _[1].name()),
-            need_labelled)),
-        ))
-
         got_labelled = dict(
             map(lambda a: ( str(a.name()), a.val(), ),
             filter(lambda a: type(a) is viuact.forms.Argument_bind,
@@ -438,28 +475,25 @@ def emit_direct_fn_call(mod, body, st, result, form):
         got_positional = list(filter(
             lambda a: type(a) is not viuact.forms.Argument_bind, arguments))
 
-        viuact.util.log.debug('fn.call: {} got positional: {}'.format(
-            full_name,
-            got_positional,
-        ))
-        viuact.util.log.debug('fn.call: {} got labelled: {}'.format(
-            full_name,
-            got_labelled,
-        ))
-
         if len(got_positional) < len(need_positional):
             raise viuact.errors.Missing_positional_argument(
                 form.to().name().tok().at(),
                 called_fn_name,
                 need_positional[len(got_positional)],
-            )
+            ).note('function signature: {}'.format(type_signature.to_string()))
+        if len(got_positional) < len(need_positional):
+            raise viuact.errors.Too_many_positional_arguments(
+                form.to().name().tok().at(),
+                called_fn_name,
+                (len(need_positional), len(got_positional),),
+            ).note('function signature: {}'.format(type_signature.to_string()))
         for param_name, param_value in need_labelled:
             if str(param_name) not in got_labelled:
                 raise viuact.errors.Missing_labelled_argument(
                     form.to().name().tok().at(),
                     called_fn_name,
                     str(param_name),
-                )
+                ).note('function signature: {}'.format(type_signature.to_string()))
 
         args = got_positional[:]
         for a, _ in need_labelled:

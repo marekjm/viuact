@@ -653,8 +653,8 @@ def cc_fn(mod, fn):
             (0, 0,),  # FIXME add position
             # signature['return'],
             fn_name,
-            signature['return'],
-            st.type_of(result),
+            signature['return'].to_string(),
+            st.type_of(result).to_string(),
         )
         raise 0
 
@@ -703,7 +703,11 @@ def cc_type(mod, form):
         return_type = cc_type(mod, form.return_type())
         parameter_types = []
         for x in form.parameter_types():
-            parameter_types.append(cc_type(mod, x))
+            param_name, param_t = cc_parameter_type(mod, x)
+            if param_name is None:
+                parameter_types.append(viuact.typesystem.t.Fn.Positional_parameter(param_t))
+            else:
+                parameter_types.append(viuact.typesystem.t.Fn.Labelled_parameter(param_name, param_t))
 
         return viuact.typesystem.t.Fn(
             rt = return_type,

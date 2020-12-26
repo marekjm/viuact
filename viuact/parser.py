@@ -658,15 +658,11 @@ def parse_type(group):
             template_parameters = [parse_type(each) for each in group[0]],
         )
     if type(group) is Group and len(group) == 3:
-        parameter_types = []
-        for x in group[0]:
-            parameter_types.append(parse_type(x))
-
         return_type = parse_type(group[2])
 
         return viuact.forms.Fn_type(
             return_type = return_type,
-            parameter_types = [parse_type(x) for x in group[0]],
+            parameter_types = [parse_parameter_type(x) for x in group[0]],
         )
     raise None
 

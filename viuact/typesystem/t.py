@@ -195,11 +195,17 @@ class Fn(Base):
         def __init__(self, t):
             self._t = t
 
+        def name(self):
+            return None
+
         def t(self):
             return self._t
 
         def to_string(self):
             return self.t().to_string()
+
+        def concretise(self, blueprint):
+            return Fn.Positional_parameter(self.t().concretise(blueprint))
     class Labelled_parameter(Parameter):
         def __init__(self, name, t):
             self._name = name
@@ -213,6 +219,9 @@ class Fn(Base):
 
         def to_string(self):
             return '({} {})'.format(self.name(), self.t().to_string())
+
+        def concretise(self, blueprint):
+            return Fn.Labelled_parameter(self.name(), self.t().concretise(blueprint))
 
     def __init__(self, rt, pt = (), templates = ()):
         super().__init__(templates)

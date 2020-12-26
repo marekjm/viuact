@@ -166,6 +166,8 @@ class State:
                 ' '.join(pts),
                 rt,
             )
+        elif type(t) is viuact.typesystem.t.Fn.Labelled_parameter:
+            return self.stringify_type(t.t())
         raise TypeError(t)
 
     def dump(self):
