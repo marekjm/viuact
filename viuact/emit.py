@@ -233,7 +233,7 @@ def emit_indirect_fn_call(mod, body, st, result, form):
             form.to().name().tok().at(),
             s = 'from variable {}'.format(name),
         ).note('expected {} argument(s), got {}'.format(
-            len(fn_t.parameters()),
+            len(fn_t.parameter_types()),
             len(form.arguments()),
         ))
         raise e
@@ -266,7 +266,7 @@ def emit_indirect_fn_call(mod, body, st, result, form):
             arg_t = st.type_of(arg_slot)
 
             try:
-                st.unify_types(param_t, arg_t)
+                st.unify_types(param_t.t(), arg_t)
             except viuact.typesystem.state.Cannot_unify:
                 raise viuact.errors.Bad_argument_type(
                     arg.first_token().at(),
@@ -1418,17 +1418,25 @@ def emit_fn_ref(mod, body, st, result, expr):
     for each in fn_sig['template_parameters']:
         tmp[viuact.typesystem.t.Template(each.name()[1:])] = st.register_template_variable(each)
     for param_name, param_t in fn_sig['parameters']:
+        t = None
         if type(param_t) is viuact.typesystem.t.Value:
-            parameter_types.append(param_t.concretise(tmp))
+            t = param_t.concretise(tmp)
         elif type(param_t) is viuact.typesystem.t.Fn:
-            parameter_types.append(param_t.concretise(tmp))
+            t = param_t.concretise(tmp)
         elif type(param_t) is viuact.typesystem.t.Template:
-            parameter_types.append(param_t.concretise(tmp))
+            t = param_t.concretise(tmp)
         else:
             viuact.util.log.error('bad parameter type in function sig: {}'.format(
                 typeof(param_t)
             ))
             raise None
+
+        if param_name is None:
+            parameter_types.append(viuact.typesystem.t.Fn.Positional_parameter(t))
+        else:
+            parameter_types.append(viuact.typesystem.t.Fn.Labelled_parameter(param_name, t))
+
+    viuact.util.log.raw(list(map(lambda _: _.to_string(), parameter_types)))
 
     st.type_of(result, viuact.typesystem.t.Fn(
         rt = fn_sig['return'].concretise(tmp),

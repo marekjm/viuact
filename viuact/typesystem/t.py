@@ -2,6 +2,7 @@
 
 import viuact.util.log
 
+from viuact.util.type_annotations import I
 
 class Template:
     def __init__(self, name):
@@ -188,8 +189,34 @@ class Pointer(Base):
 # Function types are used to describe functions. They do not have a name and are
 # described by the types of their formal parameters and return type.
 class Fn(Base):
+    class Parameter:
+        pass
+    class Positional_parameter(Parameter):
+        def __init__(self, t):
+            self._t = t
+
+        def t(self):
+            return self._t
+
+        def to_string(self):
+            return self.t().to_string()
+    class Labelled_parameter(Parameter):
+        def __init__(self, name, t):
+            self._name = name
+            self._t = t
+
+        def name(self):
+            return self._name
+
+        def t(self):
+            return self._t
+
+        def to_string(self):
+            return '({} {})'.format(self.name(), self.t().to_string())
+
     def __init__(self, rt, pt = (), templates = ()):
         super().__init__(templates)
+        all(map(lambda each: I(Fn.Parameter) | each, pt))
         self._return_type = rt
         self._parameter_types = pt
 
