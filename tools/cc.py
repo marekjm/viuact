@@ -151,16 +151,11 @@ def parse_options(args):
         'source_root': '.',
         'stop_after_tokenisation': False,
         'stop_after_parsing': False,
+        'show_env': False,
     }
-    source_file = ''
-
-    source_file = args[-1]
-
-    if len(args) == 1:
-        return (options, source_file,)
 
     i = 0
-    while i < (len(args) - 1):  # -1 because skip the source file
+    while i < len(args):  # -1 because skip the source file
         each = args[i]
 
         if each == '-r':
@@ -170,8 +165,16 @@ def parse_options(args):
             options['stop_after_tokenisation'] = True
         elif each in ('-p', '--parse',):
             options['stop_after_parsing'] = True
+        elif each in ('--env',):
+            options['show_env'] = True
+        else:
+            break
 
         i += 1
+
+    source_file = None
+    if i < len(args):
+        source_file = args[i]
 
     return (options, source_file,)
 
@@ -246,11 +249,22 @@ def main(executable_name, args):
         exit(0)
 
     if len(args) == 0:
-        viuact.util.log.error('not source file given')
+        viuact.util.log.error('no source file given')
         viuact.util.log.note('use --help to learn about correct invocation')
         exit(1)
 
     options, source_file = parse_options(args)
+    if options['show_env']:
+        print('VIUACT_DEBUG={}'.format(os.environ.get('VIUACT_DEBUG', 'false')))
+        print('VIUACT_LIBRARY_PATH={}'.format(viuact.env.library_path()))
+        print('VIUACT_CORE_DIR={}'.format(viuact.env.core_directory('')))
+        print('VIUACT_OUTPUT_DIR={}'.format(viuact.env.output_directory()))
+        return 0
+
+    if source_file is None:
+        viuact.util.log.error('no source file given')
+        viuact.util.log.note('use --help to learn about correct invocation')
+        exit(1)
 
     source_root, source_file = get_source_location(options, source_file)
     source_kind = determine_source_kind(source_file)
