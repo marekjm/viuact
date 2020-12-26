@@ -111,6 +111,7 @@ HELP = '''{NAME}
 {COPYRIGHT}
     %copyright(2020) Marek Marecki
 
+    %text
     This is Free Software published under GNU GPL v3 license.
 '''
 

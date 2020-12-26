@@ -18,8 +18,8 @@ OPT = re.compile(r'%opt\((--[a-z][a-z0-9]+|-[a-z0-9])\)')
 TEXT = '%text'
 COPYRIGHT = re.compile(r'%copyright\((\d+(?:-\d+)?(?:, \d+(?:-\d+)?)*)\)')
 
-# Set this to 0 to allow strecthing to actual terminal width.
-MAX_COLUMN_COUNT = 78
+# Set this to 0 to allow stretching to actual terminal width.
+MAX_COLUMN_COUNT = 0
 
 
 colorise = viuact.util.colors.colorise

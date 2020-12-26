@@ -123,6 +123,7 @@ HELP = '''{NAME}
     Some parts of the code were developed at Polish-Japanse Academy Of
     Information Technology in Gdańsk, Poland.
 
+    %text
     This is Free Software published under GNU GPL v3 license.
 '''
 
