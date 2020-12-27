@@ -39,6 +39,7 @@ install:
 	cp ./tools/opt.py $(CORE_DIR)/viuact-opt
 	cp ./tools/format.py $(CORE_DIR)/viuact-format
 	cp ./tools/switch.py $(CORE_DIR)/viuact-switch
+	cp ./tools/switch.py $(CORE_DIR)/viuact-man
 	cp ./tools/front.py $(BIN_DIR)/viuact
 	@sed -i "s%DEFAULT_CORE_DIR = '.*'%DEFAULT_CORE_DIR = '$(CORE_DIR)'%" $(BIN_DIR)/viuact
 	chmod +x \
@@ -46,6 +47,7 @@ install:
 		$(CORE_DIR)/viuact-opt \
 		$(CORE_DIR)/viuact-format \
 		$(CORE_DIR)/viuact-switch \
+		$(CORE_DIR)/viuact-man \
 		$(BIN_DIR)/viuact
 	# @mkdir -p $(LIB_DIR)/viuact/Std
 	# cp -Rv ./stdlib/Std/* $(LIB_DIR)/viuact/Std

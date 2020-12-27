@@ -49,6 +49,10 @@ HELP = '''{NAME}
         %text
         Manage multiple Viua environments.
 
+    %fg(man_se)man%r
+        %text
+        Read Viuact manual pages.
+
 {OPTIONS}
     %opt(--help)
         Display this message.
@@ -148,6 +152,7 @@ CORE_TOOLS = (
     'opt',
     'fmt',
     'switch',
+    'man',
 )
 KNOWN_TOOLS = (
     *CORE_TOOLS,
